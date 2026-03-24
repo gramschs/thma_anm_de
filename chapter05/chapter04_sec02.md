@@ -138,7 +138,7 @@ die Sekantensteigung finden wir unten links.
 <div id="applet-container-720">
 
 <iframe
-  src="https://gramschs.github.io/thm_anm_de_assets/interactive/chapter04/sekante.html"
+  src="https://gramschs.github.io/thma_anm_de_assets/interactive/chapter04/sekante.html"
   width="100%"
   frameborder="0"
   scrolling="no">
@@ -180,7 +180,7 @@ nehmen.
 <!-- markdownlint-disable MD033 -->
 <div id="applet-container-750">
 <iframe
-  src="https://gramschs.github.io/thm_anm_de_assets/interactive/chapter04/sekante-tangente.html"
+  src="https://gramschs.github.io/thma_anm_de_assets/interactive/chapter04/sekante-tangente.html"
   width="100%"
   frameborder="0"
   scrolling="no">
