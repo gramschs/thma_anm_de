@@ -1,4 +1,4 @@
-import{b as e}from"/thm_anm_de/build/_shared/chunk-7DW7L33J.js";var l=e(()=>`
+import{b as e}from"/thma_anm_de/build/_shared/chunk-7DW7L33J.js";var l=e(()=>`
   /* Font Awesome icon styling - consolidated */
   .label-icon {
     display: inline-block;
