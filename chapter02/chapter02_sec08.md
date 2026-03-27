@@ -136,20 +136,23 @@ plt.show()
 :class: tip
 Ein Windmesser zeichnet an einer Wetterstation über 24 Stunden stündlich die
 Windgeschwindigkeit auf. Die Messwerte in m/s von 0 bis 23 Uhr lauten:
+
+```code
 3.2, 2.8, 2.5, 2.1, 2.4, 3.0, 4.1, 5.3, 6.2, 7.0, 7.8, 8.1,
 7.5, 6.9, 6.3, 5.8, 5.1, 4.7, 4.2, 3.8, 3.5, 3.3, 3.1, 2.9.
+```
 
-1. Legen Sie die Daten als NumPy-Arrays an und erstellen Sie einen Linienplot
-   der Windgeschwindigkeit über die Tageszeit. Verwenden Sie Kreise als
-   Marker.
+1. Legen Sie die Daten (Stunden und Windgeschwindigkeit) als NumPy-Arrays an und
+   erstellen Sie einen Linienplot der Windgeschwindigkeit über die Tageszeit.
+   Verwenden Sie Kreise als Marker.
 2. Markieren Sie den Zeitpunkt der maximalen Windgeschwindigkeit mit einem
-   auffälligen Marker in einer anderen Farbe. Hinweis: `np.argmax()` liefert
-   den Index des größten Werts.
+   auffälligen Marker in einer anderen Farbe. Hinweis: `np.argmax()` liefert den
+   Index des größten Werts.
 3. Fügen Sie eine horizontale gestrichelte Linie bei der mittleren
    Windgeschwindigkeit ein. Hinweis: `ax.axhline()` zeichnet eine horizontale
    Linie über den gesamten Plotbereich.
-4. Beschriften Sie die Achsen mit Einheiten, vergeben Sie einen Titel und
-   zeigen Sie die Legende an.
+4. Beschriften Sie die Achsen mit Einheiten, vergeben Sie einen Titel und zeigen
+   Sie die Legende an.
 
 Strukturieren Sie Ihren Code mit EVA-Kommentaren.
 ````
@@ -225,7 +228,7 @@ Bruchspannung lauten:
    Bruchspannung aller Proben ein.
 3. Simulieren Sie für jede Probe 10 Einzelmesswerte mit `np.random.normal()`
    und dem jeweiligen Mittelwert und der jeweiligen Standardabweichung.
-   Verwenden Sie `np.random.seed(3)`. Fassen Sie alle 50 Werte in einem
+   Verwenden Sie `np.random.seed(17)`. Fassen Sie alle 50 Werte in einem
    Array zusammen und stellen Sie ihre Verteilung in einem zweiten Subplot
    nebeneinander als Histogramm dar.
 
@@ -246,22 +249,27 @@ import matplotlib.style as style
 style.use('seaborn-v0_8')
 
 # Eingabe
-proben    = np.array([1, 2, 3, 4, 5])
-bruchspg  = np.array([42.3, 38.7, 51.2, 45.8, 39.1])
-std_bruch = np.array([ 2.1,  3.4,  1.8,  2.7,  3.0])
+proben            = np.array([1, 2, 3, 4, 5])  # Probennummer 
+bruchspannung     = np.array([42.3, 38.7, 51.2, 45.8, 39.1])  # Mittelwert Bruchspannung in MPa
+std_bruchspannung = np.array([ 2.1,  3.4,  1.8,  2.7,  3.0])  # Standardabweichung Bruchspannung in MPa
 
-np.random.seed(3)
-alle_werte = np.concatenate([
-    np.random.normal(m, s, 10) for m, s in zip(bruchspg, std_bruch)
-])
+# Simulation Bruchspannungen
+np.random.seed(17)
+simulierte_bruchspannungen = np.zeros(50)
+idx = 0
+for i in range(5):
+    simulation = np.random.normal(bruchspannung[i], std_bruchspannung[i], 10)
+    for j in range(10):
+        simulierte_bruchspannungen[idx] = simulation[j]  # idx läuft von 0 bis 49
+        idx += 1
 
 # Verarbeitung
-mittelwert = np.mean(bruchspg)
+mittelwert = np.mean(bruchspannung)
 
 # Ausgabe
 fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
 
-ax[0].errorbar(proben, bruchspg, yerr=std_bruch,
+ax[0].errorbar(proben, bruchspannung, yerr=std_bruchspannung,
                fmt='s', color='#4C72B0', capsize=6,
                linewidth=1.5, label='Bruchspannung ± Std')
 ax[0].axhline(y=mittelwert, linestyle='dashed', color='gray',
@@ -273,9 +281,9 @@ ax[0].set_title('Bruchspannungen der Kunststoffproben')
 ax[0].legend()
 ax[0].grid(True)
 
-ax[1].hist(alle_werte, bins=15, color='#4C72B0', edgecolor='white')
-ax[1].set_xlabel('Bruchspannung in MPa')
-ax[1].set_ylabel('Haeufigkeit')
+ax[1].hist(simulierte_bruchspannungen, bins=15, color='#4C72B0', edgecolor='white')
+ax[1].set_xlabel('Simulierte Bruchspannung in MPa')
+ax[1].set_ylabel('Häufigkeit')
 ax[1].set_title('Verteilung aller Messwerte (N=50)')
 ax[1].grid(True, axis='y')
 
@@ -289,7 +297,7 @@ hindeutet. Das Histogramm zeigt eine breite Verteilung der Einzelwerte, weil
 es Messungen aus fünf Proben mit unterschiedlichen Mittelwerten enthält.
 ````
 
-````{admonition} Übung 2.10 (✩✩✩) Mini-Projekt: Heizenergie und Außentemperatur
+```{admonition} Übung 2.10 (✩✩✩) Mini-Projekt: Heizenergie und Außentemperatur
 :class: tip
 Ein Haushalt zeichnet über ein Jahr monatlich die mittlere Außentemperatur
 und den Gasverbrauch zum Heizen auf. Die Daten lauten:
@@ -327,17 +335,14 @@ Geben Sie $m$ und $b$ mit Einheiten aus.
 
 **Teil 2: Visualisierung**
 
-Erstellen Sie eine Figure mit drei Subplots: links ein großer Subplot über
-die gesamte Höhe, rechts zwei Subplots untereinander. Hinweis: Mit
-`matplotlib.gridspec.GridSpec(2, 2)` und `fig.add_subplot(gs[:, 0])` lässt
-sich ein Subplot über beide Zeilen spannen.
+Erstellen Sie eine Figure mit drei nebeneinanderliegenden Subplots:
 
-- Links (volle Höhe): Scatter-Plot mit Temperatur auf der x-Achse und
-  Gasverbrauch auf der y-Achse, überlagert mit der Regressionsgerade.
-  Markieren Sie den Vorhersagepunkt aus Teil 3 auffällig.
-- Rechts oben: monatlicher Temperaturverlauf als Linienplot mit Markern.
-- Rechts unten: monatlicher Gasverbrauch als Linienplot mit Markern.
-  Verwenden Sie für beide rechten Subplots die Monatsnamen auf der x-Achse.
+- Links: Scatter-Plot mit Temperatur auf der x-Achse und Gasverbrauch auf
+  der y-Achse, überlagert mit der Regressionsgerade. Markieren Sie den
+  Vorhersagepunkt aus Teil 3 auffällig.
+- Mitte: monatlicher Temperaturverlauf als Linienplot mit Markern.
+- Rechts: monatlicher Gasverbrauch als Linienplot mit Markern. Verwenden
+  Sie für die mittleren und rechten Subplots die Monatsnamen auf der x-Achse.
 
 **Teil 3: Vorhersage**
 
@@ -349,10 +354,10 @@ Berechnen Sie den vorhergesagten Gasverbrauch mit der Regressionsgerade.
 Bewerten Sie kurz: Passt ein lineares Modell hier gut? Welche physikalische
 Erklärung hat das Vorzeichen der Steigung?
 
-Strukturieren Sie Ihren Code mit EVA-Kommentaren.
-````
+Strukturieren Sie Ihren Code mit Kommentaren.
+```
 
-```{code-cell} python
+```{code-cell}
 # Code-Zelle
 ```
 
@@ -366,39 +371,36 @@ import matplotlib.style as style
 style.use('seaborn-v0_8')
 
 # Eingabe
-temperatur   = np.array([-2.,  1.,  5., 10., 15., 18., 21., 20., 14.,  9.,  3., -1.])
+temperatur   = np.array([-2.,  1.,  5., 10., 15., 18., 21., 20., 14.,  9.,  3., -1.])  # in °C
 gasverbrauch = np.array([350, 290, 210, 115,  60,  30,  15,  20,  75, 130, 230, 320],
-                         dtype=float)
+                         dtype=float)  # in kWh, float da sonst Integer-Array
 monate = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun',
           'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez']
 
-# Verarbeitung: Lineare Regression
+# Verarbeitung: Mittelwerte berechnen
 x_mean = np.mean(temperatur)
 y_mean = np.mean(gasverbrauch)
 
+# Verarbeitung: Steigung und Achsenabschnitt der Regressionsgeraden
 m = np.sum((temperatur - x_mean) * (gasverbrauch - y_mean)) / \
     np.sum((temperatur - x_mean)**2)
 b = y_mean - m * x_mean
 
-x_linie    = np.linspace(-6, 23, 200)
-y_linie    = m * x_linie + b
-vorhersage = m * (-5) + b
-
 print(f"Steigung:        {m:.2f} kWh/°C")
 print(f"Achsenabschnitt: {b:.1f} kWh")
-print(f"Vorhersage fuer -5 °C: {vorhersage:.0f} kWh")
 
-# Ausgabe
-from matplotlib.gridspec import GridSpec
+# Verarbeitung: Regressionslinie und Vorhersage
+x_linie    = np.linspace(-6, 23, 200)   # Temperaturbereich für die Linie
+y_linie    = m * x_linie + b            # Gasverbrauch entlang der Linie
+vorhersage = m * (-5) + b               # Vorhersage für -5 °C
 
-fig = plt.figure(figsize=(14, 10))
-gs  = GridSpec(2, 2, figure=fig)
+print(f"Vorhersage für -5 °C: {vorhersage:.0f} kWh")
 
-ax_scatter = fig.add_subplot(gs[:, 0])   # links, volle Höhe
-ax_temp    = fig.add_subplot(gs[0, 1])   # rechts oben
-ax_gas     = fig.add_subplot(gs[1, 1])   # rechts unten
+# Ausgabe: drei Subplots nebeneinander
+fig, ax = plt.subplots(nrows=1, ncols=3, figsize=(14, 5))
+ax_scatter, ax_temp, ax_gas = ax
 
-# Links: Scatter + Regression
+# Linker Subplot: Scatter-Plot mit Regressionsgerade
 ax_scatter.scatter(temperatur, gasverbrauch,
                    color='#4C72B0', s=70, zorder=5, label='Monatsdaten')
 ax_scatter.plot(x_linie, y_linie, color='#DD8452', linewidth=1.5,
@@ -411,7 +413,7 @@ ax_scatter.set_title('Regression: Temperatur vs. Gasverbrauch')
 ax_scatter.legend(fontsize=9)
 ax_scatter.grid(True)
 
-# Rechts oben: monatliche Temperatur
+# Mittlerer Subplot: monatliche Außentemperatur
 ax_temp.plot(np.arange(12), temperatur, color='#4C72B0',
              marker='o', markersize=5, linewidth=1.5)
 ax_temp.set_ylabel('Außentemperatur in °C')
@@ -420,7 +422,7 @@ ax_temp.set_xticks(np.arange(12))
 ax_temp.set_xticklabels(monate, rotation=45)
 ax_temp.grid(True)
 
-# Rechts unten: monatlicher Gasverbrauch
+# Rechter Subplot: monatlicher Gasverbrauch
 ax_gas.plot(np.arange(12), gasverbrauch, color='#DD8452',
             marker='o', markersize=5, linewidth=1.5)
 ax_gas.set_ylabel('Gasverbrauch in kWh')
@@ -436,8 +438,8 @@ plt.show()
 Ausgabe:
 ```
 Steigung:        -14.59 kWh/°C
-Achsenabschnitt: 291.2 kWh
-Vorhersage fuer -5 °C: 364 kWh
+Achsenabschnitt: 291.1 kWh
+Vorhersage für -5 °C: 364 kWh
 ```
 
 **Teil 4:** Das lineare Modell beschreibt den Zusammenhang im beobachteten

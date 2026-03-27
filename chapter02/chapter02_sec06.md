@@ -39,17 +39,17 @@ import matplotlib.style as style
 style.use('seaborn-v0_8')
 
 # Schwingungssignale (wie in Kapitel 2.1)
-A      = 5.0
-daempf = 1.5
-f      = 10.0
-t      = np.linspace(0, 2, 1000)
-a      = A * np.exp(-daempf * t) * np.sin(2 * np.pi * f * t)
-a2     = (A / 2) * np.exp(-daempf * t) * np.sin(2 * np.pi * 2 * f * t)
+A     = 5.0
+delta = 1.5
+f     = 10.0
+t     = np.linspace(0, 2, 1000)
+a     = A * np.exp(-delta * t) * np.sin(2 * np.pi * f * t)
+a2    = (A / 2) * np.exp(-delta * t) * np.sin(2 * np.pi * 2 * f * t)
 
 fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(8, 6))
 
-ax[0].plot(t, a,  color='#4C72B0', linewidth=1.5, label='Grundschwingung')
-ax[1].plot(t, a2, color='#DD8452', linewidth=1.5, label='Oberschwingung')
+ax[0].plot(t, a, label='Grundschwingung')
+ax[1].plot(t, a2,label='Oberschwingung')
 
 for axes in ax:
     axes.set_xlabel('Zeit in s')
@@ -107,11 +107,11 @@ import matplotlib.pyplot as plt
 import matplotlib.style as style
 style.use('seaborn-v0_8')
 
-A      = 5.0
-daempf = 1.5
-f      = 10.0
-t      = np.linspace(0, 2, 1000)
-a      = A * np.exp(-daempf * t) * np.sin(2 * np.pi * f * t)
+A     = 5.0
+delta = 1.5
+f     = 10.0
+t     = np.linspace(0, 2, 1000)
+a     = A * np.exp(-delta * t) * np.sin(2 * np.pi * f * t)
 
 np.random.seed(42)
 a_verrauscht = a + np.random.normal(0.0, 0.5, size=len(t))
@@ -186,14 +186,14 @@ Manchmal wollen wir nur einen bestimmten Ausschnitt eines Signals zeigen.
 fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(12, 4))
 
 # Links: vollständiges Signal
-ax[0].plot(t, a, color='#4C72B0', linewidth=1.5)
+ax[0].plot(t, a)
 ax[0].set_title('Vollstaendiges Signal')
 ax[0].set_xlabel('Zeit in s')
 ax[0].set_ylabel('Beschleunigung in m/s²')
 ax[0].grid(True)
 
 # Rechts: Ausschnitt der ersten 0.3 Sekunden
-ax[1].plot(t, a, color='#4C72B0', linewidth=1.5)
+ax[1].plot(t, a)
 ax[1].set_xlim(0.0, 0.3)
 ax[1].set_ylim(-6.0, 6.0)
 ax[1].set_title('Ausschnitt: 0 bis 0.3 s')
@@ -214,9 +214,9 @@ einer Maschine genauer zu untersuchen.
 Erstellen Sie eine Figure mit drei Subplots nebeneinander (`nrows=1, ncols=3`),
 die drei verschiedene Betriebszustände unserer Maschine zeigen:
 
-- Links: Normalbetrieb (`daempf=1.5`, `A=5.0`)
-- Mitte: Überlastbetrieb (`daempf=0.3`, `A=8.0`)
-- Rechts: Nachlauf (`daempf=4.0`, `A=3.0`)
+- Links: Normalbetrieb (`delta=1.5`, `A=5.0`)
+- Mitte: Überlastbetrieb (`delta=0.3`, `A=8.0`)
+- Rechts: Nachlauf (`delta=4.0`, `A=3.0`)
 
 Alle drei Signale sollen dieselbe Frequenz `f=10.0` und dieselbe Zeitachse
 `t = np.linspace(0, 2, 1000)` verwenden. Schränken Sie die y-Achse aller
@@ -241,15 +241,15 @@ t = np.linspace(0, 2, 1000)
 f = 10.0
 
 parameter = [
-    (1.5, 5.0, 'Normalbetrieb',    '#4C72B0'),
-    (0.3, 8.0, 'Ueberlastbetrieb', '#DD8452'),
-    (4.0, 3.0, 'Nachlauf',         '#55A868'),
+    (1.5, 5.0, 'Normalbetrieb',   '#4C72B0'),
+    (0.3, 8.0, 'Überlastbetrieb', '#DD8452'),
+    (4.0, 3.0, 'Nachlauf',        '#55A868'),
 ]
 
 fig, ax = plt.subplots(nrows=1, ncols=3, figsize=(14, 4))
 
-for i, (daempf, amp, tit, farbe) in enumerate(parameter):
-    sig = amp * np.exp(-daempf * t) * np.sin(2 * np.pi * f * t)
+for i, (delta, amp, tit, farbe) in enumerate(parameter):
+    sig = amp * np.exp(-delta * t) * np.sin(2 * np.pi * f * t)
     ax[i].plot(t, sig, color=farbe, linewidth=1.5)
     ax[i].set_title(tit)
     ax[i].set_xlabel('Zeit in s')

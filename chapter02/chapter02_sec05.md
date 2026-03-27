@@ -40,11 +40,11 @@ import matplotlib.style as style
 style.use('seaborn-v0_8')
 
 # Schwingungssignal (wie in Kapitel 2.1)
-A      = 5.0
-daempf = 1.5
-f      = 10.0
-t      = np.linspace(0, 2, 1000)
-a      = A * np.exp(-daempf * t) * np.sin(2 * np.pi * f * t)
+A     = 5.0
+delta = 1.5
+f     = 10.0
+t     = np.linspace(0, 2, 1000)
+a     = A * np.exp(-delta * t) * np.sin(2 * np.pi * f * t)
 
 # Diagramm erzeugen
 fig, ax = plt.subplots()
@@ -66,7 +66,7 @@ Diagramm verwenden.
 `(t[1], a[1])` usw. verbindet. Das erste Argument ist immer die x-Achse,
 das zweite die y-Achse. `plt.show()` zeigt das fertige Diagramm an.
 
-```{admonition} Figure und Axes
+```{admonition} Was ist der Unterschied zwischen Figure und Axes?
 :class: note
 In Matplotlib gibt es eine klare Hierarchie: Eine **Figure** kann mehrere
 **Axes** enthalten. Eine Axes ist ein einzelner Zeichenbereich mit zwei
@@ -89,7 +89,7 @@ ax.plot(t, a)
 
 ax.set_xlabel('Zeit in s')
 ax.set_ylabel('Beschleunigung in m/s²')
-ax.set_title('Gedaempfte Schwingung eines Maschinenlagers')
+ax.set_title('Gedämpfte Schwingung eines Maschinenlagers')
 ax.legend(['Sensor 1'])
 ax.grid(True)
 
@@ -108,11 +108,11 @@ Vielzahl von Farben und Linienstilen, die wir als Argumente an `ax.plot()`
 ```{code-cell} python
 fig, ax = plt.subplots(figsize=(8, 4))
 
-ax.plot(t, a, color='#4C72B0', linewidth=1.5, linestyle='solid')
+ax.plot(t, a, color='red', linewidth=1.5, linestyle='solid')
 
 ax.set_xlabel('Zeit in s')
 ax.set_ylabel('Beschleunigung in m/s²')
-ax.set_title('Gedaempfte Schwingung eines Maschinenlagers')
+ax.set_title('Gedämpfte Schwingung eines Maschinenlagers')
 ax.grid(True)
 
 plt.show()
@@ -148,15 +148,15 @@ import matplotlib.style as style
 style.use('seaborn-v0_8')
 
 # Signal
-t      = np.linspace(0, 2, 1000)
-a_unge = 5.0 * np.sin(2 * np.pi * 10.0 * t)
+t             = np.linspace(0, 2, 1000)
+a_ungedaempft = 5.0 * np.sin(2 * np.pi * 10.0 * t)
 
 # Diagramm
 fig, ax = plt.subplots(figsize=(8, 4))
-ax.plot(t, a_unge, color='#DD8452', linewidth=1.5, linestyle='dashed')
+ax.plot(t, a_ungedaempft, linestyle='dashed')
 ax.set_xlabel('Zeit in s')
 ax.set_ylabel('Beschleunigung in m/s²')
-ax.set_title('Ungedaempfte Schwingung')
+ax.set_title('Ungedämpfte Schwingung')
 ax.grid(True)
 plt.show()
 ```
@@ -172,7 +172,7 @@ mehrfach auf. Jede Kurve bekommt ein `label`, das dann in der Legende erscheint:
 
 ```{code-cell} python
 # Zweites Signal: Oberschwingung mit doppelter Frequenz
-a2 = (A / 2) * np.exp(-daempf * t) * np.sin(2 * np.pi * 2 * f * t)
+a2 = (A / 2) * np.exp(-delta * t) * np.sin(2 * np.pi * 2 * f * t)
 
 fig, ax = plt.subplots(figsize=(8, 4))
 
@@ -224,15 +224,18 @@ import matplotlib.pyplot as plt
 import matplotlib.style as style
 style.use('seaborn-v0_8')
 
-A      = 5.0
-daempf = 1.5
-f      = 10.0
-t      = np.linspace(0, 2, 1000)
-a      = A * np.exp(-daempf * t) * np.sin(2 * np.pi * f * t)
+# Parameter und sauberes, gedämpftes Schwingungssignal
+A     = 5.0
+delta = 1.5
+f     = 10.0
+t     = np.linspace(0, 2, 1000)
+a     = A * np.exp(-delta * t) * np.sin(2 * np.pi * f * t)
 
+# verrauschtes Signal
 np.random.seed(42)
 a_verrauscht = a + np.random.normal(0.0, 0.5, size=len(t))
 
+# Visualisierung
 fig, ax = plt.subplots(figsize=(8, 4))
 ax.plot(t, a_verrauscht, color='gray',      linewidth=0.8, label='Verrauschtes Signal')
 ax.plot(t, a,            color='#4C72B0',   linewidth=1.5, label='Sauberes Signal')
@@ -257,10 +260,10 @@ Berichten verwenden. `fig.savefig()` speichert das Diagramm als Datei:
 
 ```{code-cell} python
 fig, ax = plt.subplots(figsize=(8, 4))
-ax.plot(t, a, color='#4C72B0', linewidth=1.5, label='Sensor 1')
+ax.plot(t, a, label='Sensor 1')
 ax.set_xlabel('Zeit in s')
 ax.set_ylabel('Beschleunigung in m/s²')
-ax.set_title('Gedaempfte Schwingung')
+ax.set_title('Gedämpfte Schwingung')
 ax.legend()
 ax.grid(True)
 

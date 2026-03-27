@@ -66,20 +66,21 @@ print(d[-2])     # 40
 
 ````{admonition} Übung 2.2 (✩)
 :class: tip
-Gegeben ist folgende Matrix als NumPy-Array:
+Gegeben ist folgende Matrix:
 
-```python
-import numpy as np
+\begin{equation*}
+A = \begin{pmatrix}
+    1.0 & 2.0 & 3.0 \\
+    4.0 & 5.0 & 6.0 \\
+    7.0 & 8.0 & 9.0 \\
+   \end{pmatrix}.
+\end{equation*}
 
-A = np.array([
-    [1.0, 2.0, 3.0],
-    [4.0, 5.0, 6.0],
-    [7.0, 8.0, 9.0],
-])
-```
+Speichern Sie die Matrix als Array in der Variable `A` und beantworten Sie
+folgende Fragen zunächst nur im Kopf, ohne Python-Code auszuführen.
 
 1. Was gibt `print(A.shape)` aus?
-2. Was gibt `print(A[1, 2])` aus? Berechnen Sie das Ergebnis zuerst im Kopf.
+2. Was gibt `print(A[1, 2])` aus?
 3. Was gibt `print(A[0, :])` aus?
 4. Was gibt `print(A[:, 1])` aus?
 5. Führen Sie den Code aus und überprüfen Sie Ihre Vorhersagen.
@@ -117,14 +118,17 @@ print(A[:, 1])     # [2. 5. 8.]
 :class: tip
 Ein Temperatursensor misst in einem Ofen stündlich die Temperatur über einen
 Arbeitstag von 8 Stunden. Die acht Messwerte in °C lauten:
-180.2, 195.4, 201.7, 198.3, 202.1, 199.8, 197.5, 193.6.
+
+```code
+180.2, 195.4, 201.7, 198.3, 202.1, 199.8, 197.5, 193.6
+```
 
 1. Legen Sie die Messwerte als NumPy-Array an. Berechnen Sie Mittelwert,
    Standardabweichung, Minimum und Maximum und geben Sie die Ergebnisse
    formatiert aus.
-2. Der Ofen läuft in Toleranz, wenn kein Messwert mehr als 10 °C vom
-   Mittelwert abweicht. Berechnen Sie die maximale Abweichung und prüfen
-   Sie mit einer `if`-Bedingung, ob der Ofen in Toleranz läuft.
+2. Der Ofen läuft innerhalb der Toleranz, wenn kein Messwert mehr als 10 °C vom
+   Mittelwert abweicht. Berechnen Sie die maximale Abweichung und prüfen Sie mit
+   einer `if`-Bedingung, ob der Ofen im Toleranzbereich läuft.
 3. Die Temperatur soll in Kelvin umgerechnet werden: $T_K = T_{°C} + 273.15$.
    Berechnen Sie das Array `temperatur_k` und geben Sie es aus.
 
@@ -161,7 +165,7 @@ print(f"Maximum:             {t_max:.2f} °C")
 print(f"Maximale Abweichung: {max_abweichung:.2f} °C")
 
 if max_abweichung <= toleranz:
-    print("Ofen laeuft in Toleranz.")
+    print("Ofen laeuft innerhalb der Toleranz.")
 else:
     print("Toleranz ueberschritten!")
 
@@ -170,8 +174,8 @@ print(f"Temperatur in Kelvin: {temperatur_k}")
 
 Ausgabe:
 ```
-Mittelwert:          196.08 °C
-Standardabweichung:  6.71 °C
+Mittelwert:          196.07 °C
+Standardabweichung:  6.59 °C
 Minimum:             180.20 °C
 Maximum:             202.10 °C
 Maximale Abweichung: 15.88 °C
@@ -181,7 +185,7 @@ Temperatur in Kelvin: [453.35 468.55 474.85 471.45 475.25 472.95 470.65 466.75]
 
 Die maximale Abweichung beträgt 15.88 °C und überschreitet die Toleranz von
 10 °C. Der erste Messwert von 180.2 °C weicht am stärksten vom Mittelwert ab
-und deutet auf eine Anheizphase zu Beginn des Arbeitstages hin.
+und deutet auf eine Aufheizphase zu Beginn des Arbeitstages hin.
 ````
 
 ````{admonition} Übung 2.4 (✩✩)
@@ -196,7 +200,7 @@ $$\begin{pmatrix} 2.0 & 1.0 & 0.5 \\ 1.0 & 3.0 & 1.0 \\ 0.5 & 1.0 & 2.5
 Die rechte Seite enthält die bekannten Referenzkräfte in kN, der Lösungsvektor
 $\vec{x}$ die gesuchten Kalibrierungsfaktoren in kN/V.
 
-1. Lösen Sie das Gleichungssystem mit `np.linalg.solve()`.
+1. Lösen Sie das Gleichungssystem mit NumPy.
 2. Überprüfen Sie das Ergebnis mit einer Probe: Berechnen Sie $\mathbf{A}
    \cdot \vec{x}$ und vergleichen Sie es mit $\vec{b}$.
 3. Berechnen Sie zusätzlich die Inverse von $\mathbf{A}$ und lösen Sie das
@@ -242,9 +246,9 @@ Probe A @ x:     [4.5 9.  7. ]
 Loesung (inv):   [0.72093023 2.1627907  1.79069767]
 ```
 
-Beide Methoden liefern dasselbe Ergebnis. Die Probe bestätigt, dass
-$\mathbf{A} \cdot \vec{x} = \vec{b}$ exakt erfüllt ist. Die Kalibrierungs-
-faktoren der drei Sensoren betragen ca. 0.72, 2.16 und 1.79 kN/V.
+Beide Methoden liefern dasselbe Ergebnis. Die Probe bestätigt, dass $\mathbf{A}
+\cdot \vec{x} = \vec{b}$ exakt erfüllt ist. Die Kalibrierungsfaktoren der drei
+Sensoren betragen ca. 0.72, 2.16 und 1.79 kN/V.
 ````
 
 ````{admonition} Übung 2.5 (✩✩✩) Mini-Projekt: Schwingungsanalyse mit Rauschen
@@ -300,13 +304,13 @@ Strukturieren Sie Ihren Code mit EVA-Kommentaren.
 import numpy as np
 
 def erzeuge_signal(A, delta, f, t):
-    """Berechnet ein gedaempftes Schwingungssignal.
+    """Berechnet ein gedämpftes Schwingungssignal.
 
     A:     Anfangsamplitude in m/s²
-    delta: Daempfungskoeffizient in 1/s
+    delta: Dämpfungskoeffizient in 1/s
     f:     Frequenz in Hz
     t:     Zeitachse als NumPy-Array in s
-    Rueckgabe: Signal als NumPy-Array in m/s²
+    Rückgabe: Signal als NumPy-Array in m/s²
     """
     return A * np.exp(-delta * t) * np.sin(2 * np.pi * f * t)
 
@@ -329,27 +333,29 @@ f     = 10.0
 t     = np.linspace(0, 2, 1000)
 sigma = 0.5
 
-# Verarbeitung
+# Verarbeitung: erzeuge verrauschte Signale
 a_sauber = erzeuge_signal(A, delta, f, t)
-signale  = [a_sauber] + [addiere_rauschen(a_sauber, sigma, s) for s in [0, 1, 2]]
-namen    = ["sauber", "seed=0", "seed=1", "seed=2"]
+a0 = a_sauber + addiere_rauschen(a_sauber, sigma, 0)
+a1 = a_sauber + addiere_rauschen(a_sauber, sigma, 1)
+a2 = a_sauber + addiere_rauschen(a_sauber, sigma, 2)
 
 # Ausgabe
-print(f"{'Signal':<10} {'Mittelwert':>12} {'Std':>10} {'Max':>10} {'Min':>10}")
-print("-" * 55)
-for name, sig in zip(namen, signale):
-    print(f"{name:<10} {np.mean(sig):>12.4f} {np.std(sig):>10.4f} "
-          f"{np.max(sig):>10.4f} {np.min(sig):>10.4f}")
+print("Signal  | Mittelw.| Std    | Max     | Min")
+print("-" * 50)
+print(f"sauber  | {np.mean(a_sauber):.4f}  | {np.std(a_sauber):.4f} | {np.max(a_sauber):.4f}  | {np.min(a_sauber):.4f}")
+print(f"Seed 0  | {np.mean(a0):.4f}  | {np.std(a0):.4f} | {np.max(a0):.4f} | {np.min(a0):.4f}")
+print(f"Seed 1  | {np.mean(a1):.4f}  | {np.std(a1):.4f} | {np.max(a1):.4f}  | {np.min(a1):.4f}")
+print(f"Seed 2  | {np.mean(a2):.4f}  | {np.std(a2):.4f} | {np.max(a2):.4f} | {np.min(a2):.4f}")
 ```
 
 Ausgabe:
 ```
-Signal      Mittelwert        Std        Max        Min
--------------------------------------------------------
-sauber          0.0368     0.6718     4.5514    -4.4223
-seed=0          0.0530     0.8354     5.4601    -4.9472
-seed=1          0.0289     0.8276     5.3987    -5.1204
-seed=2          0.0491     0.8310     5.6123    -4.8731
+Signal  | Mittelw.| Std    | Max     | Min
+--------------------------------------------------
+sauber  | 0.0377  | 1.4400 | 4.8140  | -4.4666
+Seed 0  | 0.0528  | 2.9286 | 10.2333 | -9.0948
+Seed 1  | 0.0948  | 2.9243 | 9.9822  | -9.3825
+Seed 2  | 0.0515  | 2.8949 | 10.6523 | -9.3554
 ```
 
 **Teil 4:** Maximum und Minimum werden am stärksten durch das Rauschen

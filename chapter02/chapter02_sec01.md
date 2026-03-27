@@ -87,11 +87,11 @@ print(messwerte_array.shape)   # (5,) - fünf Elemente, eindimensional
 print(messwerte_array.dtype)   # float64 - Fließkommazahlen
 ```
 
-`.shape` gibt die Abmessungen als Tupel zurück. Bei einem eindimensionalen
-Array enthält das Tupel genau einen Wert: die Anzahl der Elemente. `.dtype`
-zeigt den Datentyp aller Elemente an. NumPy wählt automatisch den passenden
-Typ: Enthält das Array mindestens eine Fließkommazahl, wird `float64`
-verwendet.
+`.shape` gibt die Abmessungen des Arrays als Tupel zurück. Bei einem
+eindimensionalen Array enthält das Tupel genau einen Wert: die Anzahl der
+Elemente. `.dtype` zeigt den Datentyp aller Elemente an. NumPy wählt automatisch
+den passenden Typ: Enthält das Array mindestens eine Fließkommazahl, wird
+`float64` verwendet.
 
 ```{admonition} Array vs. Liste
 :class: note
@@ -109,13 +109,15 @@ Fehlerquelle beim Wechsel zwischen beiden Datentypen.
 :class: tip
 Gegeben sind folgende Schwingungsfrequenzen in Hz:
 
-```python
-frequenzen = np.array([10.0, 25.0, 50.0, 100.0, 200.0])
+```code
+10.0, 25.0, 50.0, 100.0, 200.0
 ```
 
-1. Erzeugen Sie dieses Array und geben Sie `.shape` und `.dtype` aus.
-2. Berechnen Sie die zugehörigen Kreisfrequenzen
-   $\omega = 2 \pi f$ und speichern Sie sie in einem neuen Array `omega`.
+1. Erzeugen Sie ein Array mit diesen Frequenzen und geben Sie die Abmessungen
+   und den Datentyp des arrays aus.
+2. Berechnen Sie die zugehörigen Kreisfrequenzen $\omega = 2 \pi f$ und
+   speichern Sie sie in einem neuen Array `omega`. Tipp: Die Kreiszahl $\pi$ ist
+   in NumPy als Konstante schon vordefiniert: `np.pi`.
 3. Geben Sie `omega` aus.
 ````
 
@@ -129,10 +131,12 @@ frequenzen = np.array([10.0, 25.0, 50.0, 100.0, 200.0])
 ```python
 import numpy as np
 
+# Schwingungsfrequenz
 frequenzen = np.array([10.0, 25.0, 50.0, 100.0, 200.0])
 print(frequenzen.shape)   # (5,)
 print(frequenzen.dtype)   # float64
 
+# Kreisfrequenz
 omega = 2 * np.pi * frequenzen
 print(omega)
 ```
@@ -183,7 +187,7 @@ oft als Platzhalter für Ergebnisse, die wir noch berechnen wollen:
 
 ```{code-cell} python
 signal = np.zeros(1000)
-print(signal[:5])    # Die ersten fünf Werte
+print(signal[:5])        # die ersten fünf Werte
 ```
 
 ````{admonition} Mini-Übung
@@ -205,9 +209,13 @@ Erzeugen Sie eine Zeitachse `t` von 0 bis 2 Sekunden mit 500 Punkten.
 ```python
 import numpy as np
 
+# Zeitachse in s
 t = np.linspace(0, 2, 500)
 
+# Berechnung Zeitschritt in ms
 dt_ms = (t[1] - t[0]) * 1000
+
+# Ausgabe
 print(f"Zeitschritt: {dt_ms:.4f} ms")
 print(f"t[250] = {t[250]:.4f} s")
 ```
@@ -235,7 +243,7 @@ gedämpfte Sinusschwingung beschreiben:
 $$a(t) = A \cdot e^{-\delta t} \cdot \sin(2\pi f t)$$
 
 Dabei ist $A$ die Anfangsamplitude in m/s², $\delta$ der Dämpfungskoeffizient
-und $f$ die Schwingungsfrequenz. Wir setzen ein:
+in 1/s und $f$ die Schwingungsfrequenz in Hz. Wir setzen ein:
 
 ```{code-cell} python
 # Parameter der Schwingung
@@ -288,10 +296,12 @@ $$a_2(t) = \frac{A}{2} \cdot e^{-\delta t} \cdot \sin(2\pi \cdot 2f \cdot t)$$
 ```python
 import numpy as np
 
-A     = 5.0
-delta = 1.5
-f     = 10.0
+# Parameter der Schwingung
+A     = 5.0    # Anfangsamplitude in m/s²
+delta = 1.5    # Dämpfungskoeffizient in 1/s
+f     = 10.0   # Frequenz in Hz
 
+# Zeitachse und Signale
 t  = np.linspace(0, 2, 1000)
 a  = A * np.exp(-delta * t) * np.sin(2 * np.pi * f * t)
 a2 = (A / 2) * np.exp(-delta * t) * np.sin(2 * np.pi * 2 * f * t)
@@ -302,7 +312,7 @@ print(f"Maximale Beschleunigung (Gesamtsignal): {a_gesamt.max():.2f} m/s²")
 
 Ausgabe:
 ```
-Maximale Beschleunigung (Gesamtsignal): 6.87 m/s²
+Maximale Beschleunigung (Gesamtsignal): 6.33 m/s²
 ```
 
 Die elementweise Addition der beiden Arrays ergibt in einer einzigen Zeile

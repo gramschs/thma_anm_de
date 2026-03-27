@@ -48,9 +48,10 @@ style.use('seaborn-v0_8')
 np.random.seed(7)
 
 # Simulierte Messdaten: Temperatur und Spitzenbeschleunigung
-temperatur    = np.random.uniform(20, 80, 30)         # in °C
+temperatur     = np.random.uniform(20, 80, 30)  # in °C
 beschleunigung = 0.05 * temperatur + np.random.normal(0, 0.5, 30)  # in m/s²
 
+# Visualisierung
 fig, ax = plt.subplots(figsize=(7, 5))
 
 ax.scatter(temperatur, beschleunigung, color='#4C72B0', marker='o')
@@ -74,6 +75,7 @@ dem `c`-Argument ein Array und wählen eine Farbskala mit `cmap`:
 ```{code-cell} python
 drehzahl = np.random.uniform(500, 3000, 30)   # in U/min
 
+# Visualisierung
 fig, ax = plt.subplots(figsize=(7, 5))
 
 scatter = ax.scatter(temperatur, beschleunigung,
@@ -84,7 +86,7 @@ fig.colorbar(scatter, ax=ax, label='Drehzahl in U/min')
 
 ax.set_xlabel('Temperatur in °C')
 ax.set_ylabel('Spitzenbeschleunigung in m/s²')
-ax.set_title('Beschleunigung vs. Temperatur (eingefaerbt nach Drehzahl)')
+ax.set_title('Beschleunigung vs. Temperatur (eingefärbt nach Drehzahl)')
 ax.grid(True)
 
 plt.show()
@@ -97,22 +99,24 @@ drei Variablen gleichzeitig in einem einzigen Diagramm darstellen.
 ````{admonition} Mini-Übung
 :class: tip
 Wir untersuchen den Zusammenhang zwischen Schwingungsamplitude und
-Dämpfungskoeffizient. Berechnen Sie für 20 verschiedene Dämpfungskoeffizienten
-die maximale Beschleunigung des Schwingungssignals:
+Dämpfungskoeffizient $\delta$. Berechnen Sie für 20 verschiedene
+Dämpfungskoeffizienten die maximale Beschleunigung des Schwingungssignals:
 
 ```python
-daempf_werte = np.linspace(0.2, 4.0, 20)
-f            = 10.0
-t            = np.linspace(0, 2, 1000)
+# Parameter für die Schwingungen
+delta_werte = np.linspace(0.2, 4.0, 20)
+f           = 10.0
+t           = np.linspace(0, 2, 1000)
 
-max_beschl = np.zeros(20)
-for i, d in enumerate(daempf_werte):
-    sig          = 5.0 * np.exp(-d * t) * np.sin(2 * np.pi * f * t)
-    max_beschl[i] = np.max(sig)
+# Erzeugung der Signale und Berechnung der maximalen Beschleunigung
+max_beschleunigung = np.zeros(20)
+for i, d in enumerate(delta_werte):
+    signal = 5.0 * np.exp(-d * t) * np.sin(2 * np.pi * f * t)
+    max_beschleunigung[i] = np.max(signal)
 ```
 
-1. Erstellen Sie einen Scatter-Plot mit `daempf_werte` auf der x-Achse und
-   `max_beschl` auf der y-Achse.
+1. Erstellen Sie einen Scatter-Plot mit `delta_werte` auf der x-Achse und
+   `max_beschleunigung` auf der y-Achse.
 2. Verwenden Sie Dreiecke als Marker (`marker='^'`).
 3. Beschriften Sie die Achsen mit Einheiten und fügen Sie einen Titel hinzu.
 ````
@@ -130,27 +134,30 @@ import matplotlib.pyplot as plt
 import matplotlib.style as style
 style.use('seaborn-v0_8')
 
-daempf_werte = np.linspace(0.2, 4.0, 20)
-f            = 10.0
-t            = np.linspace(0, 2, 1000)
+# Parameter für die Schwingungen
+delta_werte = np.linspace(0.2, 4.0, 20)
+f           = 10.0
+t           = np.linspace(0, 2, 1000)
 
-max_beschl = np.zeros(20)
-for i, d in enumerate(daempf_werte):
-    sig           = 5.0 * np.exp(-d * t) * np.sin(2 * np.pi * f * t)
-    max_beschl[i] = np.max(sig)
+# Erzeugung der Signale und Berechnung der maximalen Beschleunigung
+max_beschleunigung = np.zeros(20)
+for i, d in enumerate(delta_werte):
+    signal = 5.0 * np.exp(-d * t) * np.sin(2 * np.pi * f * t)
+    max_beschleunigung[i] = np.max(signal)
 
+# Visualisierung
 fig, ax = plt.subplots(figsize=(7, 5))
-ax.scatter(daempf_werte, max_beschl, color='#DD8452', marker='^', s=60)
-ax.set_xlabel('Daempfungskoeffizient in 1/s')
+ax.scatter(delta_werte, max_beschleunigung, color='#DD8452', marker='^', s=60)
+ax.set_xlabel('Dämpfungskoeffizient in 1/s')
 ax.set_ylabel('Maximale Beschleunigung in m/s²')
-ax.set_title('Einfluss der Daempfung auf die Spitzenbeschleunigung')
+ax.set_title('Einfluss der Dämpfung auf die Spitzenbeschleunigung')
 ax.grid(True)
 plt.show()
 ```
 
 Der Scatter-Plot zeigt deutlich, dass die maximale Beschleunigung mit
 zunehmendem Dämpfungskoeffizient monoton abnimmt. Bei starker Dämpfung
-(δ > 3) ist die Spitzenamplitude bereits auf unter 1 m/s² reduziert.
+(δ > 3) ist die Spitzenamplitude bereits auf unter 4.7 m/s² reduziert.
 ````
 
 ## Histogramme
@@ -173,7 +180,7 @@ fig, ax = plt.subplots(figsize=(7, 5))
 ax.hist(rauschen, bins=30, color='#4C72B0', edgecolor='white')
 
 ax.set_xlabel('Rauschwert in m/s²')
-ax.set_ylabel('Haeufigkeit')
+ax.set_ylabel('Häufigkeit')
 ax.set_title('Verteilung des Messrauschens (N=1000)')
 ax.grid(True, axis='y')
 
@@ -200,7 +207,7 @@ sigma   = 0.5
 x_kurve = np.linspace(-2, 2, 200)
 y_kurve = (1 / (sigma * np.sqrt(2 * np.pi))) * np.exp(-0.5 * (x_kurve / sigma)**2)
 ax.plot(x_kurve, y_kurve,
-        color='#DD8452', linewidth=2, label='Normalverteilung (σ=0.5)')
+        color='red', linewidth=2, label='Normalverteilung (σ=0.5)')
 
 ax.set_xlabel('Rauschwert in m/s²')
 ax.set_ylabel('Wahrscheinlichkeitsdichte')
@@ -231,8 +238,7 @@ die Verteilungen von zwei verschiedenen Rauschquellen:
 - Rechts: gleichverteiltes Rauschen `np.random.uniform(-1, 1, 2000)`
 
 Verwenden Sie jeweils `bins=40` und `density=True`. Beschriften Sie die
-Achsen, vergeben Sie Titel und fügen Sie Gitter nur auf der y-Achse hinzu
-(`grid(True, axis='y')`).
+Achsen, vergeben Sie Titel und fügen Sie ein Gitter hinzu.
 
 Verwenden Sie `np.random.seed(0)`.
 ````
@@ -250,25 +256,29 @@ import matplotlib.pyplot as plt
 import matplotlib.style as style
 style.use('seaborn-v0_8')
 
+# Erzeugung der verrauschten Signale
 np.random.seed(0)
 rauschen_normal = np.random.normal(0, 0.5, 2000)
 rauschen_gleich = np.random.uniform(-1, 1, 2000)
 
+# Visualisierung
 fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
 
+# linkes Histogramm mit normalverteiltem Rauschen
 ax[0].hist(rauschen_normal, bins=40, color='#4C72B0',
            edgecolor='white', density=True)
 ax[0].set_xlabel('Rauschwert in m/s²')
 ax[0].set_ylabel('Wahrscheinlichkeitsdichte')
 ax[0].set_title('Normalverteiltes Rauschen')
-ax[0].grid(True, axis='y')
+ax[0].grid(True)
 
+# rechtes Histogramm mit gleichverteiltem Rauschen
 ax[1].hist(rauschen_gleich, bins=40, color='#55A868',
            edgecolor='white', density=True)
 ax[1].set_xlabel('Rauschwert in m/s²')
 ax[1].set_ylabel('Wahrscheinlichkeitsdichte')
 ax[1].set_title('Gleichverteiltes Rauschen')
-ax[1].grid(True, axis='y')
+ax[1].grid(True)
 
 plt.tight_layout()
 plt.show()
@@ -297,12 +307,13 @@ temp_punkte   = np.array([25, 30, 35, 40, 45, 50, 60, 70])    # in °C
 beschl_mittel = np.array([1.2, 1.4, 1.5, 1.8, 2.0, 2.1, 2.5, 2.9])  # in m/s²
 beschl_std    = np.array([0.15, 0.12, 0.18, 0.20, 0.14, 0.22, 0.19, 0.25])
 
+# Visualisierung
 fig, ax = plt.subplots(figsize=(7, 5))
 
 ax.errorbar(temp_punkte, beschl_mittel,
             yerr=beschl_std,
             fmt='o', color='#4C72B0',
-            capsize=5, linewidth=1.5,
+            capsize=5, capthick=2, linewidth=1.5,
             label='Messwerte ± Standardabweichung')
 
 ax.set_xlabel('Temperatur in °C')
@@ -315,9 +326,9 @@ plt.show()
 ```
 
 `yerr` übergibt die Fehler in y-Richtung als Array. `fmt='o'` legt das
-Markersymbol fest, `capsize=5` gibt den Querbalken am Ende der Fehlerbalken
-eine Breite von 5 Punkten. Ohne `capsize` sind die Fehlerbalken schwerer
-abzulesen.
+Markersymbol fest, `capsize=5` gibt den Querbalken am Ende der Fehlerbalken eine
+Breite von 5 Punkten und `capthick=2` gibt ihm eine Höhe von 2 Punkten. Damit
+lassen sich die Fehlerbalken leichter ablesen.
 
 Wir können Fehlerbalken auch mit einer Regressionsgerade kombinieren:
 
@@ -327,20 +338,23 @@ N      = len(temp_punkte)
 x      = temp_punkte.astype(float)
 y      = beschl_mittel
 
+# Berechnung von Steigung m und Achsenabschnitt b 
 m = (N * np.sum(x * y) - np.sum(x) * np.sum(y)) / \
     (N * np.sum(x**2) - np.sum(x)**2)
 b = (np.sum(x**2) * np.sum(y) - np.sum(x) * np.sum(x * y)) / \
     (N * np.sum(x**2) - np.sum(x)**2)
 
+# Erzeugung der Regressionsgeraden
 x_linie   = np.linspace(20, 75, 200)
 y_linie   = m * x_linie + b
 
+# Visualisierung von Messdaten und Regressionsgeraden
 fig, ax = plt.subplots(figsize=(7, 5))
 
 ax.errorbar(temp_punkte, beschl_mittel, yerr=beschl_std,
             fmt='o', color='#4C72B0', capsize=5,
             label='Messwerte ± Std')
-ax.plot(x_linie, y_linie, color='#DD8452', linewidth=1.5,
+ax.plot(x_linie, y_linie, color='red', linewidth=1.5,
         label=f'Regression: y = {m:.3f}x + {b:.3f}')
 
 ax.set_xlabel('Temperatur in °C')

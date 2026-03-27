@@ -57,6 +57,17 @@ print(messungen.shape)
 und 4 Spalten. Die erste Zahl ist immer die Zeilenanzahl, die zweite die
 Spaltenanzahl.
 
+```{admonition} Messdaten anordnen: zeilenweise oder spaltenweise?
+:class: warning
+Beide Orientierungen sind in der Praxis üblich. Hier wird *eine Zeile pro
+Sensor* gewählt, weil der vollständige Signalverlauf eines Sensors so als
+zusammenhängende Zeile vorliegt und gut zur Matrix-Vektor-Multiplikation im
+nächsten Abschnitt passt. In der Datenanalyse und im maschinellen Lernen
+(pandas, scikit-learn) ist die umgekehrte Anordnung verbreitet: eine Zeile
+pro Zeitpunkt, eine Spalte pro Sensor. Entscheidend ist, die gewählte
+Konvention konsequent zu verwenden.
+```
+
 Auf einzelne Elemente, Zeilen und Spalten greifen wir mit eckigen Klammern zu:
 
 ```{code-cell} python
@@ -69,12 +80,11 @@ Der Doppelpunkt `:` bedeutet "alle Einträge in dieser Dimension". Das ist
 dasselbe Slicing-Prinzip, das wir von Python-Listen kennen, jetzt aber in
 zwei Dimensionen.
 
-```{admonition} Zeilen und Spalten
+```{admonition} Was steht zuerst: Zeile oder Spalte?
 :class: note
-Bei einem zweidimensionalen Array gilt: Der erste Index wählt die **Zeile**,
-der zweite die **Spalte**. Eine gute Eselsbrücke ist "Row before Column",
-also erst die Zeile, dann die Spalte. `messungen[i, j]` greift auf den Wert
-in Zeile `i` und Spalte `j` zu.
+Bei einem zweidimensionalen Array gilt: Der erste Index wählt die **Zeile**, der
+zweite die **Spalte**. `messungen[i, j]` greift auf den Wert in Zeile `i` und
+Spalte `j` zu.
 ```
 
 ````{admonition} Mini-Übung
@@ -93,9 +103,9 @@ A = \begin{pmatrix}
 
 1. Erzeugen Sie die Matrix in Python und geben Sie die Zeilen- und Spaltenanzahl
    aus.
-2. Geben Sie die Amplituden von Sensor 3 (Zeile 2) an allen Messpunkten aus.
-3. Geben Sie die Amplituden aller Sensoren am zweiten Messpunkt (Spalte 1) aus.
-4. Was liefert `amplituden[2, 1]`? Berechnen Sie das Ergebnis zuerst im Kopf.
+2. Geben Sie die Amplituden von Sensor 3 an allen Messpunkten aus.
+3. Geben Sie die Amplituden aller Sensoren am zweiten Messpunkt aus.
+4. Was liefert `amplituden[2, 1]`? Ermitteln Sie das Ergebnis zuerst im Kopf.
 ````
 
 ```{code-cell} python
@@ -108,13 +118,15 @@ A = \begin{pmatrix}
 ```python
 import numpy as np
 
+# Schwingungsamplituden in mm
 amplituden = np.array([
-    [0.12, 0.34, 0.21],
-    [0.45, 0.11, 0.38],
-    [0.29, 0.52, 0.17],
-    [0.08, 0.43, 0.31],
+    [0.12, 0.34, 0.21], # Sensor 1
+    [0.45, 0.11, 0.38], # Sensor 2
+    [0.29, 0.52, 0.17], # Sensor 3
+    [0.08, 0.43, 0.31], # Sensor 4
 ])
 
+# Ausgabe
 print(amplituden.shape)      # (4, 3)
 print(amplituden[2, :])      # [0.29 0.52 0.17]
 print(amplituden[:, 1])      # [0.34 0.11 0.52 0.43]
@@ -129,10 +141,10 @@ Messpunkt) zu. Das ist der Wert 0.52 mm. Die Form `(4, 3)` bestätigt:
 ## Matrix-Vektor-Multiplikation mit `@`
 
 Eine der wichtigsten Operationen in der linearen Algebra ist die
-Matrix-Vektor-Multiplikation. Angenommen, wir kennen die Empfindlichkeit
-jedes Sensors als Kalibrierungsfaktor und wollen daraus die tatsächlichen
-physikalischen Größen berechnen. Das entspricht einer Multiplikation der
-Kalibrierungsmatrix mit dem Messvektor.
+Matrix-Vektor-Multiplikation. Als Anwendungsbeispiel betrachten wir die
+Kalibrierung von Sensoren: Ein Sensor liefert eine elektrische Spannung,
+keine physikalische Größe wie Beschleunigung. Die Kalibrierungsmatrix rechnet
+die Rohspannungen aller Sensoren in kalibrierte Beschleunigungen um.
 
 In NumPy verwenden wir dafür den `@`-Operator:
 
@@ -147,7 +159,7 @@ K = np.array([
 # Messvektor: Rohwerte der drei Sensoren zum selben Zeitpunkt (in V)
 u = np.array([1.0, 0.8, 1.2])
 
-# Kalibrierte Beschleunigungen (in m/s²)
+# kalibrierte Beschleunigungen (in m/s²)
 a = K @ u
 print(a)
 ```
@@ -156,7 +168,7 @@ Der `@`-Operator führt die Matrixmultiplikation durch. `K @ u` bedeutet:
 multipliziere die Matrix `K` mit dem Vektor `u` und liefere den
 Ergebnisvektor `a`. Das Ergebnis hat dieselbe Anzahl von Zeilen wie `K`.
 
-```{admonition} Unterschiede Multiplikationsoperatoren
+```{admonition} Wie unterscheiden sich die Multiplikationsoperatoren?
 :class: note
 Der `*`-Operator multipliziert Arrays **elementweise**, der `@`-Operator
 führt die **Matrixmultiplikation** durch. `K * u` wäre hier falsch, weil es
@@ -167,20 +179,23 @@ Multiplikation.
 
 ````{admonition} Mini-Übung
 :class: tip
-Die Steifigkeitsmatrix eines einfachen Feder-Masse-Systems lautet:
+Bei einem System aus mehreren Massen, die über Federn verbunden sind, beschreibt
+die Steifigkeitsmatrix $K$, welche Kräfte $\vec{F}$ entstehen, wenn die Massen
+ausgelenkt werden. Das Produkt $\vec{F} = \mathbf{K}\cdot\vec{x}$ ist die
+Matrix-Form des Hookeschen Gesetzes.
 
-```python
-K = np.array([
-    [ 3.0, -1.0],
-    [-1.0,  2.0],
-])
-```
+Die Steifigkeitsmatrix eines einfachen Feder-Masse-Systems mit der Einheit
+N/mm lautet:
 
-Der Verschiebungsvektor der beiden Massen beträgt `u = np.array([0.5, 0.3])`
-in mm.
+\begin{equation*} K = \begin{pmatrix} 3.0 & -1.0\\
+    -1.0 &  2.0\\
+\end{pmatrix} \end{equation*}
 
-1. Berechnen Sie den Kraftvektor `F = K @ u`.
-2. Geben Sie `F` aus und überprüfen Sie das Ergebnis für die erste Komponente
+Der Verschiebungsvektor der beiden Massen beträgt $\vec{x} = \begin{pmatrix} 0.5
+& 0.3 \end{pmatrix}^\top$ in mm.
+
+1. Berechnen Sie den Kraftvektor $\vec{F} = \mathbf{K}\cdot\vec{x}$ in N.
+2. Geben Sie $\vec{F}$ aus und überprüfen Sie das Ergebnis für die erste Komponente
    von Hand: $F_1 = 3.0 \cdot 0.5 + (-1.0) \cdot 0.3$.
 ````
 
@@ -194,13 +209,17 @@ in mm.
 ```python
 import numpy as np
 
+# Steifigkeitsmatrix in N/mm
 K = np.array([
     [ 3.0, -1.0],
     [-1.0,  2.0],
 ])
-u = np.array([0.5, 0.3])
 
-F = K @ u
+# Verschiebungsvektor in mm
+x = np.array([0.5, 0.3])
+
+# Berechnung der Kraft in N
+F = K @ x
 print(F)
 ```
 
@@ -313,7 +332,7 @@ A = np.array([
     [3, 1, 2],
 ], dtype=float)
 
-b = np.array([100, 50, 70], dtype=float)
+b = np.array([100, 50, 70], dtype=float)    # float, da sonst Integer-Array
 
 # Lösung mit solve
 x = np.linalg.solve(A, b)
@@ -329,14 +348,14 @@ print(f"Probe: {A @ x}")
 
 Ausgabe:
 ```
-Lösung (solve): M1 = 10.00 €, M2 = 20.00 €, L = 30.00 €
-Lösung (inv):   M1 = 10.00 €, M2 = 20.00 €, L = 30.00 €
+Lösung (solve): M1 = 3.33 €, M2 = 40.00 €, L = 10.00 €
+Lösung (inv):   M1 = 3.33 €, M2 = 40.00 €, L = 10.00 €
 Probe: [100.  50.  70.]
 ```
 
 Beide Methoden liefern dasselbe Ergebnis. Eine Einheit Material 1 kostet
-10 €, eine Einheit Material 2 kostet 20 € und eine Arbeitsstunde kostet
-30 €. Die Probe bestätigt, dass $\mathbf{A} \cdot \vec{x} = \vec{b}$ erfüllt
+3.33 €, eine Einheit Material 2 kostet 40 € und eine Arbeitsstunde kostet
+10 €. Die Probe bestätigt, dass $\mathbf{A} \cdot \vec{x} = \vec{b}$ erfüllt
 ist.
 ````
 

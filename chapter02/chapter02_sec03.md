@@ -37,11 +37,11 @@ seine wichtigsten statistischen Kenngrößen:
 import numpy as np
 
 # Gedämpftes Schwingungssignal (wie in Kapitel 2.1)
-A     = 5.0
-delta = 1.5
-f     = 10.0
-t     = np.linspace(0, 2, 1000)
-a     = A * np.exp(-delta * t) * np.sin(2 * np.pi * f * t)
+A     = 5.0    # Anfangsamplitude in m/s²
+delta = 1.5    # Dämpfungskoeffizient in 1/s
+f     = 10.0   # Frequenz in Hz
+t     = np.linspace(0, 2, 1000) # Zeitache in s
+a     = A * np.exp(-delta * t) * np.sin(2 * np.pi * f * t) # Schwingung in m/s²
 
 # Statistische Kenngrößen
 print(f"Mittelwert:         {np.mean(a):.4f} m/s^2")
@@ -71,17 +71,19 @@ Array. Mit `t[idx_max]` lesen wir dann den zugehörigen Zeitpunkt ab.
 Wir betrachten die Beschleunigungswerte der drei Sensoren aus Kapitel 2.2:
 
 ```python
+# Messwerte: 3 Sensoren, 4 Zeitpunkte (in m/s²)
 messungen = np.array([
-    [0.3, 1.2, 2.5, 1.8],
-    [0.5, 0.9, 1.7, 1.1],
-    [1.2, 2.4, 3.1, 2.0],
+    [0.3, 1.2, 2.5, 1.8],   # Sensor 1
+    [0.5, 0.9, 1.7, 1.1],   # Sensor 2
+    [1.2, 2.4, 3.1, 2.0],   # Sensor 3
 ])
 ```
 
 1. Berechnen Sie den Mittelwert und die Standardabweichung des gesamten Arrays.
-2. Berechnen Sie den Mittelwert jedes Sensors separat, also den Mittelwert
-   über jede Zeile. Hinweis: `np.mean(messungen, axis=1)` berechnet den
-   Mittelwert entlang der Spaltenrichtung, also pro Zeile.
+2. Berechnen Sie den Mittelwert jedes Sensors separat, also den Mittelwert über
+   jede Zeile. Hinweis: `np.mean(messungen, axis=1)` mittelt jeden Sensor über
+   alle Zeitpunkte, d.h. entlang die Spalten (`axis=1`) einer Zeile. Das Ergebnis ist
+   ein Wert pro Sensor.
 3. Welcher Sensor hat die größte mittlere Beschleunigung?
 ````
 
@@ -95,15 +97,18 @@ messungen = np.array([
 ```python
 import numpy as np
 
+# Messwerte: 3 Sensoren, 4 Zeitpunkte (in m/s²)
 messungen = np.array([
-    [0.3, 1.2, 2.5, 1.8],
-    [0.5, 0.9, 1.7, 1.1],
-    [1.2, 2.4, 3.1, 2.0],
+    [0.3, 1.2, 2.5, 1.8],   # Sensor 1
+    [0.5, 0.9, 1.7, 1.1],   # Sensor 2
+    [1.2, 2.4, 3.1, 2.0],   # Sensor 3
 ])
 
+# statistische Auswertung gesamt
 print(f"Mittelwert gesamt:         {np.mean(messungen):.4f} m/s²")
 print(f"Standardabweichung gesamt: {np.std(messungen):.4f} m/s²")
 
+# statistische Auswertung pro Sensor
 mittelwerte = np.mean(messungen, axis=1)
 print(f"Mittelwerte pro Sensor: {mittelwerte}")
 print(f"Sensor mit größtem Mittelwert: Sensor {np.argmax(mittelwerte) + 1}")
@@ -111,9 +116,9 @@ print(f"Sensor mit größtem Mittelwert: Sensor {np.argmax(mittelwerte) + 1}")
 
 Ausgabe:
 ```
-Mittelwert gesamt:         1.4750 m/s²
-Standardabweichung gesamt: 0.8034 m/s²
-Mittelwerte pro Sensor: [1.45 1.05 2.175]
+Mittelwert gesamt:         1.5583 m/s²
+Standardabweichung gesamt: 0.8088 m/s²
+Mittelwerte pro Sensor: [1.45  1.05  2.175]
 Sensor mit größtem Mittelwert: Sensor 3
 ```
 
@@ -152,12 +157,12 @@ Der Mittelwert liegt nahe bei null und die Standardabweichung nahe bei 0.2,
 wie erwartet. Die leichten Abweichungen entstehen, weil es sich um endlich
 viele Zufallszahlen handelt.
 
-```{admonition} Reproduzierbarkeit mit Seeds
+```{admonition} Wie können Zufallszahlen reproduzierbar gemacht werden?
 :class: note
 Zufallszahlen in NumPy sind pseudozufällig: Sie werden aus einem
 Startwert berechnet und sehen zufällig aus, sind aber deterministisch.
 Mit `np.random.seed(42)` legen wir diesen Startwert fest. Jeder, der
-denselben Seed verwendet, erhält exakt dieselbe Folge von Zufallszahlen.
+denselben **Seed** verwendet, erhält exakt dieselbe Folge von Zufallszahlen.
 Das ist wichtig für reproduzierbare Simulationen und Tests. Ohne
 `seed()` wählt NumPy bei jedem Programmstart einen anderen Startwert,
 und die Ergebnisse ändern sich bei jedem Durchlauf.
@@ -220,18 +225,22 @@ Wir untersuchen, wie stark das Rauschen den Mittelwert des Signals verfälscht.
 ```python
 import numpy as np
 
-A     = 5.0
-delta = 1.5
-f     = 10.0
-t     = np.linspace(0, 2, 1000)
+# Parameter für gedämpftes Schwingungssignal
+A     = 5.0                      # Anfangsamplitude in m/s²
+delta = 1.5                      # Dämpfungskoeffizient in 1/s
+f     = 10.0                     # Frequenz in Hz
+t     = np.linspace(0, 2, 1000)  # Zeitache in s
 
+# saubes Schwingungssignal in m/s²
 a_sauber = A * np.exp(-delta * t) * np.sin(2 * np.pi * f * t)
 
+# verrauschtes Signal in m/s²
 np.random.seed(0)
 sigma        = 0.5
 rauschen     = np.random.normal(0.0, sigma, size=len(t))
 a_verrauscht = a_sauber + rauschen
 
+# Vergleich der Mittelwerte
 mw_sauber    = np.mean(a_sauber)
 mw_verrauscht = np.mean(a_verrauscht)
 
@@ -242,9 +251,9 @@ print(f"Abweichung:            {abs(mw_verrauscht - mw_sauber):.4f} m/s²")
 
 Ausgabe:
 ```
-Mittelwert sauber:     0.0368 m/s²
-Mittelwert verrauscht: 0.0530 m/s²
-Abweichung:            0.0162 m/s²
+Mittelwert sauber:     0.0377 m/s²
+Mittelwert verrauscht: 0.0151 m/s²
+Abweichung:            0.0226 m/s²
 ```
 
 Die Abweichung der Mittelwerte ist sehr klein, obwohl die Standardabweichung
