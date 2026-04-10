@@ -17,4 +17,5 @@ TH Mannheim
 ![Künstlich generiertes fiktives Labor mit Computer](title.png)
 
 Dieses Vorlesungsskript unterstützt die Vorlesung "Angewandte Numerik im
-Maschinenbau".
+Maschinenbau". Viele Beispiele wurden dabei aus dem Vorlesungskript "Angewandte
+Numerik im Maschinenbau" von Alexander Baral übernommen.
