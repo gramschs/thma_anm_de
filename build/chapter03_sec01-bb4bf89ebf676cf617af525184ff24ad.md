@@ -1,0 +1,217 @@
+---
+kernelspec:
+  name: python3
+  display_name: 'Python 3'
+---
+
+# 3.1 Matrizen und lineare Gleichungssysteme
+
+An einem Obststand kostet ein Apfel 0,30 €, eine Banane 0,20 € und eine Orange
+0,50 €. Wir kaufen an drei Tagen verschiedene Mengen und bezahlen 2,10 €, 1,70 €
+und 2,80 €. Morgen soll jemand anderes einkaufen, aber wir kennen die
+Einzelpreise nicht mehr. *Wie findet man sie aus den Kassenbons zurück?*
+
+Genau das ist die Aufgabe eines **linearen Gleichungssystems (LGS)**. In diesem
+Kapitel lernen wir, wie man ein LGS als Matrixgleichung aufschreibt und
+prüft, ob es überhaupt eine eindeutige Lösung gibt.
+
+## Lernziele
+
+```{admonition} Lernziele
+:class: attention
+* [ ] Sie können ein lineares Gleichungssystem in der Matrixform
+  $\mathbf{A} \cdot \vec{x} = \vec{b}$ aufschreiben.
+* [ ] Sie können eine Matrix als 2D-NumPy-Array anlegen und auf Zeilen,
+  Spalten und einzelne Elemente zugreifen.
+* [ ] Sie können mit `np.linalg.det()` prüfen, ob ein LGS eine eindeutige
+  Lösung hat.
+```
+
++++
+
+## Eine Matrix anlegen
+
+Wir beginnen direkt mit dem Code. Die Einkaufsmengen an drei Tagen
+(Zeile = Tag, Spalte = Fruchtsorte) lassen sich als Tabelle darstellen:
+
+$$\mathbf{A} = \begin{pmatrix} 3 & 2 & 1 \\ 2 & 3 & 0 \\ 1 & 1 & 3 \end{pmatrix}$$
+
+In NumPy legen wir diese Tabelle als zweidimensionales Array an. Jede
+innere Liste entspricht einer Zeile:
+
+```{code-cell} python
+import numpy as np
+
+# Koeffizientenmatrix: jede Zeile ist ein Einkaufstag
+# Spalten: Anzahl Aepfel, Bananen, Orangen
+A = np.array([
+    [3, 2, 1],   # Tag 1: 3 Aepfel, 2 Bananen, 1 Orange
+    [2, 3, 0],   # Tag 2: 2 Aepfel, 3 Bananen, 0 Orangen
+    [1, 1, 3],   # Tag 3: 1 Apfel,  1 Banane,  3 Orangen
+], dtype=float)  # dtype=float: Zahlen werden als Dezimalzahlen gespeichert
+
+print('Matrix A:')
+print(A)
+print('Form (Zeilen, Spalten):', A.shape)
+```
+
+`.shape` gibt ein Tupel `(Zeilen, Spalten)` zurueck. Mit eckigen Klammern
+greifen wir auf einzelne Elemente zu. Der erste Index wahlt die **Zeile**,
+der zweite die **Spalte**. Zahlen werden ab 0 gezahlt:
+
+```{code-cell} python
+print(A[0, 2])   # Zeile 0, Spalte 2: Orangen an Tag 1
+print(A[1, :])   # Zeile 1 komplett:  Einkauf an Tag 2
+print(A[:, 0])   # Spalte 0 komplett: Aepfel an allen Tagen
+```
+
++++
+
+## Vom Gleichungssystem zur Matrixform
+
+Die drei Einkaufstage liefern drei Gleichungen. Dabei sind
+$x_A$, $x_B$, $x_O$ die gesuchten Einzelpreise:
+
+$$\begin{align}
+3 x_A + 2 x_B + 1 x_O &= 2{,}10 \\
+2 x_A + 3 x_B + 0 x_O &= 1{,}70 \\
+1 x_A + 1 x_B + 3 x_O &= 2{,}80
+\end{align}$$
+
+Diese drei Gleichungen schreiben wir kompakt als **Matrixgleichung**:
+
+$$\mathbf{A} \cdot \vec{x} = \vec{b}$$
+
+$\mathbf{A}$ enthaelt die Koeffizienten (die Einkaufsmengen), $\vec{x}$ die
+Unbekannten (die Preise) und $\vec{b}$ die rechten Seiten (die Kassenbons).
+
+```{admonition} Aufbau der Matrixform
+:class: note
+Jede Zeile von $\mathbf{A}$ entspricht einer Gleichung, jede Spalte einer
+Unbekannten. Der Eintrag $A_{ij}$ ist der Koeffizient der $j$-ten
+Unbekannten in der $i$-ten Gleichung.
+```
+
+In NumPy legen wir die rechte Seite als einfaches 1D-Array an:
+
+```{code-cell} python
+# Rechte Seite: bezahlte Gesamtbetraege in Euro
+b = np.array([2.10, 1.70, 2.80])
+
+print('Koeffizientenmatrix A:')
+print(A)
+print('Rechte Seite b:', b)
+```
+
++++
+
+## Hat das System eine eindeutige Lösung?
+
+Nicht jedes LGS hat genau eine Lösung. Es gibt drei Möglichkeiten:
+
+1. genau eine Lösung (Normalfall)
+2. keine Lösung (widersprüchliche Gleichungen)
+3. unendlich viele Lösungen (eine Gleichung ist doppelt)
+
+Für quadratische Matrizen (gleich viele Gleichungen wie Unbekannte) prüfen
+wir das schnell mit der **Determinante** $\det(\mathbf{A})$:
+
+$$\det(\mathbf{A}) \neq 0 \quad \Longleftrightarrow \quad \text{genau eine Lösung}$$
+
+*Was bedeutet das anschaulich?* Jede Gleichung beschreibt eine Ebene im
+Raum. Schneiden sich alle drei Ebenen in genau einem Punkt, ist
+$\det(\mathbf{A}) \neq 0$. Sind zwei Ebenen parallel, ist
+$\det(\mathbf{A}) = 0$.
+
+```{code-cell} python
+# Determinante berechnen
+det_A = np.linalg.det(A)
+print(f'Determinante: {det_A:.4f}')
+
+# np.isclose prueft, ob ein Wert nahe bei 0 liegt
+# (besser als == 0, weil Fliesskommazahlen nie exakt sind)
+if np.isclose(det_A, 0.0):
+    print('det(A) gleich 0: keine eindeutige Lösung.')
+else:
+    print('det(A) ungleich 0: genau eine Lösung vorhanden.')
+```
+
+Zum Vergleich: eine singuläre Matrix, bei der eine Gleichung die andere
+doppelt:
+
+```{code-cell} python
+# Zeile 2 = Zeile 0 + Zeile 1 -> keine neue Information
+A_singular = np.array([
+    [3, 2, 1],
+    [2, 3, 0],
+    [5, 5, 1],   # = Zeile 0 + Zeile 1
+], dtype=float)
+
+det_singular = np.linalg.det(A_singular)
+print(f'Determinante der singulären Matrix: {det_singular:.2e}')
+# Ergebnis ist nahe 0 (winzige Abweichung durch Fließkomma-Rechnung)
+```
+
++++
+
+```{admonition} Mini-Übung
+:class: tip
+Ein Café verkauft Kaffee (K), Tee (T) und Kuchen (C). An drei Tagen
+wurden folgende Bestellungen aufgenommen:
+
+| Tag | Kaffee | Tee | Kuchen | Umsatz (€) |
+|-----|--------|-----|--------|------------|
+| Mo  | 5      | 2   | 3      | 24,50      |
+| Di  | 3      | 4   | 1      | 17,30      |
+| Mi  | 6      | 1   | 4      | 28,10      |
+
+1. Legen Sie `A` und `b` als NumPy-Arrays an.
+2. Geben Sie die Form von `A` aus.
+3. Berechnen Sie die Determinante und entscheiden Sie, ob eine eindeutige
+   Lösung existiert.
+```
+
+```{code-cell} python
+# Hier Ihren Code eingeben
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+import numpy as np
+
+# Koeffizientenmatrix: Zeile = Tag, Spalte = Produkt (K, T, C)
+A = np.array([
+    [5, 2, 3],   # Montag
+    [3, 4, 1],   # Dienstag
+    [6, 1, 4],   # Mittwoch
+], dtype=float)
+
+# Rechte Seite: Tagesumsaetze in Euro
+b = np.array([24.50, 17.30, 28.10])
+
+print('Form von A:', A.shape)  # (3, 3): 3 Gleichungen, 3 Unbekannte
+
+# Determinante pruefen
+det_A = np.linalg.det(A)
+print(f'Determinante: {det_A:.2f}')
+# Ausgabe: Determinante: -13.00 -> eindeutige Lösung vorhanden
+```
+
+Die Determinante ist $-13 \neq 0$, das System hat also genau eine Lösung.
+Im nächsten Kapitel berechnen wir diese Lösung mit `np.linalg.solve`.
+````
+
++++
+
+## Zusammenfassung und Ausblick
+
+Ein LGS lässt sich immer als Matrixgleichung $\mathbf{A} \cdot \vec{x} = \vec{b}$
+schreiben. Die Koeffizientenmatrix $\mathbf{A}$ legen wir als 2D-NumPy-Array
+an, den rechten Seiten-Vektor $\vec{b}$ als 1D-Array. Mit
+`np.linalg.det()` und `np.isclose()` prüfen wir, ob eine eindeutige Lösung
+existiert, bevor wir versuchen, das System zu lösen.
+
+Im nächsten Kapitel lernen wir `np.linalg.solve`, das eine Lösung in einer
+einzigen Zeile berechnet, und sichern das Ergebnis immer mit einer Probe ab.

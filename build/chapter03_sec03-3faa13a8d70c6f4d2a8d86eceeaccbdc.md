@@ -1,0 +1,362 @@
+---
+kernelspec:
+  name: python3
+  display_name: 'Python 3'
+---
+
+# 3.3 Anwendung: Wärmeübertragung in einer Mehrschichtwand
+
+Eine Außenwand eines Gebäudes besteht typischerweise nicht aus einem einzigen
+Material, sondern aus mehreren Schichten: Mauerwerk, Dämmung, Verkleidung.
+Jede Schicht hat einen anderen Widerstand gegen Wärmedurchgang. Wir wollen
+wissen: Wie hoch ist die Temperatur an den Grenzflächen zwischen den Schichten?
+Und wie groß ist der Wärmestrom durch die Wand?
+
+Diese Fragen führen direkt auf ein lineares Gleichungssystem — das erste,
+das wir vollständig aus einem physikalischen Problem herleiten.
+
+## Lernziele
+
+```{admonition} Lernziele
+:class: attention
+* [ ] Sie können die Wärmeübertragungsgleichungen einer Mehrschichtwand
+  in ein LGS der Form $\mathbf{A} \cdot \vec{x} = \vec{b}$ überführen.
+* [ ] Sie können die Matrix $\mathbf{A}$ und den Vektor $\vec{b}$ aus
+  physikalischen Gleichungen systematisch ablesen.
+* [ ] Sie können das LGS mit `np.linalg.solve` lösen und die Ergebnisse
+  physikalisch interpretieren.
+* [ ] Sie können die Lösung grafisch darstellen.
+```
+
++++
+
+## Das physikalische Modell
+
+Wir betrachten eine Wand aus drei Schichten A, B und C mit den thermischen
+Widerständen $R_A$, $R_B$, $R_C$ in K/W. Auf der linken Seite herrscht die
+bekannte Temperatur $T_{LA}$, auf der rechten Seite $T_{CR}$.
+
+```
+T_LA   |   A   |   B   |   C   |  T_CR
+300 K  |  R_A  |  R_B  |  R_C  |  310 K
+       |       |       |       |
+            T_AB   T_BC
+       <----------  Q  ---------->
+```
+
+Im **stationären Zustand** (keine zeitliche Änderung) ist der Wärmestrom $Q$
+durch alle drei Schichten gleich:
+
+$$Q = Q_A = Q_B = Q_C$$
+
+Das Wärmeübertragungs­gesetz (analog zum Ohmschen Gesetz) lautet für jede
+Schicht:
+
+$$Q_i = \frac{\Delta T_i}{R_i}$$
+
+Damit erhalten wir drei Gleichungen:
+
+$$\frac{T_{LA} - T_{AB}}{R_A} = Q \qquad (1)$$
+
+$$\frac{T_{AB} - T_{BC}}{R_B} = Q \qquad (2)$$
+
+$$\frac{T_{BC} - T_{CR}}{R_C} = Q \qquad (3)$$
+
+Die drei Unbekannten sind: $T_{AB}$, $T_{BC}$ und $Q$.
+
++++
+
+## Vom physikalischen Modell zur Matrixform
+
+Wir bringen die Unbekannten auf die linke Seite und die bekannten Größen
+auf die rechte Seite. Dafür multiplizieren wir jede Gleichung mit dem
+jeweiligen $R_i$:
+
+$$T_{LA} - T_{AB} = R_A \cdot Q \quad\Rightarrow\quad
+T_{AB} + R_A \cdot Q = T_{LA} \qquad (1')$$
+
+$$T_{AB} - T_{BC} = R_B \cdot Q \quad\Rightarrow\quad
+-T_{AB} + T_{BC} + R_B \cdot Q = 0 \qquad (2')$$
+
+$$T_{BC} - T_{CR} = R_C \cdot Q \quad\Rightarrow\quad
+-T_{BC} + R_C \cdot Q = -T_{CR} \qquad (3')$$
+
+Jetzt lesen wir die Koeffizientenmatrix und die rechte Seite ab.
+Der Lösungsvektor ist $\vec{x} = (T_{AB},\, T_{BC},\, Q)^T$:
+
+$$\underbrace{\begin{pmatrix}
++1 &  0 & R_A \\
+-1 & +1 & R_B \\
+ 0 & -1 & R_C
+\end{pmatrix}}_{\mathbf{A}}
+\cdot
+\underbrace{\begin{pmatrix} T_{AB} \\ T_{BC} \\ Q \end{pmatrix}}_{\vec{x}}
+=
+\underbrace{\begin{pmatrix} T_{LA} \\ 0 \\ -T_{CR} \end{pmatrix}}_{\vec{b}}$$
+
+```{admonition} Systematisches Ablesen der Matrixform
+:class: note
+**Rezept:** Jede umgeformte Gleichung liefert eine Zeile von $\mathbf{A}$
+und einen Eintrag in $\vec{b}$. Der Koeffizient der $j$-ten Unbekannten
+in der $i$-ten Gleichung steht in $A_{ij}$. Was auf der rechten Seite
+übrig bleibt, steht in $b_i$. Unbekannte, die in einer Gleichung gar
+nicht vorkommen, erhalten den Koeffizient 0.
+```
+
++++
+
+## Implementierung in NumPy
+
+Jetzt setzen wir die gegebenen Zahlenwerte ein und lösen:
+
+```{code-cell} python
+import numpy as np
+
+# Gegebene Größen
+R_A  = 0.5   # Thermischer Widerstand Schicht A in K/W
+R_B  = 0.3   # Thermischer Widerstand Schicht B in K/W
+R_C  = 0.7   # Thermischer Widerstand Schicht C in K/W
+T_LA = 300.  # Temperatur linke Seite in K
+T_CR = 310.  # Temperatur rechte Seite in K
+```
+
+```{code-cell} python
+# Koeffizientenmatrix: Unbekannte sind [T_AB, T_BC, Q]
+A = np.array([
+    [+1.,  0., R_A],
+    [-1., +1., R_B],
+    [ 0., -1., R_C],
+])
+
+# Rechte Seite
+b = np.array([T_LA, 0., -T_CR])
+
+print('Koeffizientenmatrix A:')
+print(A)
+print(f'\nRechte Seite b: {b}')
+```
+
+```{code-cell} python
+# Lösbarkeitstest
+det_A = np.linalg.det(A)
+print(f'Determinante: {det_A:.4f}')
+
+if np.isclose(det_A, 0.):
+    print('Keine eindeutige Lösung.')
+else:
+    print('Eindeutige Lösung vorhanden.')
+```
+
+```{code-cell} python
+# Lösung
+x = np.linalg.solve(A, b)
+T_AB, T_BC, Q = x
+
+print(f'T_AB = {T_AB:.2f} K   (Grenzfläche A–B)')
+print(f'T_BC = {T_BC:.2f} K   (Grenzfläche B–C)')
+print(f'Q    = {Q:.2f} W    (Wärmestrom)')
+```
+
+```{code-cell} python
+# Probe
+print(f'Probe: {np.allclose(A @ x, b)}')
+```
+
+## Physikalische Interpretation
+
+Das Ergebnis lässt sich direkt überprüfen: Da $T_{CR} > T_{LA}$, fließt
+Wärme von rechts nach links — der Wärmestrom $Q$ ist negativ (die Vorzeichen­
+konvention in unserem Modell definiert positives $Q$ von links nach rechts).
+
+Die Temperatur steigt von links nach rechts monoton an, was physikalisch
+plausibel ist. Den Temperaturabfall über jede Schicht können wir aus dem
+Wärmestrom zurückrechnen:
+
+```{code-cell} python
+delta_T_A = T_AB - T_LA
+delta_T_B = T_BC - T_AB
+delta_T_C = T_CR - T_BC
+
+print(f'Temperaturdifferenz über Schicht A: {delta_T_A:.2f} K')
+print(f'Temperaturdifferenz über Schicht B: {delta_T_B:.2f} K')
+print(f'Temperaturdifferenz über Schicht C: {delta_T_C:.2f} K')
+print(f'Summe (= T_CR - T_LA): {delta_T_A + delta_T_B + delta_T_C:.2f} K')
+```
+
+Schicht C hat den größten thermischen Widerstand ($R_C = 0.7$ K/W) und
+daher den größten Temperaturabfall — analog zur Spannung über dem größten
+Widerstand in einem Gleichstromkreis.
+
+## Visualisierung des Temperaturprofils
+
+Ein Diagramm macht das Ergebnis anschaulich:
+
+```{code-cell} python
+import matplotlib.pyplot as plt
+import matplotlib.style as style
+style.use('seaborn-v0_8')
+
+# Positionen: linke Wand, Grenzfläche A/B, Grenzfläche B/C, rechte Wand
+positionen   = [0,   R_A,        R_A + R_B,        R_A + R_B + R_C]
+temperaturen = [T_LA, T_AB,      T_BC,              T_CR]
+
+fig, ax = plt.subplots(figsize=(8, 5))
+
+ax.plot(positionen, temperaturen,
+        color='#C44E52', linewidth=2.5, marker='o', markersize=8,
+        label='Temperaturprofil')
+
+# Schichtgrenzen einzeichnen
+for pos, name in zip(positionen[1:-1], ['A|B', 'B|C']):
+    ax.axvline(pos, color='gray', linestyle='dashed', linewidth=1)
+    ax.text(pos, T_LA + 0.3, name, ha='center', va='bottom', color='gray')
+
+# Schichtbezeichnungen
+mitten = [(positionen[i] + positionen[i+1]) / 2 for i in range(3)]
+for mitte, name in zip(mitten, ['Schicht A\n(R=0.5)', 'Schicht B\n(R=0.3)', 'Schicht C\n(R=0.7)']):
+    ax.text(mitte, T_LA + 6, name, ha='center', va='center',
+            fontsize=9, color='#4C72B0')
+
+ax.set_xlabel('Thermischer Widerstand (kumuliert) in K/W')
+ax.set_ylabel('Temperatur in K')
+ax.set_title('Temperaturprofil in der Mehrschichtwand')
+ax.legend()
+ax.grid(True)
+
+plt.tight_layout()
+plt.show()
+```
+
+Das lineare Temperaturprofil innerhalb jeder Schicht ist typisch für
+stationäre Wärmeleitung. Die Steigung ist in Schicht C am größten,
+weil dort der Widerstand am höchsten ist.
+
+````{admonition} Mini-Übung
+:class: tip
+Eine Kühlhauswand soll die Innentemperatur von $T_{\text{innen}} = 268$ K
+(−5 °C) bei einer Außentemperatur von $T_{\text{außen}} = 293$ K (20 °C)
+halten. Die Wand besteht aus:
+
+| Schicht | Material       | R (K/W) |
+|---------|----------------|---------|
+| A       | Beton          | 0.2     |
+| B       | Polyurethan-Schaum (Dämmung) | 1.8 |
+| C       | Stahlblech     | 0.05    |
+
+1. Stellen Sie das LGS auf (auf Papier oder als Kommentar) und implementieren
+   Sie es in NumPy. Beachten Sie: Die linke Seite ist jetzt innen
+   ($T_{LA} = T_{\text{innen}}$), die rechte Seite außen.
+2. Lösen Sie das System und geben Sie $T_{AB}$, $T_{BC}$ und $Q$ mit
+   Einheiten aus.
+3. Welche Schicht bewirkt den größten Temperaturabfall? Ist das physikalisch
+   plausibel?
+4. Erstellen Sie das Temperaturprofil als Linienplot.
+````
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip, dropdown
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.style as style
+style.use('seaborn-v0_8')
+
+# Gegebene Größen
+R_A  = 0.2
+R_B  = 1.8
+R_C  = 0.05
+T_LA = 268.   # Innen (kalt)
+T_CR = 293.   # Außen (warm)
+
+# LGS: A·x = b mit x = [T_AB, T_BC, Q]
+A = np.array([[+1., 0., R_A], [-1., +1., R_B], [0., -1., R_C]])
+b = np.array([T_LA, 0., -T_CR])
+
+x = np.linalg.solve(A, b)
+T_AB, T_BC, Q = x
+
+print(f'T_AB = {T_AB:.2f} K  ({T_AB - 273.15:.1f} °C)')
+print(f'T_BC = {T_BC:.2f} K  ({T_BC - 273.15:.1f} °C)')
+print(f'Q    = {Q:.2f} W')
+
+# Temperaturabfall pro Schicht
+print(f'\nTemperaturabfall A: {T_AB - T_LA:.2f} K')
+print(f'Temperaturabfall B: {T_BC - T_AB:.2f} K  ← größter Abfall')
+print(f'Temperaturabfall C: {T_CR - T_BC:.2f} K')
+
+# Plot
+pos  = [0, R_A, R_A+R_B, R_A+R_B+R_C]
+temp = [T_LA, T_AB, T_BC, T_CR]
+
+fig, ax = plt.subplots(figsize=(8, 5))
+ax.plot(pos, temp, color='#4C72B0', linewidth=2.5,
+        marker='o', markersize=8, label='Temperaturprofil')
+ax.set_xlabel('Thermischer Widerstand (kumuliert) in K/W')
+ax.set_ylabel('Temperatur in K')
+ax.set_title('Kühlhauswand – Temperaturprofil')
+ax.legend()
+ax.grid(True)
+plt.tight_layout()
+plt.show()
+```
+
+Der größte Temperaturabfall liegt in Schicht B (Polyurethan-Schaum), weil
+deren Widerstand mit $R_B = 1.8$ K/W bei weitem am größten ist. Das ist
+genau der Sinn einer Wärmedämmung.
+````
+
++++
+
+## Verallgemeinerung: Parameterstudie
+
+In der Ingenieurpraxis fragt man oft: Was passiert, wenn ich die Dämmstärke
+verändere? Wir untersuchen, wie der Wärmestrom $Q$ vom Widerstand $R_B$
+der mittleren Schicht abhängt.
+
+```{code-cell} python
+# Ursprüngliche Parameter
+R_A  = 0.5
+R_C  = 0.7
+T_LA = 300.
+T_CR = 310.
+
+# R_B variieren
+R_B_werte = np.linspace(0.01, 3.0, 200)
+Q_werte   = np.zeros(len(R_B_werte))
+
+for i, R_B in enumerate(R_B_werte):
+    A_i = np.array([[1., 0., R_A], [-1., 1., R_B], [0., -1., R_C]])
+    b_i = np.array([T_LA, 0., -T_CR])
+    x_i = np.linalg.solve(A_i, b_i)
+    Q_werte[i] = x_i[2]   # nur Q interessiert uns
+
+fig, ax = plt.subplots(figsize=(8, 4))
+ax.plot(R_B_werte, Q_werte, color='#C44E52', linewidth=2)
+ax.axhline(0, color='gray', linestyle='dashed', linewidth=1)
+ax.set_xlabel('Thermischer Widerstand R_B in K/W')
+ax.set_ylabel('Wärmestrom Q in W')
+ax.set_title('Einfluss der Dämmstärke auf den Wärmestrom')
+ax.grid(True)
+plt.tight_layout()
+plt.show()
+```
+
+Der Wärmestrom nimmt mit wachsendem Widerstand $R_B$ betragsmäßig ab — eine
+stärkere Dämmung reduziert den Wärmeverlust. Das Vorzeichen bleibt negativ
+(Wärme fließt von rechts nach links), weil $T_{CR} > T_{LA}$.
+
+## Zusammenfassung und Ausblick
+
+Wir haben gezeigt, wie physikalische Gleichgewichtsbedingungen systematisch
+in ein LGS überführt werden: Gleichungen umformen, Unbekannte auf die linke
+Seite, bekannte Größen auf die rechte. Die Koeffizientenmatrix $\mathbf{A}$
+und der Vektor $\vec{b}$ ergeben sich dann direkt durch Ablesen. Mit
+`np.linalg.solve` ist die eigentliche Lösung eine einzige Zeile.
+
+Im nächsten Notebook wenden wir dieselbe Methode auf ein elektrisches
+Netzwerk an: die Wheatstone-Messbrücke. Das System ist größer (6 Unbekannte),
+aber das Prinzip ist identisch.

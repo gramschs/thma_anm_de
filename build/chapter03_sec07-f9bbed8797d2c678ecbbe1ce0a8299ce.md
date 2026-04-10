@@ -1,0 +1,503 @@
+---
+kernelspec:
+  name: python3
+  display_name: 'Python 3'
+---
+
+# 3.7 Optionaler Exkurs: Rechenzeit und Skalierung linearer Gleichungssysteme
+
+In den vorigen Kapiteln haben wir `np.linalg.solve()` für kleine Systeme
+mit 3 oder 6 Unbekannten eingesetzt. In der Ingenieurpraxis entstehen bei
+der Finite-Elemente-Simulation eines Motorblocks oder der CFD-Analyse einer
+Turbinenschaufel Systeme mit Tausenden oder Millionen von Unbekannten.
+*Wie wächst die Rechenzeit mit der Systemgröße, und ab wann stößt
+`np.linalg.solve` an seine Grenzen?*
+
+## Lernziele
+
+```{admonition} Lernziele
+:class: attention
+* [ ] Sie können zufällige, eindeutig lösbare LGS als Testprobleme
+  erzeugen.
+* [ ] Sie können mit `time.time()` die Rechenzeit einer Operation messen.
+* [ ] Sie können Rechenzeit als Funktion der Systemgröße berechnen und
+  darstellen.
+* [ ] Sie können die beobachtete Skalierung qualitativ mit der
+  theoretischen $O(n^3)$-Komplexität der LU-Zerlegung in Beziehung
+  setzen.
+* [ ] Sie können mit `try` und `except` einen `LinAlgError` abfangen,
+  wenn `np.linalg.solve` eine singuläre Matrix erhält.
+```
+
++++
+
+## Zufällige, eindeutig lösbare Gleichungssysteme erzeugen
+
+Für die Zeitmessung brauchen wir Testprobleme: Matrizen $\mathbf{A}$ und
+Vektoren $\vec{b}$ beliebiger Größe, die ein eindeutig lösbares System
+bilden. Eine zufällige Matrix ist fast immer invertierbar; die
+Wahrscheinlichkeit, zufällig eine singuläre Matrix zu erzeugen, ist
+praktisch null. Wir sichern die Invertierbarkeit dennoch ab, indem wir
+**Diagonaldominanz** erzwingen:
+
+```{code-cell} python
+import numpy as np
+import time
+import matplotlib.pyplot as plt
+import matplotlib.style as style
+style.use('seaborn-v0_8')
+
+def erzeuge_lgs(n, seed=None):
+    """Erzeugt ein zufälliges, eindeutig lösbares LGS der Größe n×n.
+
+    Parameter:
+    n : int
+        Dimension des Gleichungssystems
+    seed : int oder None
+        Zufallsseed für Reproduzierbarkeit (gleicher seed -> gleiche Matrix)
+
+    Rückgabe:
+    A : ndarray, Shape (n, n)
+        Koeffizientenmatrix
+    b : ndarray, Shape (n,)
+        Rechte Seite
+    """
+    rng = np.random.default_rng(seed)
+
+    # --- Zufällige Matrix erzeugen ---
+    # standard_normal: Einträge normalverteilt, Mittelwert 0, Standardabweichung 1
+    # Typische Werte liegen zwischen -3 und +3
+    A = rng.standard_normal((n, n))
+
+    # --- Diagonaldominanz erzwingen ---
+    # Eine Matrix heißt diagonaldominant, wenn jedes Diagonalelement dem
+    # Betrag nach größer ist als die Summe aller anderen Einträge in
+    # derselben Zeile. Diagonaldominante Matrizen sind immer invertierbar.
+    #
+    # Wir addieren n * I (Einheitsmatrix), damit jedes Diagonalelement um n
+    # wächst. Der Faktor n statt einer festen Zahl ist wichtig: Die typische
+    # Zeilensumme einer n×n-Zufallsmatrix wächst wie sqrt(n), also muss der
+    # Zuwachs auf der Diagonale ebenfalls mit n skalieren.
+    A += n * np.eye(n)
+
+    # --- Zufälliger rechter Seiten-Vektor ---
+    b = rng.standard_normal(n)
+
+    return A, b
+
+
+### --- Test für n = 5 ---
+
+A_test, b_test = erzeuge_lgs(5, seed=42)
+print(f'Form von A:   {A_test.shape}')
+print(f'Determinante: {np.linalg.det(A_test):.2f}')
+print(f'Rang:         {np.linalg.matrix_rank(A_test)}')
+```
+
+```{admonition} Diagonaldominanz
+:class: note
+Eine Matrix heißt **diagonaldominant**, wenn jedes Diagonalelement dem
+Betrag nach größer ist als die Summe aller anderen Elemente in derselben
+Zeile. Diagonaldominante Matrizen sind immer invertierbar. Durch Addition
+von $n \cdot \mathbf{I}$ fügen wir $n$ zu jedem Diagonalelement hinzu,
+was bei standardnormalverteilten Einträgen (typische Werte zwischen $-3$
+und $+3$, typische Zeilensumme $\propto \sqrt{n}$) für alle realistischen
+$n$ ausreicht.
+```
+
+```{admonition} Mini-Übung
+:class: tip
+
+1. Warum skaliert der Zuwachs auf der Diagonale mit $n$ statt mit einem
+   festen Wert wie $10$? Überlegen Sie: Wie groß ist die typische
+   Zeilensumme einer $1000 \times 1000$-Matrix mit standardnormalverteilten
+   Einträgen, und würde ein Zuwachs von $10$ noch ausreichen?
+
+2. Was ändert sich, wenn Sie `seed=42` durch `seed=0` ersetzen? Rufen Sie
+   `erzeuge_lgs(5, seed=42)` zweimal auf. Liefern beide Aufrufe dieselbe
+   Matrix?
+```
+
+```{code-cell} python
+
+### Hier Ihren Code eingeben
+
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+**Zu Frage 1:** Die Zeilensumme wächst mit $\sqrt{n}$ (Summe von $n$
+unabhängigen Zufallsvariablen mit Standardabweichung 1). Für $n = 1000$
+ist das ca. $\sqrt{1000} \approx 32$. Ein fester Zuwachs von $10$ wäre
+nicht ausreichend, um die Diagonale zu dominieren. Mit dem Zuwachs $n =
+1000$ überwiegt das Diagonalelement bei weitem.
+
+**Zu Frage 2:** Mit `seed=0` entsteht eine andere Matrix als mit
+`seed=42`, weil der Startzustand des Zufallsgenerators verschieden ist.
+Zwei Aufrufe mit demselben `seed` liefern dagegen immer dieselbe Matrix:
+
+```python
+import numpy as np
+
+A1, _ = erzeuge_lgs(5, seed=42)
+A2, _ = erzeuge_lgs(5, seed=42)
+print('Gleich (seed=42):', np.allclose(A1, A2))   # True
+
+A3, _ = erzeuge_lgs(5, seed=0)
+print('Gleich (42 vs 0):', np.allclose(A1, A3))   # False
+```
+
+Der `seed` legt den Startzustand des Zufallsgenerators fest und macht
+Ergebnisse reproduzierbar, was beim Testen und Debuggen hilfreich ist.
+````
+
++++
+
+## Rechenzeit messen
+
+Wir schreiben eine Funktion, die ein LGS der Größe $n$ erzeugt, löst und
+die dafür benötigte Zeit zurückgibt. `time.time()` gibt die aktuelle
+Systemzeit in Sekunden zurück; die Differenz zweier Messungen liefert die
+vergangene Zeit:
+
+```{code-cell} python
+def messe_rechenzeit(n):
+    """Erzeugt ein zufälliges n×n-LGS, löst es und gibt die
+    Rechenzeit in Sekunden zurück.
+
+    Parameter
+    n : int
+        Dimension des Gleichungssystems
+
+    Rückgabe
+    t_elapsed : float
+        Rechenzeit in Sekunden
+    """
+    A, b = erzeuge_lgs(n)
+
+    # --- Zeitmessung ---
+    # time.time() gibt Systemzeit in Sekunden zurück.
+    # Differenz der beiden Aufrufe = Laufzeit von np.linalg.solve
+    t_start   = time.time()
+    x         = np.linalg.solve(A, b)
+    t_elapsed = time.time() - t_start
+
+    return t_elapsed
+
+
+# --- Einzelmessung als Schnelltest ---
+
+t_test = messe_rechenzeit(500)
+print(f'Rechenzeit für n = 500: {t_test*1000:.2f} ms')
+```
+
++++
+
+## Parameterstudie: Rechenzeit vs. Systemgröße
+
+Wir messen die Rechenzeit für ausgewählte Systemgrößen von $n = 100$ bis
+$n = 3000$:
+
+```{code-cell} python
+# --- Systemgrößen und Ergebnis-Arrays vorbereiten ---
+
+n_werte = np.array([100, 250, 500, 750, 1000, 1500, 2000, 3000])
+t_werte = np.zeros(len(n_werte))
+
+# --- Ein LGS pro Systemgröße lösen und Zeit messen ---
+print('Messe Rechenzeiten ...')
+for i, n in enumerate(n_werte):
+    t_werte[i] = messe_rechenzeit(n)
+    print(f'  n = {n:5d}: {t_werte[i]*1000:.1f} ms')
+
+print('Fertig.')
+```
+
+```{admonition} Hinweis zur Rechenzeit
+:class: note
+Die gemessenen Zeiten hängen von der Hardware ab und variieren bei jedem
+Durchlauf leicht, weil das Betriebssystem andere Prozesse parallel
+ausführt. Für eine zuverlässigere Messung würden wir jeden Punkt mehrfach
+messen und den Mittelwert nehmen. Für die qualitative Analyse der
+Skalierung reicht eine Einzelmessung aus.
+```
+
++++
+
+## Visualisierung
+
+```{code-cell} python
+# --- Theoretische O(n³)-Referenz ---
+# Skaliert auf den ersten Messpunkt: t_ref(n) = t(n0) * (n/n0)^3
+# In der log-log-Darstellung erscheint ein Potenzgesetz t ~ n^alpha als
+# Gerade; die Steigung gibt den Exponenten alpha an.
+
+t_ref = t_werte[0] * (n_werte / n_werte[0])**3
+
+fig, ax = plt.subplots(figsize=(8, 5))
+
+ax.loglog(n_werte, t_werte, color='#4C72B0', linewidth=2,
+          marker='o', markersize=7, label='gemessen')
+ax.loglog(n_werte, t_ref, color='#DD8452', linewidth=2,
+          linestyle='dashed', label='$O(n^3)$-Referenz')
+
+ax.set_xlabel('Systemgröße $n$')
+ax.set_ylabel('Rechenzeit in s')
+ax.set_title('Rechenzeit von np.linalg.solve (log-log-Skala)')
+ax.legend()
+ax.grid(True, which='both')
+
+plt.tight_layout()
+plt.show()
+```
+
+```{admonition} Mini-Übung
+:class: tip
+
+1. Was bedeutet es, dass die gemessene Kurve nahezu parallel zur
+   gestrichelten Referenzlinie verläuft? Erklären Sie in einem Satz,
+   ohne Code auszuführen.
+2. Verdoppeln wir die Systemgröße von $n$ auf $2n$: Um welchen Faktor
+   steigt die Rechenzeit bei $O(n^3)$? Berechnen Sie den Faktor im Kopf.
+3. Ersetzen Sie `ax.loglog` durch `ax.plot`. Wie verändert sich die
+   Darstellung, und warum ist die log-log-Skala für diesen Vergleich
+   besser geeignet?
+```
+
+```{code-cell} python
+# Hier Ihren Code eingeben
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+**Zu Frage 1:** Parallele Kurven in der log-log-Darstellung bedeuten
+dasselbe Potenzgesetz. Die gemessene Kurve folgt also ebenfalls
+$t \propto n^3$, nur mit einem anderen Vorfaktor, der durch Hardware und
+Implementierungsdetails bestimmt wird.
+
+**Zu Frage 2:** Bei $O(n^3)$ gilt
+$t(2n) = c \cdot (2n)^3 = 8 \cdot c \cdot n^3 = 8 \cdot t(n)$.
+Die Rechenzeit steigt um den Faktor $2^3 = 8$.
+
+**Zu Frage 3:**
+```python
+fig, ax = plt.subplots(figsize=(8, 5))
+ax.plot(n_werte, t_werte, marker='o', label='gemessen')
+ax.plot(n_werte, t_ref, linestyle='dashed', label='O(n³)-Referenz')
+ax.set_xlabel('Systemgröße n')
+ax.set_ylabel('Rechenzeit in s')
+ax.legend()
+plt.tight_layout()
+plt.show()
+```
+
+In der linearen Darstellung dominiert der steile Anstieg bei großen $n$
+das gesamte Bild; Unterschiede bei kleinen $n$ sind kaum sichtbar. Die
+log-log-Skala zeigt den gesamten Bereich gleichmäßig und macht den
+Exponenten (die Steigung der Geraden) direkt ablesbar.
+````
+
++++
+
+## Skalierungsexponent bestimmen
+
+Wir schätzen den Skalierungsexponenten numerisch durch lineare Regression
+im log-log-Raum. Wir verwenden nur die obere Hälfte der Messpunkte, weil
+bei kleinen $n$ Overhead-Effekte (Funktionsaufruf, Speicherzuweisung) den
+Exponenten verfälschen können:
+
+```{code-cell} python
+# --- Steigung im log-log-Raum bestimmen ---
+# log(t) = alpha * log(n) + const  <=>  t ~ n^alpha
+# np.polyfit bestimmt alpha als Steigung der linearen Regressionsgeraden.
+log_n = np.log(n_werte)
+log_t = np.log(t_werte)
+
+# Nur obere Hälfte der Datenpunkte: weniger Overhead-Einfluss bei großen n
+mitte    = len(n_werte) // 2
+steigung = np.polyfit(log_n[mitte:], log_t[mitte:], 1)[0]
+
+print(f'Geschätzter Skalierungsexponent: {steigung:.2f}')
+print(f'Theoretischer Wert (LU-Zerlegung): 3.00')
+```
+
+Der gemessene Exponent liegt nahe bei 3. Das bestätigt die theoretische
+$O(n^3)$-Komplexität der LU-Zerlegung, die `np.linalg.solve` intern
+verwendet. Verdoppeln wir die Systemgröße, steigt die Rechenzeit also
+etwa um den Faktor $2^3 = 8$.
+
+```{admonition} Mini-Übung
+:class: tip
+Schätzen Sie auf Basis Ihrer Messung die Rechenzeit für $n = 10\,000$
+und diskutieren Sie die Konsequenzen für große Ingenieurprobleme.
+
+
+1. Berechnen Sie die erwartete Rechenzeit mit
+
+   $t(n) \approx t(n_0) \cdot (n / n_0)^3$, wobei $n_0 = 3000$ und
+   $t(n_0)$ in `t_werte[-1]` steht.
+
+2. Wie lange würde das dauern?
+3. Sind Finite-Elemente-Simulationen mit $n = 10^6$ Unbekannten mit
+
+   `np.linalg.solve()` denkbar? Recherchieren Sie die Stichwörter
+   *sparse matrix* und *iterativer Löser*.
+```
+
+```{code-cell} python
+
+### Hier Ihren Code eingeben
+
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+import numpy as np
+
+# t_werte[-1] stammt aus der Parameterstudie oben (n0 = 3000)
+n0    = 3000
+t0    = t_werte[-1]   # in Sekunden
+
+n_neu = 10000
+t_neu = t0 * (n_neu / n0)**3
+
+print(f'Gemessene Rechenzeit für n = {n0}: {t0:.2f} s')
+print(f'Geschätzte Rechenzeit für n = {n_neu}: {t_neu:.0f} s '
+      f'({t_neu/60:.1f} min)')
+```
+
+Typische Ausgabe: Für $n = 10\,000$ ergibt sich eine Rechenzeit von etwa
+30 bis 60 Sekunden. Für $n = 10^6$ wäre die Rechenzeit astronomisch lang;
+`np.linalg.solve()` ist für solche Systeme völlig ungeeignet. In der
+Praxis nutzt man iterative Löser wie CG (Conjugate Gradient) oder GMRES,
+die auf die Dünnbesetztheit der Matrizen in typischen Ingenieurproblemen
+zugeschnitten sind und nur $O(n)$ bis $O(n \log n)$ Operationen benötigen.
+In Python stehen sie über `scipy.sparse.linalg` zur Verfügung.
+````
+
++++
+
+## Fehler abfangen mit `try` und `except`
+
+`np.linalg.solve` setzt voraus, dass die Koeffizientenmatrix invertierbar
+ist. Übergibt man eine singuläre Matrix, bricht das Programm mit einem
+`LinAlgError` ab. Wie in Kapitel 3.1 gezeigt, können wir die
+Invertierbarkeit vorab mit der Determinante prüfen. Manchmal ist das aber
+nicht praktisch, zum Beispiel wenn viele Matrizen automatisch verarbeitet
+werden. In solchen Fällen hilft `try/except`: Wir lassen `solve` laufen
+und reagieren gezielt auf den Fehler, ohne das gesamte Programm zu
+unterbrechen.
+
+Das allgemeine Muster ist immer dasselbe: Im `try`-Block steht der
+riskante Code, im `except`-Block die Reaktion auf den Fehler:
+
+```{code-cell} python
+import numpy as np
+
+### --- Beispiel 1: einfacher Laufzeitfehler ---
+
+### Ohne try/except würde das Programm hier abbrechen.
+
+try:
+    ergebnis = 1 / 0
+except ZeroDivisionError:
+    print('Fehler abgefangen: Division durch null.')
+
+print('Das Programm läuft danach normal weiter.')
+
+### --- Beispiel 2: singuläre Matrix ---
+
+### np.linalg.solve wirft einen LinAlgError, wenn die Matrix singulär ist.
+
+### Hier ist Zeile 2 = 2 * Zeile 1, also det(A) = 0.
+
+A_sing = np.array([[1, 2], [2, 4]], dtype=float)
+b_sing = np.array([3., 6.])
+
+try:
+    x_sing = np.linalg.solve(A_sing, b_sing)
+    print('Lösung:', x_sing)
+except np.linalg.LinAlgError:
+    print('Fehler abgefangen: Matrix ist singulär, keine eindeutige Lösung.')
+```
+
+```{admonition} Mini-Übung
+:class: tip
+
+1. Was für ein Objekt gibt `np.linalg.solve` zurück: eine Zahl, ein
+
+   1D-Array oder eine Matrix? Überprüfen Sie es mit `print(type(x))` und
+   `print(x.shape)` für ein kleines LGS Ihrer Wahl.
+
+2. Ersetzen Sie `b_sing = np.array([3., 6.])` durch
+
+   `b_sing = np.array([3., 7.])`. Ändert sich das Verhalten? Überlegen
+   Sie zuerst im Kopf: Hängt der Fehler von `b` oder von `A` ab?
+
+3. Formulieren Sie in einem Satz, warum der Determinanten-Test aus
+
+   Kapitel 3.1 sinnvoller ist als `try/except`, wenn Sie die Lösbarkeit
+   eines Systems vorab prüfen wollen.
+```
+
+```{code-cell} python
+
+### Hier Ihren Code eingeben
+
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+import numpy as np
+
+# Frage 1: Typ und Form des Ergebnisses
+A_klein = np.array([[2., 1.], [1., 3.]])
+b_klein = np.array([5., 10.])
+x_klein = np.linalg.solve(A_klein, b_klein)
+
+print(type(x_klein))    # <class 'numpy.ndarray'>
+print(x_klein.shape)    # (2,) -> 1D-Array mit 2 Einträgen
+
+# Frage 2: b_sing ändern hat keinen Einfluss auf den Fehler
+A_sing = np.array([[1, 2], [2, 4]], dtype=float)
+for b_test in [np.array([3., 6.]), np.array([3., 7.])]:
+    try:
+        x_test = np.linalg.solve(A_sing, b_test)
+        print('Lösung:', x_test)
+    except np.linalg.LinAlgError:
+        print(f'b = {b_test}: Matrix singulär, kein Ergebnis.')
+```
+
+`solve` gibt stets ein 1D-Array zurück. Bei Frage 2 ändert sich nichts:
+Der Fehler hängt allein von `A` ab, nicht von `b`. Eine singuläre Matrix
+hat für kein `b` eine eindeutige Lösung. Der Determinanten-Test ist
+sinnvoller, weil er erklärt und quantifiziert, warum das System nicht
+lösbar ist; `try/except` zeigt nur, dass ein Fehler aufgetreten ist,
+ohne eine Ursache zu nennen.
+````
+
++++
+
+## Zusammenfassung
+
+Die Rechenzeit von `np.linalg.solve()` wächst mit der dritten Potenz der
+Systemgröße: $O(n^3)$. Das folgt direkt aus der LU-Zerlegung, die intern
+verwendet wird. Für kleine und mittlere Systeme (bis einige Tausend
+Unbekannte) ist das kein Problem. Für die großen Systeme der
+Ingenieurpraxis, etwa bei der Finite-Elemente-Methode, der
+Strömungssimulation oder der Strukturmechanik, brauchen wir
+spezialisierte iterative Löser, die die Dünnbesetztheit der Matrizen
+ausnutzen.
+
+Mit `try/except` können wir Laufzeitfehler gezielt abfangen. Für LGS
+bleibt der Determinanten-Test aus Kapitel 3.1 die erste Wahl, wenn wir
+die Lösbarkeit vorab prüfen wollen.
+
+Im abschließenden Kapitel 3.8 finden sich Übungsaufgaben, die alle
+Konzepte aus diesem Kapitel zusammenführen.
