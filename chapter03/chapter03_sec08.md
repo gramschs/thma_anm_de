@@ -173,7 +173,7 @@ Ziel einer Wärmedämmung.
 ````{admonition} Übung 3.8 (✩✩)
 :class: tip
 In Notebook 3.4 und 3.5 haben wir die Wheatstone-Messbrücke mit
-$R_1 = R_2 = R_3 = 100\,\Omega$, $R_L = 10\,\Omega$ und $U_0 = 10$ V
+$R_1 = R_2 = R_3 = 100\,\Omega$, $R_B = 10\,\Omega$ und $U_0 = 10$ V
 analysiert. In dieser Übung erweitern wir die Analyse.
 
 a) Implementieren Sie die vollständige Funktion `solve_bridge_full(R4)`,
@@ -181,7 +181,7 @@ a) Implementieren Sie die vollständige Funktion `solve_bridge_full(R4)`,
    $\vec{x} = (I_0, I_1, I_2, I_3, I_4, I)^T$ zurückgibt.
 
 b) Berechnen Sie für $R_4 = 150\,\Omega$ alle sechs Ströme und geben Sie
-   sie mit Einheiten aus. Überprüfen Sie die Knotenregel an Knoten B
+   sie mit Einheiten aus. Überprüfen Sie die Knotenregel an Knoten K2
    ($I_1 = I + I_2$) numerisch.
 
 c) Berechnen Sie für $R_4 = 150\,\Omega$ die Verlustleistung in jedem
@@ -203,7 +203,7 @@ Strukturieren Sie Ihren Code mit EVA-Kommentaren.
 import numpy as np
 
 # Eingabe
-R1 = 100.; R2 = 100.; R3 = 100.; RL = 10.; U0 = 10.
+R1 = 100.; R2 = 100.; R3 = 100.; RB = 10.; U0 = 10.
 R4 = 150.
 
 def solve_bridge_full(R4):
@@ -214,7 +214,7 @@ def solve_bridge_full(R4):
         [ 0.,  0.,  0., +1.,  -1.,  +1.],
         [ 0.,  R1,  R2,  0.,   0.,   0.],
         [ 0.,  0.,  0.,  R3,   R4,   0.],
-        [ 0.,  R1,  0., -R3,   0.,  -RL],
+        [ 0.,  R1,  0., -R3,   0.,  -RB],
     ])
     b = np.array([0., 0., 0., U0, U0, 0.])
     return np.linalg.solve(A, b)
@@ -229,14 +229,14 @@ print(f'I1 = {I1*1000:.4f} mA  (durch R1)')
 print(f'I2 = {I2*1000:.4f} mA  (durch R2)')
 print(f'I3 = {I3*1000:.4f} mA  (durch R3)')
 print(f'I4 = {I4*1000:.4f} mA  (durch R4)')
-print(f'I  = {I*1000:.4f} mA  (Querstrom durch RL)')
+print(f'I  = {I*1000:.4f} mA   (Querstrom durch RB)')
 
-print(f'\nKnotenregel B: I1 = I + I2 -> {np.isclose(I1, I + I2)}')
+print(f'\nKnotenregel K2: I1 = I + I2 -> {np.isclose(I1, I + I2)}')
 
 # Verarbeitung Teil c
-widerstaende = [R1, R2, R3, R4, RL]
+widerstaende = [R1, R2, R3, R4, RB]
 stroeme      = [I1, I2, I3, I4, I]
-namen        = ['R1', 'R2', 'R3', 'R4', 'RL']
+namen        = ['R1', 'R2', 'R3', 'R4', 'RB']
 
 P_gesamt = 0.
 for name, R, Ii in zip(namen, widerstaende, stroeme):
@@ -253,27 +253,27 @@ print(f'Energieerhaltung: {np.isclose(P_gesamt, P_quelle)}')
 ```
 ````
 
-````{admonition} Übung 3.9 (✩✩✩) Mini-Projekt: Brücke mit variablem R_L
+````{admonition} Übung 3.9 (✩✩✩) Mini-Projekt: Brücke mit variablem R_B
 :class: tip
 In Notebook 3.5 haben wir $R_4$ variiert und $I(R_4)$ untersucht. In
-dieser Übung variieren wir stattdessen den Brückenwiderstand $R_L$ bei
+dieser Übung variieren wir stattdessen den Brückenwiderstand $R_B$ bei
 festem $R_4 = 120\,\Omega$ (Messwert, unbekannt von der abgeglichenen
 Brücke bei $R_4^* = 100\,\Omega$).
 
 **Teil 1: Parameterstudie**
 
-Berechnen Sie $I(R_L)$ und $P_L(R_L) = R_L \cdot I^2$ für
-$R_L \in [1\,\Omega, 500\,\Omega]$. Zeigen Sie beide Grössen in einem
+Berechnen Sie $I(R_B)$ und $P_B(R_B) = R_B \cdot I^2$ für
+$R_B \in [1\,\Omega, 500\,\Omega]$. Zeigen Sie beide Grössen in einem
 Subplot übereinander.
 
 **Teil 2: Optimaler Brückenwiderstand**
 
-Für welchen Wert von $R_L$ wird die Verlustleistung $P_L$ maximal? Bestimmen
+Für welchen Wert von $R_B$ wird die Verlustleistung $P_B$ maximal? Bestimmen
 Sie diesen Wert numerisch mit `np.argmax` und markieren Sie ihn im Diagramm.
 
 **Teil 3: Interpretation**
 
-Der Wert von $R_L$, bei dem $P_L$ maximal wird, ist bekannt als
+Der Wert von $R_B$, bei dem $P_B$ maximal wird, ist bekannt als
 Leistungsanpassung: Die maximale Leistung wird an den Verbraucher
 übertragen, wenn sein Widerstand gleich dem Innenwiderstand der Quelle ist.
 Berechnen Sie den Innenwiderstand der Quelle, gesehen vom Brückenwiderstand
@@ -281,7 +281,7 @@ aus (Thevenin-Widerstand), analytisch:
 
 $$R_{Th} = \frac{R_1 R_2}{R_1 + R_2} + \frac{R_3 R_4}{R_3 + R_4}$$
 
-Vergleichen Sie $R_{Th}$ mit dem numerisch gefundenen optimalen $R_L$.
+Vergleichen Sie $R_{Th}$ mit dem numerisch gefundenen optimalen $R_B$.
 
 Strukturieren Sie Ihren Code mit EVA-Kommentaren.
 ````
@@ -302,57 +302,57 @@ style.use('seaborn-v0_8')
 # Eingabe
 R1 = 100.; R2 = 100.; R3 = 100.; R4 = 120.; U0 = 10.
 
-def solve_bridge_RL(RL):
-    """Querstrom I und Verlustleistung PL für gegebenes RL."""
+def solve_bridge_RB(RB):
+    """Querstrom I und Verlustleistung PB für gegebenes RB."""
     A = np.array([
         [+1., -1.,  0., -1.,   0.,   0.],
         [ 0., +1., -1.,  0.,   0.,  -1.],
         [ 0.,  0.,  0., +1.,  -1.,  +1.],
         [ 0.,  R1,  R2,  0.,   0.,   0.],
         [ 0.,  0.,  0.,  R3,   R4,   0.],
-        [ 0.,  R1,  0., -R3,   0.,  -RL],
+        [ 0.,  R1,  0., -R3,   0.,  -RB],
     ])
     b  = np.array([0., 0., 0., U0, U0, 0.])
     x  = np.linalg.solve(A, b)
     I  = x[5]
-    PL = RL * I**2
-    return I, PL
+    PB = RB * I**2
+    return I, PB
 
 # Verarbeitung: Parameterstudie
-RL_werte = np.linspace(1., 500., 1000)
-I_werte  = np.zeros(len(RL_werte))
-PL_werte = np.zeros(len(RL_werte))
+RB_werte = np.linspace(1., 500., 1000)
+I_werte  = np.zeros(len(RB_werte))
+PB_werte = np.zeros(len(RB_werte))
 
-for i, RL in enumerate(RL_werte):
-    I_werte[i], PL_werte[i] = solve_bridge_RL(RL)
+for i, RB in enumerate(RB_werte):
+    I_werte[i], PB_werte[i] = solve_bridge_RB(RB)
 
 # Verarbeitung: Optimum
-idx_max  = np.argmax(PL_werte)
-RL_opt   = RL_werte[idx_max]
-PL_max   = PL_werte[idx_max]
+idx_max  = np.argmax(PB_werte)
+RB_opt   = RB_werte[idx_max]
+PB_max   = PB_werte[idx_max]
 
 # Thevenin-Widerstand
 R_Th = (R1 * R2) / (R1 + R2) + (R3 * R4) / (R3 + R4)
 
 # Ausgabe
-print(f'Optimales RL (numerisch): {RL_opt:.1f} Ohm')
+print(f'Optimales RB (numerisch): {RB_opt:.1f} Ohm')
 print(f'Thevenin-Widerstand:      {R_Th:.1f} Ohm')
-print(f'Übereinstimmung: {np.isclose(RL_opt, R_Th, atol=5.)}')
+print(f'Übereinstimmung: {np.isclose(RB_opt, R_Th, atol=5.)}')
 
 fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(9, 7), sharex=True)
 
-ax[0].plot(RL_werte, I_werte * 1000, color='#4C72B0', linewidth=2)
+ax[0].plot(RB_werte, I_werte * 1000, color='#4C72B0', linewidth=2)
 ax[0].set_ylabel('Querstrom I in mA')
-ax[0].set_title('Messbrücke: Querstrom und Verlustleistung als Funktion von R_L')
+ax[0].set_title('Messbrücke: Querstrom und Verlustleistung als Funktion von R_B')
 ax[0].grid(True)
 
-ax[1].plot(RL_werte, PL_werte * 1000, color='#DD8452', linewidth=2,
+ax[1].plot(RB_werte, PB_werte * 1000, color='#DD8452', linewidth=2,
            label='Verlustleistung')
-ax[1].scatter([RL_opt], [PL_max * 1000], color='#C44E52', s=100, zorder=5,
-              label=f'Maximum bei R_L = {RL_opt:.1f} Ohm')
-ax[1].axvline(RL_opt, color='#C44E52', linestyle='dashed', linewidth=1.5)
-ax[1].set_xlabel('R_L in Ohm')
-ax[1].set_ylabel('Verlustleistung P_L in mW')
+ax[1].scatter([RB_opt], [PB_max * 1000], color='#C44E52', s=100, zorder=5,
+              label=f'Maximum bei R_B = {RB_opt:.1f} Ohm')
+ax[1].axvline(RB_opt, color='#C44E52', linestyle='dashed', linewidth=1.5)
+ax[1].set_xlabel('R_B in Ohm')
+ax[1].set_ylabel('Verlustleistung P_B in mW')
 ax[1].legend()
 ax[1].grid(True)
 

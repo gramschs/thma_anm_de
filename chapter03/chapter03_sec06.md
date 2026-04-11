@@ -9,7 +9,7 @@ kernelspec:
 In Kapitel 3.5 haben wir die Funktion `solve_bridge(R4)` entwickelt, die
 den Querstrom $I$ für einen einzelnen Widerstandswert berechnet. Jetzt
 nutzen wir sie systematisch: Wir variieren $R_4$ über einen großen Bereich,
-berechnen $I(R_4)$ und die Verlustleistung $P_L(R_4) = R_L \cdot I^2$ und
+berechnen $I(R_4)$ und die Verlustleistung $P_B(R_4) = R_B \cdot I^2$ und
 stellen die Ergebnisse grafisch dar. Das Ziel ist, den Abgleichwert
 $R_4^*$ zu finden, bei dem $I = 0$ gilt, und ihn mit der analytischen
 Formel aus Kapitel 3.5 zu vergleichen.
@@ -20,7 +20,7 @@ Formel aus Kapitel 3.5 zu vergleichen.
 :class: attention
 * [ ] Sie können eine Parameterstudie mit einer `for`-Schleife über
   viele $R_4$-Werte durchführen und die Ergebnisse in Arrays speichern.
-* [ ] Sie können $I(R_4)$ und $P_L(R_4)$ in einem Subplot mit
+* [ ] Sie können $I(R_4)$ und $P_B(R_4)$ in einem Subplot mit
   gemeinsamer x-Achse darstellen.
 * [ ] Sie können die Nullstelle von $I(R_4)$ numerisch mit
   `np.argmin` bestimmen und physikalisch erklären.
@@ -46,11 +46,11 @@ style.use('seaborn-v0_8')
 R1 = 100.   # Ohm
 R2 = 100.   # Ohm
 R3 = 100.   # Ohm
-RL = 10.    # Ohm
+RB = 10.    # Ohm
 U0 = 10.    # V
 
-def solve_bridge(R4, R1=100., R2=100., R3=100., RL=10., U0=10.):
-    """Berechnet den Querstrom I durch R_L für gegebenes R4.
+def solve_bridge(R4, R1=100., R2=100., R3=100., RB=10., U0=10.):
+    """Berechnet den Querstrom I durch R_B für gegebenes R4.
 
     Parameter
     ----------
@@ -58,7 +58,7 @@ def solve_bridge(R4, R1=100., R2=100., R3=100., RL=10., U0=10.):
         Variabler Messwiderstand in Ohm
     R1, R2, R3 : float
         Feste Brückenwiderstände in Ohm (Default: 100)
-    RL : float
+    RB : float
         Brückenwiderstand in Ohm (Default: 10)
     U0 : float
         Speisespannung in V (Default: 10)
@@ -75,7 +75,7 @@ def solve_bridge(R4, R1=100., R2=100., R3=100., RL=10., U0=10.):
         [ 0.,  0.,  0., +1.,  -1.,  +1.],   # K3
         [ 0.,  R1,  R2,  0.,   0.,   0.],   # M1
         [ 0.,  0.,  0.,  R3,   R4,   0.],   # M2
-        [ 0.,  R1,  0., -R3,   0.,  -RL],   # M3
+        [ 0.,  R1,  0., -R3,   0.,  -RB],   # M3
     ])
     b = np.array([0., 0., 0., U0, U0, 0.])
     return np.linalg.solve(A, b)[5]
@@ -91,22 +91,22 @@ parallel in zwei Arrays:
 # R4-Werte und Ergebnis-Arrays vorbereiten
 R4_werte = np.linspace(1., 2000., 500)
 I_werte  = np.zeros(len(R4_werte))
-PL_werte = np.zeros(len(R4_werte))
+PB_werte = np.zeros(len(R4_werte))
 
 # --- Parameterstudie: ein LGS pro R4-Wert ---
 for i, R4 in enumerate(R4_werte):
     I_i         = solve_bridge(R4)
     I_werte[i]  = I_i
-    PL_werte[i] = RL * I_i**2   # Verlustleistung P_L = R_L * I^2
+    PB_werte[i] = RB * I_i**2   # Verlustleistung P_B = R_B * I^2
 
 print(f'Minimaler Querstrom:      {I_werte.min()*1000:.4f} mA')
 print(f'Maximaler Querstrom:      {I_werte.max()*1000:.4f} mA')
-print(f'Maximale Verlustleistung: {PL_werte.max()*1000:.4f} mW')
+print(f'Maximale Verlustleistung: {PB_werte.max()*1000:.4f} mW')
 ```
 
 ## Visualisierung
 
-Wir zeigen $I(R_4)$ und $P_L(R_4)$ übereinander. `sharex=True` koppelt
+Wir zeigen $I(R_4)$ und $P_B(R_4)$ übereinander. `sharex=True` koppelt
 die x-Achsen beider Subplots: Ein Zoom im oberen Diagramm wirkt sich
 automatisch auf das untere aus, und die x-Achsenbeschriftung erscheint
 nur einmal unten:
@@ -123,10 +123,10 @@ ax[0].set_title('Messbrücke: Querstrom und Verlustleistung als Funktion von $R_
 ax[0].grid(True)
 
 # --- Unteres Diagramm: Verlustleistung ---
-ax[1].plot(R4_werte, PL_werte * 1000,  # Umrechnung W -> mW
+ax[1].plot(R4_werte, PB_werte * 1000,  # Umrechnung W -> mW
            linewidth=2)
 ax[1].set_xlabel('$R_4$ in $\\Omega$')
-ax[1].set_ylabel('Verlustleistung $P_L$ in mW')
+ax[1].set_ylabel('Verlustleistung $P_B$ in mW')
 ax[1].grid(True)
 
 plt.tight_layout()
@@ -142,10 +142,10 @@ bevor Sie weiteren Code ausführen.
    Diagramm ab?
 2. Für welche $R_4$-Werte ist $I$ positiv, für welche negativ? Erklären
    Sie das Vorzeichen physikalisch: Was bedeutet ein Vorzeichenwechsel
-   für die Stromrichtung durch $R_L$?
-3. $P_L = R_L \cdot I^2$ hat bei $R_4^*$ ein Minimum. Warum ist dieses
-   Minimum gleich null, und warum kann $P_L$ nicht negativ werden?
-   Skizzieren Sie den qualitativen Verlauf von $P_L$ in der Nähe
+   für die Stromrichtung durch $R_B$?
+3. $P_B = R_B \cdot I^2$ hat bei $R_4^*$ ein Minimum. Warum ist dieses
+   Minimum gleich null, und warum kann $P_B$ nicht negativ werden?
+   Skizzieren Sie den qualitativen Verlauf von $P_B$ in der Nähe
    der Nullstelle, bevor Sie nachsehen.
 ```
 
@@ -158,13 +158,13 @@ erkennbar am Schnittpunkt der Kurve mit der gestrichelten Nulllinie.
 **Zu Frage 2:** Für $R_4 < 100\,\Omega$ ist $I$ negativ (Strom fließt
 entgegen der definierten Zählpfeilrichtung), für $R_4 > 100\,\Omega$
 positiv. Das Vorzeichen zeigt, in welche Richtung der Querstrom durch
-$R_L$ fließt: Links von $R_4^*$ überwiegt die Spannung auf der rechten
+$R_B$ fließt: Links von $R_4^*$ überwiegt die Spannung auf der rechten
 Seite der Brücke, rechts davon die linke Seite.
 
-**Zu Frage 3:** $P_L = R_L \cdot I^2$ ist immer nichtnegativ, weil ein
+**Zu Frage 3:** $P_B = R_B \cdot I^2$ ist immer nichtnegativ, weil ein
 Quadrat nie negativ werden kann. Bei $R_4^*$ gilt $I = 0$, also
-$P_L(R_4^*) = 0$: Das ist das globale Minimum. Für alle anderen
-$R_4$-Werte ist $I \neq 0$ und damit $P_L > 0$. Der Verlauf ist
+$P_B(R_4^*) = 0$: Das ist das globale Minimum. Für alle anderen
+$R_4$-Werte ist $I \neq 0$ und damit $P_B > 0$. Der Verlauf ist
 parabelförmig um die Nullstelle.
 ```
 
@@ -209,14 +209,14 @@ ax[0].set_title('Messbrücke: Nullstelle bei $R_4^*$')
 ax[0].legend()
 ax[0].grid(True)
 
-ax[1].plot(R4_werte, PL_werte * 1000, linewidth=2,
-           label='Verlustleistung $P_L$')
+ax[1].plot(R4_werte, PB_werte * 1000, linewidth=2,
+           label='Verlustleistung $P_B$')
 ax[1].axvline(R4_null, color='tab:red', linestyle='dashed', linewidth=1.5,
               label=f'$R_4^* = {R4_null:.0f}\\,\\Omega$')
-ax[1].scatter([R4_null], [PL_werte[idx_null]*1000],
+ax[1].scatter([R4_null], [PB_werte[idx_null]*1000],
               color='tab:red', s=80, zorder=5)
 ax[1].set_xlabel('$R_4$ in $\\Omega$')
-ax[1].set_ylabel('Verlustleistung $P_L$ in mW')
+ax[1].set_ylabel('Verlustleistung $P_B$ in mW')
 ax[1].legend()
 ax[1].grid(True)
 
@@ -261,7 +261,7 @@ import matplotlib.pyplot as plt
 
 R4_fest = 150.   # Ohm, fester Messwiderstand
 
-def solve_bridge_R3(R3_var, R1=100., R2=100., R4_fest=150., RL=10., U0=10.):
+def solve_bridge_R3(R3_var, R1=100., R2=100., R4_fest=150., RB=10., U0=10.):
     """Querstrom I bei variablem R3 und festem R4 = 150 Ohm."""
     # Gleiche Struktur wie solve_bridge, aber R3_var und R4_fest vertauscht
     A = np.array([
@@ -270,7 +270,7 @@ def solve_bridge_R3(R3_var, R1=100., R2=100., R4_fest=150., RL=10., U0=10.):
         [ 0.,  0.,  0.,       +1.,     -1.,  +1.],
         [ 0.,  R1,  R2,        0.,      0.,   0.],
         [ 0.,  0.,  0.,   R3_var, R4_fest,    0.],
-        [ 0.,  R1,  0.,  -R3_var,      0.,   -RL],
+        [ 0.,  R1,  0.,  -R3_var,      0.,   -RB],
     ])
     b = np.array([0., 0., 0., U0, U0, 0.])
     return np.linalg.solve(A, b)[5]
@@ -316,7 +316,7 @@ Das numerische Ergebnis stimmt mit der analytischen Formel überein.
 Wir haben `solve_bridge` in einer Schleife über 500 $R_4$-Werte
 aufgerufen und die Ergebnisse als NumPy-Arrays gespeichert. Der Subplot
 mit `sharex=True` erlaubt den direkten Vergleich von $I(R_4)$ und
-$P_L(R_4)$. Die Nullstelle bei $R_4^* = 100\,\Omega$, numerisch über
+$P_B(R_4)$. Die Nullstelle bei $R_4^* = 100\,\Omega$, numerisch über
 `np.argmin` gefunden, bestätigt das Wheatstonesche Abgleichprinzip und
 stimmt mit der analytischen Formel überein.
 

@@ -17,7 +17,7 @@ Referenzwiderstände; der vierte, $R_4$, ist der **Messwiderstand**, dessen
 Wert sich durch eine physikalische Einwirkung ändert, zum Beispiel durch
 mechanische Dehnung bei einem Dehnungsmessstreifen oder durch Temperatur
 bei einem NTC-Widerstand. Wenn alle vier Widerstände in einem bestimmten
-Verhältnis stehen, ist der Querstrom $I$ durch den Brückenwiderstand $R_L$
+Verhältnis stehen, ist der Querstrom $I$ durch den Brückenwiderstand $R_B$
 exakt null: Die Brücke ist **abgeglichen**. Jede Abweichung von $R_4$ vom
 Sollwert erzeugt einen messbaren Querstrom, aus dem sich der aktuelle Wert
 von $R_4$ zurückrechnen lässt.
@@ -48,9 +48,9 @@ $R_4$ ist die Brücke abgeglichen?*
 ## Die Schaltung
 
 Die Brückenschaltung besteht aus vier Widerständen und einem
-Brückenwiderstand $R_L$. Von oben fließt der Gesamtstrom $I_0$; er teilt
+Brückenwiderstand $R_B$. Von oben fließt der Gesamtstrom $I_0$; er teilt
 sich in einen linken Zweig ($I_1$, $I_2$) und einen rechten Zweig
-($I_3$, $I_4$) auf. Der Querstrom $I$ fließt durch $R_L$.
+($I_3$, $I_4$) auf. Der Querstrom $I$ fließt durch $R_B$.
 
 ```{figure} pics/wheatstone_bruecke.svg
 :alt: Wheatstone-Brückenschaltung mit eingezeichneten Stromrichtungen
@@ -58,20 +58,20 @@ sich in einen linken Zweig ($I_1$, $I_2$) und einen rechten Zweig
 :width: 75%
 
 Wheatstone‑Brückenschaltung mit den vier Brückenwiderständen $R_1, R_2, R_3,
-R_4$ und dem Brückenwiderstand $R_L$. Die Pfeile geben die definierten
+R_4$ und dem Brückenwiderstand $R_B$. Die Pfeile geben die definierten
 Zählpfeilrichtungen der Ströme $I_0, I_1, I_2, I_3, I_4$ und des Querstroms $I$
-durch $R_L$ an; sie bilden die Grundlage für die Formulierung der Knoten‑
+durch $R_B$ an; sie bilden die Grundlage für die Formulierung der Knoten‑
 (K1-K3) und Maschengleichungen (M1-M3). Die Spannungsquelle $U_0$ speist die
 Brücke von rechts, mit Pluspol oben. (Quelle: eigene Abbildung; Lizenz [CC BY-SA
 4.0](https://creativecommons.org/licenses/by-sa/4.0))
 ```
 
 Gegebene Größen:
-$R_1 = R_2 = R_3 = 100\,\Omega$, $R_L = 10\,\Omega$, $U_0 = 10\,\text{V}$.
+$R_1 = R_2 = R_3 = 100\,\Omega$, $R_B = 10\,\Omega$, $U_0 = 10\,\text{V}$.
 Der Messwiderstand $R_4$ ist variabel.
 
 Der Lösungsvektor enthält alle sechs Ströme:
-$\vec{x} = (I_0,\, I_1,\, I_2,\, I_3,\, I_4,\, I)^T$.
+$\vec{x} = (I_0,\, I_1,\, I_2,\, I_3,\, I_4,\, I)^{\top}$.
 
 +++
 
@@ -102,7 +102,7 @@ R1 = 100.   # Ohm
 R2 = 100.   # Ohm
 R3 = 100.   # Ohm
 R4 = 200.   # Ohm  (Testwert: Messwiderstand vom Sollwert abgewichen)
-RL = 10.    # Ohm  (Brückenwiderstand)
+RB = 10.    # Ohm  (Brückenwiderstand)
 U0 = 10.    # V
 
 # Unbekannte: x = [I0, I1, I2, I3, I4, I]  (6 Ströme, 6 Gleichungen)
@@ -147,7 +147,7 @@ positiven Beitrag; entgegen der Stromrichtung einen negativen:
 \begin{align}
 R_1 I_1 + R_2 I_2                   &= U_0 \tag{M1} \\
 R_3 I_3 + R_4 I_4                   &= U_0 \tag{M2} \\
-R_1 I_1 - R_3 I_3 - R_L I           &= 0   \tag{M3}
+R_1 I_1 - R_3 I_3 - R_B I           &= 0   \tag{M3}
 \end{align}
 
 ```{code-cell} python
@@ -155,7 +155,7 @@ R_1 I_1 - R_3 I_3 - R_L I           &= 0   \tag{M3}
 # Maschengleichung: Summe der Spannungsabfälle = Quellenspannung
 # Spannungsabfall: U = R * I (Ohmsches Gesetz)
 # Widerstand in Stromrichtung durchlaufen:        +R * I
-# Widerstand entgegen der Stromrichtung:           -R * I
+# Widerstand entgegen der Stromrichtung:          -R * I
 #
 # M1  linke Masche (Uhrzeigersinn: Quelle -> R1 -> R2):
 #     R1*I1 + R2*I2 = U0
@@ -165,12 +165,12 @@ R_1 I_1 - R_3 I_3 - R_L I           &= 0   \tag{M3}
 #     R3*I3 + R4*I4 = U0
 #     Koeffizienten:                               [ 0,   0,   0,  R3,  R4,   0]  | b = U0
 #
-# M3  Quermasche (Uhrzeigersinn: R1 -> RL -> R3, keine Quelle):
+# M3  Quermasche (Uhrzeigersinn: R1 -> RB -> R3, keine Quelle):
 #     R1 in Richtung I1:  +R1*I1
-#     RL entgegen I:      -RL*I   (wir laufen entgegen der definierten I-Richtung)
+#     RB entgegen I:      -RB*I   (wir laufen entgegen der definierten I-Richtung)
 #     R3 entgegen I3:     -R3*I3
-#     R1*I1 - R3*I3 - RL*I = 0
-#     Koeffizienten:                               [ 0,  R1,   0, -R3,   0, -RL]  | b = 0
+#     R1*I1 - R3*I3 - RB*I = 0
+#     Koeffizienten:                               [ 0,  R1,   0, -R3,   0, -RB]  | b = 0
 
 A = np.array([
     [+1., -1.,  0., -1.,   0.,   0.],   # K1
@@ -178,7 +178,7 @@ A = np.array([
     [ 0.,  0.,  0., +1.,  -1.,  +1.],   # K3
     [ 0.,  R1,  R2,  0.,   0.,   0.],   # M1
     [ 0.,  0.,  0.,  R3,   R4,   0.],   # M2
-    [ 0.,  R1,  0., -R3,   0.,  -RL],   # M3
+    [ 0.,  R1,  0., -R3,   0.,  -RB],   # M3
 ])
 b = np.array([0., 0., 0., U0, U0, 0.])
 
@@ -246,7 +246,7 @@ ist auch $b[5] = 0$.
 ```python
 import numpy as np
 
-R1 = 100.; R2 = 100.; R3 = 100.; R4 = 50.; RL = 10.; U0 = 10.
+R1 = 100.; R2 = 100.; R3 = 100.; R4 = 50.; RB = 10.; U0 = 10.
 
 A = np.array([
     [+1., -1.,  0., -1.,   0.,   0.],
@@ -254,7 +254,7 @@ A = np.array([
     [ 0.,  0.,  0., +1.,  -1.,  +1.],
     [ 0.,  R1,  R2,  0.,   0.,   0.],
     [ 0.,  0.,  0.,  R3,   R4,   0.],
-    [ 0.,  R1,  0., -R3,   0.,  -RL],
+    [ 0.,  R1,  0., -R3,   0.,  -RB],
 ])
 b = np.array([0., 0., 0., U0, U0, 0.])
 x = np.linalg.solve(A, b)
@@ -276,8 +276,8 @@ Das Muster aus der Zelle oben verallgemeinern wir zu einer Funktion.
 $R_4$ wird als Parameter übergeben; alles andere bleibt gleich:
 
 ```{code-cell} python
-def solve_bridge(R4, R1=100., R2=100., R3=100., RL=10., U0=10.):
-    """Berechnet den Querstrom I durch den Brückenwiderstand R_L.
+def solve_bridge(R4, R1=100., R2=100., R3=100., RB=10., U0=10.):
+    """Berechnet den Querstrom I durch den Brückenwiderstand R_B.
 
     Parameter
     ----------
@@ -285,7 +285,7 @@ def solve_bridge(R4, R1=100., R2=100., R3=100., RL=10., U0=10.):
         Variabler Messwiderstand in Ohm
     R1, R2, R3 : float
         Feste Brückenwiderstände in Ohm (Default: 100)
-    RL : float
+    RB : float
         Brückenwiderstand in Ohm (Default: 10)
     U0 : float
         Speisespannung in V (Default: 10)
@@ -293,7 +293,7 @@ def solve_bridge(R4, R1=100., R2=100., R3=100., RL=10., U0=10.):
     Rückgabe
     --------
     I : float
-        Querstrom durch R_L in Ampere, oder None bei singulärer Matrix
+        Querstrom durch R_B in Ampere, oder None bei singulärer Matrix
     """
     # Koeffizientenmatrix: gleiche Struktur wie oben, R4 als Parameter
     A = np.array([
@@ -302,7 +302,7 @@ def solve_bridge(R4, R1=100., R2=100., R3=100., RL=10., U0=10.):
         [ 0.,  0.,  0., +1.,  -1.,  +1.],   # K3: I3 - I4 + I  = 0
         [ 0.,  R1,  R2,  0.,   0.,   0.],   # M1: R1*I1 + R2*I2 = U0
         [ 0.,  0.,  0.,  R3,   R4,   0.],   # M2: R3*I3 + R4*I4 = U0
-        [ 0.,  R1,  0., -R3,   0.,  -RL],   # M3: R1*I1 - R3*I3 - RL*I = 0
+        [ 0.,  R1,  0., -R3,   0.,  -RB],   # M3: R1*I1 - R3*I3 - RB*I = 0
     ])
     b = np.array([0., 0., 0., U0, U0, 0.])
 
@@ -320,7 +320,7 @@ I_test  = solve_bridge(R4_test)
 
 print(f'R4 = {R4_test:.0f} Ohm')
 print(f'Querstrom        I   = {I_test*1000:.4f} mA')
-print(f'Verlustleistung  P_L = {10. * I_test**2 * 1000:.4f} mW')
+print(f'Verlustleistung  P_B = {RB * I_test**2 * 1000:.4f} mW')
 ```
 
 ````{admonition} Mini-Übung
@@ -353,7 +353,7 @@ import numpy as np
 # Bei R1=R2=R3=R4=100 Ohm teilen beide Hälfte U0 symmetrisch auf.
 # Spannung in der Mitte links:  U0 * R2/(R1+R2) = 5 V
 # Spannung in der Mitte rechts: U0 * R4/(R3+R4) = 5 V
-# Keine Spannungsdifferenz über R_L -> kein Querstrom: I = 0
+# Keine Spannungsdifferenz über R_B -> kein Querstrom: I = 0
 
 # Frage 2
 I_abgeglichen = solve_bridge(100.)
@@ -367,7 +367,7 @@ A = np.array([
     [ 0.,  0.,  0., +1.,  -1.,  +1.],
     [ 0.,  R1,  R2,  0.,   0.,   0.],
     [ 0.,  0.,  0.,  R3,   R4,   0.],
-    [ 0.,  R1,  0., -R3,   0.,  -RL],
+    [ 0.,  R1,  0., -R3,   0.,  -RB],
 ])
 b = np.array([0., 0., 0., U0, U0, 0.])
 x = np.linalg.solve(A, b)
@@ -396,7 +396,7 @@ die Gleichungen jetzt aus der Knotenregel und der Maschenregel stammen.
 Als Funktion `solve_bridge(R4)` verpackt, lässt sich das System für
 beliebige $R_4$-Werte auswerten. Im nächsten Kapitel nutzen wir diese
 Funktion für eine vollständige Parameterstudie: Wir berechnen $I(R_4)$
-und die Verlustleistung $P_L(R_4)$ für viele Werte und stellen die
+und die Verlustleistung $P_B(R_4)$ für viele Werte und stellen die
 Ergebnisse in einem Diagramm dar. Dort sehen wir auch die Nullstelle
 bei $R_4^* = 100\,\Omega$ und können sie mit der analytischen
 Abgleichbedingung vergleichen.
