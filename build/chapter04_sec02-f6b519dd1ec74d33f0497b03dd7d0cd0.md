@@ -1,0 +1,675 @@
+---
+kernelspec:
+  name: python3
+  display_name: 'Python 3'
+---
+
+# 4.2 Fachwerke: Steifigkeitsmatrix und Lösung
+
+In Kapitel 4.1 haben wir das Fachwerk als Datensatz aufgebaut: Knotenkoordinaten,
+Konnektivitätsmatrix und Kraftvektor. Jetzt berechnen wir die **globale
+Steifigkeitsmatrix** und lösen das LGS
+
+\begin{equation*}
+\mathbf{K} \cdot \vec{u} = \vec{F}
+\end{equation*}
+
+nach dem Verschiebungsvektor $\vec{u}$ auf. Das Vorgehen ist dasselbe wie in
+Kapitel 3: Matrix aufstellen, Lösbarkeit prüfen, `np.linalg.solve` aufrufen,
+Probe durchführen. Neu ist nur, wie die Matrix aus den Stäben aufgebaut wird.
+
+## Lernziele
+
+```{admonition} Lernziele
+:class: attention
+* [ ] Sie können die globale Steifigkeitsmatrix $\mathbf{K}$ aus den
+  Elementsteifigkeitsmatrizen der einzelnen Stäbe zusammensetzen.
+* [ ] Sie können das LGS durch Elimination der Lagerknoten reduzieren
+  und mit `np.linalg.solve` lösen.
+* [ ] Sie können aus dem Verschiebungsvektor die Lagerkräfte zurückrechnen.
+* [ ] Sie können die Stabkraft (Zug oder Druck) für jeden Stab berechnen
+  und physikalisch interpretieren.
+```
+
+## Die Steifigkeitsmatrix aufbauen
+
+Wir bauen das Fachwerk aus Kapitel 4.1 noch einmal als Datensatz auf.
+Zusätzlich kommen jetzt die **Materialeigenschaften** ins Spiel: der
+Elastizitätsmodul, der Stabdurchmesser und der daraus berechnete Querschnitt.
+Aus Geometrie und Material berechnen wir anschließend die globale
+Steifigkeitsmatrix $\mathbf{K}$.
+
+```{admonition} Wie bauen wir eine Steifigkeitsmatrix auf?
+:class: note
+Der Aufbau einer Steifigkeitsmatrix erfolgt in 5 Schritten:
+1. *Fachwerk-Setup*: Knotenkoordinaten, Konnektivität, Kräfte und
+   Materialeigenschaften definieren.
+2. *Geometrie eines einzelnen Stabs*: Länge und Winkel berechnen.
+3. *Stabsteifigkeit*: Federkonstante $k = E A / L$ bestimmen.
+4. *Elementsteifigkeitsmatrix*: $\mathbf{k}_{ij} =
+   k\,\mathbf{e}\mathbf{e}^\top$ für einen einzelnen Stab aufstellen.
+5. *Assemblierung*: Alle Elementsteifigkeitsmatrizen in die globale Matrix
+   $\mathbf{K}$ eintragen.
+```
+
+**Schritt 1 - Fachwerk-Setup:**
+Wir übernehmen die Geometrie, Lagerung und Kräfte aus Kapitel 4.1. Neu hinzu
+kommen der **Elastizitätsmodul** $E$ und der **Querschnitt** $A$.
+
+```{code-cell} python
+import numpy as np
+
+# --- Materialeigenschaften ---
+elastizitaetsmodul = 2.1e11                          # Stahl in N/m²
+durchmesser        = 1.0e-2                          # Stabdurchmesser in m
+querschnitt        = np.pi * 0.25 * durchmesser**2   # Kreisquerschnitt in m²
+
+# --- Fachwerk-Setup (wie in Kapitel 4.1) ---
+knoten_pos = np.array([
+    [0.0,  1.0,  2.0],   # x-Koordinaten in m
+    [0.0,  1.0,  0.0],   # y-Koordinaten in m
+])
+anzahl_knoten = knoten_pos.shape[1]
+
+lager_indizes = [0, 2]
+
+verbindung = np.zeros((anzahl_knoten, anzahl_knoten))
+verbindung[0, 1] = 1
+verbindung[1, 2] = 1
+verbindung = verbindung + verbindung.T
+
+kraft_knoten = np.zeros((anzahl_knoten, 2))
+kraft_knoten[1, 1] = -5000.                          # 5000 N nach unten an Knoten 1
+kraft_vektor = kraft_knoten.flatten()
+```
+
+**Schritt 2 - Geometrie eines einzelnen Stabs:**
+Bevor wir die Schleife über alle Stäbe schreiben, rechnen wir die nötige
+Geometrie an einem konkreten Beispiel durch: Stab 0-1. Wir berechnen den
+**Differenzvektor**, die **Länge** $L$ und den **Winkel** $\varphi$
+gegenüber der $x$-Achse.
+
+```{figure} pics/chap04_stabgeometrie.svg
+
+Geometrie von Stab 0-1: Der Differenzvektor zeigt von Knoten 0 nach Knoten 1
+und hat die Komponenten $\Delta x$ und $\Delta y$. Daraus ergeben sich die
+Stablänge $L = \|\Delta\mathbf{r}\|$ und der Winkel $\varphi$ gegenüber der
+$x$-Achse. Stab 1-2 ist grau dargestellt, da er in diesem Schritt nicht im
+Fokus steht. (Quelle: eigene Abbildung; Lizenz [CC BY-SA
+4.0](https://creativecommons.org/licenses/by-sa/4.0))
+```
+
+```{code-cell} python
+# Stab 0-1: Geometrie berechnen
+i, j = 0, 1
+
+differenz   = knoten_pos[:, j] - knoten_pos[:, i]     # Vektor von i nach j
+staeblaenge = np.linalg.norm(differenz)               # Länge L in m
+winkel      = np.arctan2(differenz[1], differenz[0])  # Winkel φ in rad
+
+# Ausgabe
+print(f"Stab {i}-{j}:")
+print(f"  Differenzvektor : {differenz} m")
+print(f"  Länge L         : {staeblaenge:.4f} m")
+print(f"  Winkel φ        : {np.degrees(winkel):.1f}°")
+```
+
+Der Winkel $\varphi$ beschreibt, wie der Stab im globalen Koordinatensystem
+liegt. Er bestimmt, wie die Stabkräfte später auf $x$- und $y$-Richtung
+aufgeteilt werden.
+
+**Schritt 3 - Stabsteifigkeit:**
+Ein gerader Stab verhält sich entlang seiner Längsachse wie eine lineare Feder.
+Die **Stabsteifigkeit** $k$ gibt an, wie viel Kraft pro Meter Längenänderung
+entsteht:
+
+\begin{equation*}
+k = \frac{E\,A}{L}.
+\end{equation*}
+
+```{figure} pics/chap04_federanalogie.svg
+
+Analogie zwischen einem geraden Stab und einer linearen Feder: Beide reagieren
+auf eine Kraft $F$ mit einer Dehnung $\Delta L$, die proportional zu $F$ ist.
+Die Federkonstante des Stabs ist $k = EA/L$: Je größer der Elastizitätsmodul
+$E$ oder der Querschnitt $A$, desto steifer der Stab; je länger der Stab,
+desto nachgiebiger. (Quelle: eigene Abbildung; Lizenz [CC BY-SA
+4.0](https://creativecommons.org/licenses/by-sa/4.0))
+```
+
+```{code-cell} python
+# Stabsteifigkeit k = E * A / L für Stab 0-1
+staebsteifigkeit = elastizitaetsmodul * querschnitt / staeblaenge
+
+# Ausgabe
+print(f"Stabsteifigkeit k (Stab {i}-{j}): {staebsteifigkeit:.4e} N/m")
+```
+
+Je kürzer und dicker ein Stab, desto größer seine Steifigkeit, genau wie
+bei einer Schraubenfeder.
+
+```{admonition} Mini-Übung
+:class: tip
+Stab 0-1 hat die Länge $\sqrt{2}\,\text{m}$ und die berechnete Steifigkeit
+`staebsteifigkeit`. Überlegen Sie zuerst im Kopf:
+1. Um welchen Faktor ändert sich $k$, wenn der Durchmesser von $1\,\text{cm}$
+   auf $2\,\text{cm}$ verdoppelt wird?
+2. Überprüfen Sie Ihre Antwort mit Code.
+```
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+durchmesser_neu     = 2.0e-2
+querschnitt_neu     = np.pi * 0.25 * durchmesser_neu**2
+steifigkeit_neu     = elastizitaetsmodul * querschnitt_neu / staeblaenge
+
+print(f"k (d = 1 cm): {staebsteifigkeit:.4e} N/m")
+print(f"k (d = 2 cm): {steifigkeit_neu:.4e} N/m")
+print(f"Faktor:       {steifigkeit_neu / staebsteifigkeit:.1f}")
+```
+
+Der Querschnitt wächst quadratisch mit dem Durchmesser ($A = \pi d^2 / 4$),
+daher vervierfacht sich $k$ bei doppeltem Durchmesser.
+````
+
+**Schritt 4 - Elementsteifigkeitsmatrix eines einzelnen Stabs:**
+Der Stab ist nur entlang seiner eigenen Achse steif. Diese Richtung beschreiben
+wir durch den **Einheitsvektor**
+
+\begin{equation*}
+\vec{e} =
+\begin{pmatrix} \cos\varphi \\ \sin\varphi \end{pmatrix}.
+\end{equation*}
+
+```{figure} pics/chap04_projektion.svg
+
+Die Verschiebung $\vec{u}_j$ an Knoten $j$ wird in zwei Anteile zerlegt:
+Die Komponente $u^{\parallel}$ entlang der Stabachse $\vec{e}$ (orange) dehnt
+oder staucht den Stab und erzeugt die Stabkraft
+$\vec{F}_{ij} = k\,u^{\parallel}\,\vec{e}$. Die senkrechte Komponente
+$u^{\perp}$ (grau) dreht den Stab leicht, ändert seine Länge nicht und
+leistet keinen Beitrag zur Stabkraft. Der gestrichelte Stab zeigt die
+verformte Lage. (Quelle: eigene Abbildung; Lizenz [CC BY-SA
+4.0](https://creativecommons.org/licenses/by-sa/4.0))
+```
+
+Die Elementsteifigkeitsmatrix leiten wir in drei Schritten her:
+
+1. **Projizieren**: Die Relativverschiebung $\vec{u}_j - \vec{u}_i$ der
+   beiden Stabendknoten wird auf die Stabachse projiziert. Der parallele
+   Anteil beschreibt die Dehnung des Stabs:
+   \begin{equation*}
+   u^{\parallel} = \vec{e}^\top (\vec{u}_j - \vec{u}_i).
+   \end{equation*}
+   In der Abbildung ist Knoten $i$ gelagert ($\vec{u}_i = \vec{0}$),
+   sodass dort $u^{\parallel} = \vec{e}^\top \vec{u}_j$ gilt.
+2. **Kraft berechnen**: Aus der Dehnung $u^{\parallel}$ folgt die
+   Stabkraft in Richtung $\vec{e}$:
+   \begin{equation*}
+   \vec{F}_{ij} = k\,u^{\parallel}\,\vec{e}
+                = k\,\vec{e}\,\bigl(\vec{e}^\top (\vec{u}_j - \vec{u}_i)\bigr).
+   \end{equation*}
+3. **Zurückverteilen**: Wir schreiben das Ergebnis in Matrixform. Das
+   Produkt $k\,\vec{e}\vec{e}^\top$ ist die **Elementsteifigkeitsmatrix**:
+   Sie projiziert die Relativverschiebung auf die Stabachse und verteilt
+   die entstehende Kraft wieder auf $x$- und $y$-Richtung:
+   \begin{equation*}
+   \mathbf{k}_{ij}
+   = k\,\vec{e}\vec{e}^\top
+   = k
+   \begin{pmatrix}
+   \cos^2\varphi            & \cos\varphi\,\sin\varphi \\
+   \cos\varphi\,\sin\varphi & \sin^2\varphi
+   \end{pmatrix}.
+   \end{equation*}
+
+Im Code entsprechen `cos_w` und `sin_w` den Komponenten von $\vec{e}$;
+`k_element` ist direkt $k\,\vec{e}\vec{e}^\top$.
+
+```{code-cell} python
+# Einheitsvektor entlang der Stabachse
+cos_w = np.cos(winkel)
+sin_w = np.sin(winkel)
+
+# Elementsteifigkeitsmatrix k_element = k * e * e^T
+k_element = staebsteifigkeit * np.array([
+    [cos_w**2,       sin_w * cos_w],
+    [sin_w * cos_w,  sin_w**2     ],
+])
+
+# Ausgabe
+print(f"Elementsteifigkeitsmatrix k_element (Stab {i}-{j}) in kN/mm:")
+print(np.round(k_element * 1e-3, 3))
+```
+
+Die Matrix `k_element` ist symmetrisch und positiv semidefinit: Der
+Diagonaleintrag $k\cos^2\varphi$ gibt die Steifigkeit in $x$-Richtung an,
+$k\sin^2\varphi$ die in $y$-Richtung. Der Nebendiagonaleintrag
+$k\cos\varphi\sin\varphi$ beschreibt die Kopplung zwischen beiden Richtungen.
+
+**Schritt 5 - Assemblierung zur globalen Steifigkeitsmatrix:**
+Wir wiederholen Schritte 2-4 in einer Schleife über alle Stabpaare und tragen
+jede Elementsteifigkeitsmatrix an der richtigen Stelle in die globale Matrix
+$\mathbf{K}$ ein. Die **Diagonalblöcke** werden addiert (der Knoten wird
+steifer), die **Nebendiagonalblöcke** beschreiben die Kopplung zwischen den
+Knoten.
+
+```{figure} pics/chap04_blockstruktur.svg
+
+Blockstruktur der globalen Steifigkeitsmatrix $\mathbf{K}$: Die
+**Diagonalblöcke** $\mathbf{K}_{00}$, $\mathbf{K}_{11}$, $\mathbf{K}_{22}$
+(dunkelblau) enthalten die aufsummierten Elementsteifigkeitsmatrizen aller
+an den jeweiligen Knoten angrenzenden Stäbe. Die **Nebendiagonalblöcke**
+$\mathbf{K}_{01}$, $\mathbf{K}_{10}$, $\mathbf{K}_{12}$, $\mathbf{K}_{21}$
+(hellblau) beschreiben die Kopplung zwischen verbundenen Knoten. Die
+**Nullblöcke** $\mathbf{K}_{02}$ und $\mathbf{K}_{20}$ (grau) zeigen, dass
+zwischen Knoten 0 und Knoten 2 kein Stab existiert. Jeder Block hat die
+Dimension $2 \times 2$, weil jeder Knoten zwei Freiheitsgrade ($x$ und $y$)
+besitzt. (Quelle: eigene Abbildung; Lizenz [CC BY-SA
+4.0](https://creativecommons.org/licenses/by-sa/4.0))
+```
+
+Und nun folgt die Umsetzung in Python-Code.
+
+```{code-cell} python
+# --- Globale Steifigkeitsmatrix: (2*anzahl_knoten) x (2*anzahl_knoten) ---
+steifigkeit_global = np.zeros((2 * anzahl_knoten, 2 * anzahl_knoten))
+
+for i in range(anzahl_knoten):
+    for j in range(i + 1, anzahl_knoten):
+        if verbindung[i, j]:
+            # Schritt 2: Geometrie
+            differenz        = knoten_pos[:, j] - knoten_pos[:, i]
+            staeblaenge      = np.linalg.norm(differenz)
+            winkel           = np.arctan2(differenz[1], differenz[0])
+
+            # Schritt 3: Stabsteifigkeit
+            staebsteifigkeit = elastizitaetsmodul * querschnitt / staeblaenge
+
+            # Schritt 4: Elementsteifigkeitsmatrix
+            cos_w     = np.cos(winkel)
+            sin_w     = np.sin(winkel)
+            k_element = staebsteifigkeit * np.array([
+                [cos_w**2,       sin_w * cos_w],
+                [sin_w * cos_w,  sin_w**2     ],
+            ])
+
+            # Schritt 5: In globale Matrix eintragen
+            steifigkeit_global[2*i : 2*(i+1), 2*i : 2*(i+1)] += k_element  # Diagonalblock i
+            steifigkeit_global[2*j : 2*(j+1), 2*j : 2*(j+1)] += k_element  # Diagonalblock j
+            steifigkeit_global[2*i : 2*(i+1), 2*j : 2*(j+1)] -= k_element  # Kopplung i→j
+            steifigkeit_global[2*j : 2*(j+1), 2*i : 2*(i+1)] -= k_element  # Kopplung j→i
+
+print("Globale Steifigkeitsmatrix K (in kN/mm):")
+print(np.round(steifigkeit_global * 1e-3, 3))
+```
+
+Die Kommentare im Code verweisen auf die jeweiligen Schritte, damit der
+Zusammenhang zwischen dem konkreten Beispiel aus Schritten 2-4 und der Schleife
+sichtbar bleibt.
+
+````{admonition} Mini-Übung
+:class: tip
+1. `steifigkeit_global` hat die Dimension $6 \times 6$. Warum genau 6
+   und nicht 3? Begründen Sie ohne Code.
+2. Rufen Sie `np.linalg.det(steifigkeit_global)` auf. Was ergibt sich,
+   und warum ist das erwartet? Überlegen Sie zuerst, was physikalisch
+   passiert, wenn keine Lager gesetzt sind.
+3. Der Block `steifigkeit_global[2:4, 2:4]` enthält die Freiheitsgrade
+   von Knoten 1. Geben Sie diesen Block aus. Sind die beiden
+   Diagonaleinträge gleich oder verschieden, und warum ist das für dieses
+   Fachwerk plausibel?
+````
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+# Frage 2
+print(f"det(K) = {np.linalg.det(steifigkeit_global):.2e}")
+
+# Frage 3
+print("K[2:4, 2:4] in kN/mm:")
+print(np.round(steifigkeit_global[2:4, 2:4] * 1e-3, 3))
+```
+
+Die Matrix hat die Dimension $6 \times 6$, weil jeder der 3 Knoten zwei
+Freiheitsgrade ($x$ und $y$) besitzt: $3 \times 2 = 6$.
+
+Ohne Lager kann das Fachwerk als Starrkörper beliebig verschoben werden.
+Das LGS hat dann unendlich viele Lösungen, die Matrix ist singulär, und
+ihre Determinante ist null.
+
+Die beiden Diagonaleinträge von `K[2:4, 2:4]` sind gleich, weil die Geometrie
+symmetrisch ist: Stab 0-1 und Stab 1-2 haben denselben Betrag des Winkels
+(gespiegelt), sodass sich die $x$- und $y$-Anteile der Steifigkeit genau
+aufheben und identische Diagonalwerte entstehen.
+````
+
+## Lager einbauen, lösen und Lagerkräfte berechnen
+
+Die globale Steifigkeitsmatrix $\mathbf{K}$ ist ohne Lager singulär: das
+Fachwerk könnte als Starrkörper beliebig verschoben werden. Wir müssen daher
+die Lagerknoten aus dem LGS entfernen, bevor wir es lösen können. Das
+geschieht in fünf Schritten.
+
+```{admonition} Wie lösen wir das LGS?
+:class: note
+1. *Freie Freiheitsgrade bestimmen*: Lagerknoten ausschließen, DOF-Indizes
+   der freien Knoten sammeln.
+2. *LGS reduzieren*: Steifigkeitsmatrix und Kraftvektor auf die freien
+   Freiheitsgrade einschränken.
+3. *Lösen*: `np.linalg.solve` auf das reduzierte System anwenden.
+4. *Verschiebungsvektor rekonstruieren*: Lagerknoten auf null setzen,
+   freie DOFs eintragen.
+5. *Lagerkräfte zurückrechnen*: $\vec{F} = \mathbf{K} \cdot \vec{u}$
+   für alle Knoten auswerten.
+```
+
+**Schritt 1 - Freie Freiheitsgrade bestimmen:**
+Jeder Knoten hat zwei **Freiheitsgrade** (DOFs): einen in $x$- und einen in
+$y$-Richtung. Lagerknoten sind in beiden Richtungen gesperrt, ihre
+Verschiebung ist null. Die verbleibenden Knoten heißen **freie Knoten**;
+ihre DOFs bilden das eigentliche Gleichungssystem.
+
+Wir sammeln zunächst die Indizes der freien Knoten und daraus die
+zugehörigen DOF-Indizes in `freie_dofs`. Knoten $n$ trägt die
+DOF-Indizes $2n$ (x-Richtung) und $2n+1$ (y-Richtung).
+
+```{code-cell} python
+# Freie Knoten: alle Knoten, die nicht gelagert sind
+freie_indizes = []
+for n in range(anzahl_knoten):
+    if n not in lager_indizes:
+        freie_indizes.append(n)
+
+# Freie DOFs: jeder freie Knoten trägt DOF 2n (x) und 2n+1 (y)
+freie_dofs = []
+for n in freie_indizes:
+    freie_dofs.append(2 * n)       # x-Freiheitsgrad
+    freie_dofs.append(2 * n + 1)   # y-Freiheitsgrad
+freie_dofs = np.array(freie_dofs)
+
+print("Alle Knoten:  ", list(range(anzahl_knoten)))
+print("Lagerknoten:  ", lager_indizes)
+print("Freie Knoten: ", freie_indizes)
+print("Freie DOFs:   ", freie_dofs)
+```
+
+`freie_dofs` enthält hier nur die Indizes `[2, 3]`, weil Knoten 1
+der einzige freie Knoten ist. Das reduzierte LGS hat damit nur
+$2 \times 2$ Einträge, also genau zwei Unbekannte für die $x$- und
+$y$-Verschiebung von Knoten 1.
+
+**Schritt 2 - LGS reduzieren:**
+Wir schränken die globale Steifigkeitsmatrix $\mathbf{K}$ und den Kraftvektor
+$\vec{F}$ auf die freien DOFs ein. Die Zeilen und Spalten der Lagerknoten
+werden dabei weggelassen, weil ihre Verschiebungen bereits bekannt sind
+(nämlich null).
+
+```{code-cell} python
+# Reduzierten Kraftvektor: nur Einträge der freien DOFs
+kraft_reduziert = kraft_vektor[freie_dofs]
+
+# Reduzierte Steifigkeitsmatrix: nur Zeilen und Spalten der freien DOFs
+steifigkeit_reduziert = steifigkeit_global[freie_dofs, :][:, freie_dofs]
+
+# Ausgabe
+print(f"Reduzierte Steifigkeitsmatrix "
+      f"({steifigkeit_reduziert.shape[0]}x{steifigkeit_reduziert.shape[1]})"
+      f" in kN/mm:")
+print(np.round(steifigkeit_reduziert * 1e-3, 3))
+print(f"Reduzierter Kraftvektor: {kraft_reduziert} N")
+```
+
+Das reduzierte LGS hat hier die Dimension $2 \times 2$, weil nur Knoten 1
+frei ist. In größeren Fachwerken mit mehr freien Knoten wächst die
+reduzierte Matrix entsprechend. Der Code ändert sich dabei nicht, weil
+`freie_dofs` die Reduktion vollständig steuert.
+
+
+
+
+
+
+
+
+
+Die Lagerknoten haben die Verschiebung null. Wir entfernen ihre Zeilen und
+Spalten aus dem LGS (Reduktion) und lösen das verbleibende System. Anschließend
+berechnen wir die Kräfte an allen Knoten zurück, auch an den Lagern.
+
+```{code-cell} python
+# --- Freie Knoten bestimmen ---
+freie_indizes = [n for n in range(anzahl_knoten) if n not in lager_indizes]
+
+# --- Reduzierungsmaske: Indizes der freien Freiheitsgrade ---
+# Jeder freie Knoten trägt 2 Einträge bei (x und y)
+reduzier_maske = []
+for n in freie_indizes:
+    reduzier_maske.append(2 * n)       # x-Freiheitsgrad
+    reduzier_maske.append(2 * n + 1)   # y-Freiheitsgrad
+reduzier_maske = np.array(reduzier_maske)
+
+# --- Reduziertes LGS: nur freie Freiheitsgrade ---
+kraft_reduziert      = kraft_vektor[reduzier_maske]
+steifigkeit_reduziert = (steifigkeit_global[reduzier_maske, :]
+                         [:, reduzier_maske])
+
+print(f"Reduzierte Steifigkeitsmatrix ({steifigkeit_reduziert.shape[0]}x"
+      f"{steifigkeit_reduziert.shape[1]}) in kN/mm:")
+print(np.round(steifigkeit_reduziert * 1e-3, 3))
+print(f"\nReduzierter Kraftvektor: {kraft_reduziert} N")
+
+# --- Lösen: K_red * u_red = F_red ---
+verschiebung_reduziert = np.linalg.solve(steifigkeit_reduziert,
+                                          kraft_reduziert)
+
+# --- Vollständiger Verschiebungsvektor ---
+# Lagerknoten haben Verschiebung = 0 (Randbedingung)
+verschiebung_gesamt = np.zeros(2 * anzahl_knoten)
+verschiebung_gesamt[reduzier_maske] = verschiebung_reduziert
+
+# --- Knotenkräfte zurückrechnen (inkl. Lagerreaktionen) ---
+# F = K * u liefert alle Knotenkräfte
+kraft_ergebnis = np.round(steifigkeit_global @ verschiebung_gesamt, 6)
+
+# --- Probe: A @ x muss gleich b ergeben (für freie Freiheitsgrade) ---
+probe = np.allclose(
+    steifigkeit_reduziert @ verschiebung_reduziert,
+    kraft_reduziert
+)
+print(f"\nProbe bestanden: {probe}")
+
+# --- Ergebnisse ausgeben ---
+print("\nVerschiebungen und Knotenkräfte:")
+for n in range(anzahl_knoten):
+    u  = verschiebung_gesamt[2*n : 2*(n+1)]
+    F  = kraft_ergebnis[2*n : 2*(n+1)]
+    print(f"  Knoten {n} (gelagert: {n in lager_indizes}): "
+          f"u = [{u[0]*1e3:.4f}, {u[1]*1e3:.4f}] mm, "
+          f"F = [{F[0]:.1f}, {F[1]:.1f}] N")
+```
+
+Das Vorzeichen der Verschiebung von Knoten 1 in $y$-Richtung ist negativ:
+der Knoten bewegt sich nach unten, weil die Last nach unten zeigt. Das ist
+physikalisch sinnvoll. Die Verschiebung in $x$-Richtung ist null, weil die
+Geometrie symmetrisch ist und sich die Horizontalkomponenten beider Stäbe
+genau aufheben.
+
+Die Lagerkräfte an Knoten 0 und 2 müssen zusammen die Last von 5000 N
+nach oben tragen. Wegen der Symmetrie erwartet man je 2500 N, was sich
+aus der Ausgabe bestätigen lässt.
+
+````{admonition} Mini-Übung
+:class: tip
+1. Addieren Sie die $y$-Lagerkräfte an Knoten 0 und Knoten 2. Was ergibt
+   die Summe, und warum ist das die erwartete Antwort?
+2. Verdoppeln Sie die Last auf $-10\,000$ N und berechnen Sie die
+   Verschiebungen neu. Um welchen Faktor ändert sich `verschiebung_gesamt`?
+   Begründen Sie den Zusammenhang ohne Code (Stichwort: Linearität des LGS).
+3. Erhöhen Sie den Stabdurchmesser auf `durchmesser = 2e-2` m (alles andere
+   bleibt gleich). Wie ändert sich die Absenkung von Knoten 1, und warum
+   genau um diesen Faktor?
+````
+
+```{code-cell} python
+# Hier Ihren Code eingeben
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+import numpy as np
+
+# Frage 1: Gleichgewicht in y-Richtung
+fy_lager_0 = kraft_ergebnis[1]   # y-Kraft an Knoten 0
+fy_lager_2 = kraft_ergebnis[5]   # y-Kraft an Knoten 2
+print(f"Fy0 + Fy2 = {fy_lager_0 + fy_lager_2:.1f} N")
+# Ergebnis: +5000 N = externe Last kompensiert durch Lagerreaktionen
+
+# Frage 2: Doppelte Last -> doppelte Verschiebungen (Linearität)
+kraft_knoten_2 = np.zeros((anzahl_knoten, 2))
+kraft_knoten_2[1, 1] = -10000.
+kraft_vektor_2  = kraft_knoten_2.flatten()
+kraft_red_2     = kraft_vektor_2[reduzier_maske]
+u_red_2         = np.linalg.solve(steifigkeit_reduziert, kraft_red_2)
+print(f"u1y (5000 N): {verschiebung_reduziert[1]*1e3:.4f} mm")
+print(f"u1y (10000 N): {u_red_2[1]*1e3:.4f} mm")
+# -> genau doppelt so groß
+
+# Frage 3: doppelter Durchmesser -> A_neu = 4 * A (Fläche ~ d²)
+# k_neu = E * A_neu / l = 4 * k -> u_neu = F / (4k) = u / 4
+durchmesser_neu = 2.e-2
+querschnitt_neu  = np.pi * 0.25 * durchmesser_neu**2
+# querschnitt_neu = 4 * querschnitt -> Absenkung wird 4x kleiner
+print(f"Querschnittsverhältnis: {querschnitt_neu / querschnitt:.1f}")
+```
+
+Die Summe der Lagerkräfte in $y$ ergibt +5000 N, da genau die externe Last
+kompensiert wird. Bei doppelter Last verdoppeln sich alle Verschiebungen,
+weil das LGS linear ist. Doppelter Durchmesser bedeutet vierfache
+Querschnittsfläche ($A \propto d^2$) und damit vierfache Stabsteifigkeit,
+die Absenkung halbiert sich aber nicht, sondern wird auf ein Viertel reduziert.
+````
+
+## Stabkräfte: Zug oder Druck?
+
+Die Knotenverschiebungen allein reichen für eine Bemessung nicht aus. Wir
+wollen wissen, welche **Stabkraft** (axiale Kraft) in jedem Stab wirkt, und
+ob der Stab auf **Zug** oder **Druck** beansprucht wird. Gedrückte Stäbe
+müssen auf Knicken ausgelegt werden, was eine eigene Bemessungsaufgabe ist.
+
+```{code-cell} python
+# --- Stabkräfte berechnen ---
+# Stabkraft N = k * delta, wobei delta die projizierte Relativverschiebung ist
+# delta = e . (u_j - u_i), e = Einheitsvektor entlang Stabachse
+# Vorzeichen: N > 0 -> Zug (Stab wird gestreckt)
+#             N < 0 -> Druck (Stab wird gestaucht)
+
+print(f"{'Stab':>5}  {'Länge':>8}  {'Kraft N':>12}  {'Typ':>8}")
+print("-" * 40)
+
+for i in range(anzahl_knoten):
+    for j in range(i + 1, anzahl_knoten):
+        if verbindung[i, j]:
+            differenz    = knoten_pos[:, j] - knoten_pos[:, i]
+            staeblaenge   = np.linalg.norm(differenz)
+            winkel        = np.arctan2(differenz[1], differenz[0])
+            staebsteifigkeit = elastizitaetsmodul * querschnitt / staeblaenge
+
+            # Einheitsvektor entlang der Stabachse
+            einheitsvektor = np.array([np.cos(winkel), np.sin(winkel)])
+
+            # Verschiebung der Endknoten
+            u_i = verschiebung_gesamt[2*i : 2*(i+1)]
+            u_j = verschiebung_gesamt[2*j : 2*(j+1)]
+
+            # Projizierte Relativverschiebung (Dehnung mal Länge)
+            projektion = np.dot(einheitsvektor, u_j - u_i)
+            stabkraft  = staebsteifigkeit * projektion
+
+            stabtyp = 'Zug' if stabkraft > 0 else 'Druck'
+            print(f"  {i}-{j}   {staeblaenge:>7.3f} m  "
+                  f"{stabkraft:>11.2f} N  {stabtyp:>8}")
+```
+
+````{admonition} Mini-Übung
+:class: tip
+1. Stab 0-1 und Stab 1-2 haben dieselbe Länge und denselben Betrag der
+   Stabkraft. Warum ist das für dieses symmetrische Fachwerk erwartet?
+2. Sind die Stäbe auf Zug oder Druck belastet? Überprüfen Sie das
+   qualitativ: In welche Richtung zeigt die Last, und wie müssen sich
+   die Stäbe verhalten, damit Knoten 1 im Gleichgewicht bleibt?
+3. Verdoppeln Sie die Last auf $-10\,000$ N. Wie verändern sich die
+   Stabkräfte? Begründen Sie den Zusammenhang mit der Linearität des LGS.
+````
+
+```{code-cell} python
+# Hier Ihren Code eingeben
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+import numpy as np
+
+# Frage 1: Symmetrische Geometrie und symmetrische Last (Knoten 1 in der Mitte)
+# -> beide Stäbe tragen gleich viel und sind gleich lang
+# -> gleiche Steifigkeit k = E*A/l -> gleiche Stabkraft
+
+# Frage 2: Last zeigt nach unten. Knoten 1 zieht die Stabenden nach unten.
+# Die Stäbe werden gestreckt (Zug), weil ihre Endknoten 0 und 2 fest sind
+# und Knoten 1 sich nach unten bewegt.
+
+# Frage 3: Doppelte Last -> doppelte Verschiebungen -> doppelte Stabkräfte
+# (projektion = dot(e, u_j - u_i) verdoppelt sich, k bleibt gleich)
+print("Stabkräfte bei doppelter Last:")
+kraft_knoten_2 = np.zeros((anzahl_knoten, 2))
+kraft_knoten_2[1, 1] = -10000.
+kraft_vektor_2  = kraft_knoten_2.flatten()
+u_red_2  = np.linalg.solve(steifigkeit_reduziert, kraft_vektor_2[reduzier_maske])
+u_gesamt_2 = np.zeros(2 * anzahl_knoten)
+u_gesamt_2[reduzier_maske] = u_red_2
+
+for i in range(anzahl_knoten):
+    for j in range(i + 1, anzahl_knoten):
+        if verbindung[i, j]:
+            diff   = knoten_pos[:, j] - knoten_pos[:, i]
+            l      = np.linalg.norm(diff)
+            phi    = np.arctan2(diff[1], diff[0])
+            k      = elastizitaetsmodul * querschnitt / l
+            e      = np.array([np.cos(phi), np.sin(phi)])
+            N      = k * np.dot(e, u_gesamt_2[2*j:2*(j+1)] - u_gesamt_2[2*i:2*(i+1)])
+            print(f"  Stab {i}-{j}: N = {N:.2f} N")
+```
+
+Beide Stäbe stehen unter Zug: Knoten 1 wird nach unten gezogen, die Stäbe
+werden dabei gestreckt. Die Stabkräfte verdoppeln sich bei doppelter Last,
+weil die Verschiebungen linear von der Last abhängen und die Stabkraft
+proportional zur Verschiebung ist.
+````
+
+## Zusammenfassung und Ausblick
+
+Das FEM-Schema für ebene Fachwerke folgt immer demselben Ablauf:
+Elementsteifigkeitsmatrizen $\mathbf{k}_{ij}$ berechnen und in die globale
+Matrix $\mathbf{K}$ eintragen, das LGS durch Elimination der Lagerknoten
+reduzieren, mit `np.linalg.solve` lösen und die Lagerkräfte sowie Stabkräfte
+zurückrechnen.
+
+In den nächsten Kapiteln wenden wir dasselbe Schema auf größere Fachwerke
+mit mehr Knoten und Stäben an. Der Code ändert sich dabei kaum, weil der
+Algorithmus vollständig durch die Konnektivitätsmatrix gesteuert wird.

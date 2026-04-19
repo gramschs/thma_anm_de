@@ -1,0 +1,468 @@
+---
+kernelspec:
+  name: python3
+  display_name: 'Python 3'
+---
+
+# 4.5 Übung: Dachstuhl-Fachwerk (sechs Knoten)
+
+In Kapitel 4.4 haben Sie das FEM-Schema an einem Fünfknoten-Fachwerk mit
+detaillierter Schritt-für-Schritt-Anleitung erprobt. In dieser Übung wenden
+Sie denselben Algorithmus auf ein neues Tragwerk an. Die Unterstützung ist
+bewusst geringer: Die Code-Zellen enthalten keine Kommentare mehr, die jeden
+Teilschritt vorschreiben. Die ausklappbaren Lösungsblöcke stehen weiterhin
+zur Verfügung, sollten aber erst nach einem eigenen Lösungsversuch geöffnet
+werden.
+
+## Lernziele
+
+```{admonition} Lernziele
+:class: attention
+* [ ] Sie können das FEM-Berechnungsschema für ebene Fachwerke selbstständig
+  auf ein neues Tragwerk anwenden, ohne Schritt-für-Schritt-Anleitung.
+* [ ] Sie können Verschiebungen, Lagerkräfte und Stabkräfte berechnen und
+  die Ergebnisse auf physikalische Plausibilität prüfen.
+* [ ] Sie können den Einfluss von Parametern (Querschnitt, Laststellung)
+  numerisch untersuchen und das Ergebnis mit dem Zusammenhang $k = EA/L$
+  begründen.
+```
+
+## Problemstellung
+
+Betrachten Sie ein ebenes Fachwerk mit sechs Knoten und neun Stäben, das
+einem einfachen Dachstuhl nachempfunden ist. Die vier Untergurtknoten liegen
+auf der Linie $y = 0\,\text{m}$, die beiden Obergurtknoten auf
+$y = 1\,\text{m}$:
+
+| Knoten | $x$ in m | $y$ in m | Bemerkung |
+| --- | --- | --- | --- |
+| 0 | 0.0 | 0.0 | Festlager |
+| 1 | 1.0 | 0.0 | frei |
+| 2 | 2.0 | 0.0 | frei |
+| 3 | 3.0 | 0.0 | Festlager |
+| 4 | 1.0 | 1.0 | frei |
+| 5 | 2.0 | 1.0 | frei |
+
+Die neun Stäbe verbinden folgende Knotenpaare:
+
+| Gruppe | Stäbe |
+| --- | --- |
+| Untergurt | 0-1, 1-2, 2-3 |
+| Obergurt | 4-5 |
+| Randdiagonalen | 0-4, 3-5 |
+| Innenstreben | 1-4, 2-5 |
+| Kreuzdiagonale | 1-5 |
+
+An den Knoten 4 und 5 greift je eine Vertikallast von $3000\,\text{N}$ nach
+unten an. Die Materialeigenschaften sind dieselben wie in den Kapiteln 4.1
+bis 4.4: Stahl mit $E = 2{,}1 \cdot 10^{11}\,\text{N/m}^2$, Stabdurchmesser
+$d = 1\,\text{cm}$.
+
+Skizzieren Sie das Fachwerk vor dem Rechnen auf Papier. Überprüfen Sie dabei,
+welche Stäbe Sie qualitativ auf Zug und welche auf Druck erwarten.
+
+---
+
+## Aufgabe 1: Grundsetup und Visualisierung
+
+Legen Sie die Materialeigenschaften, die Knotenkoordinaten, die Lagerknoten,
+die Konnektivitätsmatrix und den Kraftvektor an. Stellen Sie das Fachwerk
+anschließend mit der bereitgestellten Funktion `zeichne_fachwerk` grafisch dar
+und prüfen Sie, ob die Geometrie Ihrer Skizze entspricht.
+
+```{code-cell} python
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Hier Ihren Code eingeben
+```
+
+Die folgende Funktion ist fertig vorgegeben und darf nicht verändert werden.
+Sie zeichnet die Ausgangslage sowie, falls übergeben, die verformte Lage und
+farblich kodierte Stabkräfte.
+
+```{code-cell} python
+def zeichne_fachwerk(knoten_pos, verbindung, lager_indizes,
+                     verschiebung=None, skalierung=500,
+                     stabkraefte=None, titel=''):
+    """Zeichnet ein Fachwerk in Ausgangs- und verformter Lage.
+
+    Stäbe werden blau (Zug) oder rot (Druck) eingefärbt, sofern ein
+    Dictionary ``stabkraefte`` übergeben wird. Ohne dieses Argument werden
+    alle Stäbe blau gezeichnet.
+
+    Parameters
+    ----------
+    knoten_pos : ndarray, Form (n, 2)
+        Knotenkoordinaten; Knoten n steht in Zeile n.
+    verbindung : ndarray, Form (n, n)
+        Symmetrische Konnektivitätsmatrix.
+    lager_indizes : list
+        Indizes der fest gelagerten Knoten.
+    verschiebung : ndarray oder None
+        Verschiebungsvektor der Länge 2n. Ohne Angabe: Nullverschiebung.
+    skalierung : float
+        Überhöhungsfaktor für die Verformungsdarstellung.
+    stabkraefte : dict oder None
+        {(i, j): Stabkraft in N}. Positiv = Zug (blau), negativ = Druck (rot).
+    titel : str
+        Diagrammtitel.
+    """
+    n = knoten_pos.shape[0]
+    if verschiebung is None:
+        verschiebung = np.zeros(2 * n)
+    if stabkraefte is None:
+        stabkraefte = {}
+
+    fig, ax = plt.subplots(figsize=(9, 5))
+    knoten_verformt = knoten_pos + skalierung * verschiebung.reshape((n, 2))
+
+    for i in range(n):
+        for j in range(i + 1, n):
+            if verbindung[i, j]:
+                ax.plot([knoten_pos[i, 0],      knoten_pos[j, 0]],
+                        [knoten_pos[i, 1],      knoten_pos[j, 1]],
+                        color='gray', linewidth=1.5, alpha=0.3)
+                F = stabkraefte.get((i, j), 0)
+                farbe = 'tab:red' if (stabkraefte and F < 0) else 'tab:blue'
+                ax.plot([knoten_verformt[i, 0], knoten_verformt[j, 0]],
+                        [knoten_verformt[i, 1], knoten_verformt[j, 1]],
+                        color=farbe, linewidth=2.5)
+                if stabkraefte:
+                    mx = 0.5 * (knoten_verformt[i, 0] + knoten_verformt[j, 0])
+                    my = 0.5 * (knoten_verformt[i, 1] + knoten_verformt[j, 1])
+                    ax.text(mx, my + 0.07, f'{F / 1000:.2f} kN',
+                            fontsize=7, ha='center', color=farbe)
+
+    ax.scatter(knoten_pos[:, 0], knoten_pos[:, 1],
+               c='gray', s=60, zorder=4, alpha=0.3)
+    ax.scatter(knoten_verformt[:, 0], knoten_verformt[:, 1],
+               c='tab:red', s=80, zorder=5)
+    for k in range(n):
+        ax.text(knoten_verformt[k, 0] + 0.04,
+                knoten_verformt[k, 1] + 0.04,
+                f'K{k}', fontsize=9)
+
+    h_d, b_d = 0.10, 0.10
+    for k in lager_indizes:
+        xd = [knoten_verformt[k, 0],
+              knoten_verformt[k, 0] - b_d / 2,
+              knoten_verformt[k, 0] + b_d / 2]
+        yd = [knoten_verformt[k, 1],
+              knoten_verformt[k, 1] - h_d,
+              knoten_verformt[k, 1] - h_d]
+        ax.fill(xd, yd, color='tab:green', alpha=0.7)
+
+    if stabkraefte:
+        ax.plot([], [], color='tab:blue', linewidth=3, label='Zug')
+        ax.plot([], [], color='tab:red',  linewidth=3, label='Druck')
+        ax.legend(fontsize=9, loc='upper right')
+
+    ax.set_title(titel)
+    ax.set_aspect('equal')
+    ax.grid(True)
+    plt.tight_layout()
+    plt.show()
+```
+
+````{admonition} Lösung zu Aufgabe 1
+:class: tip
+:class: dropdown
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Materialeigenschaften
+elastizitaetsmodul = 2.1e11
+durchmesser        = 1.0e-2
+querschnitt        = np.pi * 0.25 * durchmesser**2
+
+# Knotenkoordinaten
+knoten_pos = np.array([
+    [0., 0.],   # Knoten 0: Festlager
+    [1., 0.],   # Knoten 1: frei
+    [2., 0.],   # Knoten 2: frei
+    [3., 0.],   # Knoten 3: Festlager
+    [1., 1.],   # Knoten 4: frei
+    [2., 1.],   # Knoten 5: frei
+])
+anzahl_knoten = knoten_pos.shape[0]
+
+# Lagerknoten
+lager_indizes = [0, 3]
+
+# Konnektivitätsmatrix
+verbindung = np.zeros((anzahl_knoten, anzahl_knoten))
+for i, j in [(0, 1), (1, 2), (2, 3),   # Untergurt
+             (4, 5),                     # Obergurt
+             (0, 4), (3, 5),            # Randdiagonalen
+             (1, 4), (2, 5),            # Innenstreben
+             (1, 5)]:                   # Kreuzdiagonale
+    verbindung[i, j] = 1
+verbindung = verbindung + verbindung.T
+
+# Kraftvektor
+kraft_knoten = np.zeros((anzahl_knoten, 2))
+kraft_knoten[4, 1] = -3000.   # 3000 N nach unten an Knoten 4
+kraft_knoten[5, 1] = -3000.   # 3000 N nach unten an Knoten 5
+kraft_vektor = kraft_knoten.flatten()
+
+print("Anzahl Knoten:", anzahl_knoten)
+print("Anzahl Stäbe:", int(verbindung.sum() / 2))
+print("Kraftvektor:", kraft_vektor)
+
+zeichne_fachwerk(knoten_pos, verbindung, lager_indizes,
+                 titel='Dachstuhl-Fachwerk in Ausgangslage')
+```
+````
+
+---
+
+## Aufgabe 2: Steifigkeitsmatrix aufbauen und LGS lösen
+
+Bauen Sie die globale Steifigkeitsmatrix `steifigkeit_global` auf. Bestimmen
+Sie die freien Freiheitsgrade, reduzieren Sie das LGS und lösen Sie es mit
+`np.linalg.solve`. Geben Sie den vollständigen Verschiebungsvektor knotenweise
+aus.
+
+```{code-cell} python
+# Hier Ihren Code eingeben
+```
+
+````{admonition} Lösung zu Aufgabe 2
+:class: tip
+:class: dropdown
+```python
+# Globale Steifigkeitsmatrix
+steifigkeit_global = np.zeros((2 * anzahl_knoten, 2 * anzahl_knoten))
+
+for i in range(anzahl_knoten):
+    for j in range(i + 1, anzahl_knoten):
+        if verbindung[i, j]:
+            differenz        = knoten_pos[j] - knoten_pos[i]
+            staeblaenge      = np.linalg.norm(differenz)
+            winkel           = np.arctan2(differenz[1], differenz[0])
+            staebsteifigkeit = elastizitaetsmodul * querschnitt / staeblaenge
+            cos_w = np.cos(winkel)
+            sin_w = np.sin(winkel)
+            k_element = staebsteifigkeit * np.array([
+                [cos_w**2,       sin_w * cos_w],
+                [sin_w * cos_w,  sin_w**2     ],
+            ])
+            steifigkeit_global[2*i : 2*(i+1), 2*i : 2*(i+1)] += k_element
+            steifigkeit_global[2*j : 2*(j+1), 2*j : 2*(j+1)] += k_element
+            steifigkeit_global[2*i : 2*(i+1), 2*j : 2*(j+1)] -= k_element
+            steifigkeit_global[2*j : 2*(j+1), 2*i : 2*(i+1)] -= k_element
+
+# Freie Freiheitsgrade
+freie_indizes = [n for n in range(anzahl_knoten) if n not in lager_indizes]
+freie_dofs    = np.array([dof
+                          for n in freie_indizes
+                          for dof in [2 * n, 2 * n + 1]])
+
+# Reduziertes System lösen
+steifigkeit_reduziert  = steifigkeit_global[freie_dofs, :][:, freie_dofs]
+kraft_reduziert        = kraft_vektor[freie_dofs]
+verschiebung_reduziert = np.linalg.solve(steifigkeit_reduziert,
+                                          kraft_reduziert)
+
+# Vollständiger Verschiebungsvektor
+verschiebung_gesamt = np.zeros(2 * anzahl_knoten)
+verschiebung_gesamt[freie_dofs] = verschiebung_reduziert
+
+print("Verschiebungen (in mm):")
+for n in range(anzahl_knoten):
+    ux = verschiebung_gesamt[2 * n]     * 1e3
+    uy = verschiebung_gesamt[2 * n + 1] * 1e3
+    print(f"  Knoten {n}: ux = {ux:10.4f} mm,  uy = {uy:10.4f} mm")
+```
+````
+
+---
+
+## Aufgabe 3: Lagerkräfte und Gleichgewichtsprüfung
+
+Berechnen Sie den vollständigen Kraftvektor aus
+$\vec{F} = \mathbf{K} \cdot \vec{u}$.
+An den freien Knoten liefert er die äußeren Lasten zurück (Probe).
+An den Lagerknoten liefert er die Lagerreaktionen. Prüfen Sie das
+Gleichgewicht mit `np.allclose` und stellen Sie die Ergebnisse knotenweise
+dar.
+
+```{code-cell} python
+# Hier Ihren Code eingeben
+```
+
+````{admonition} Lösung zu Aufgabe 3
+:class: tip
+:class: dropdown
+```python
+# Vollständiger Kraftvektor (Lagerreaktionen und äußere Lasten)
+reaktion = steifigkeit_global @ verschiebung_gesamt
+
+# Gleichgewichtsprobe
+probe = np.allclose(reaktion[freie_dofs], kraft_vektor[freie_dofs])
+print(f"Gleichgewichtsprobe bestanden: {probe}")
+
+# Knotenweise Zusammenfassung
+print("\nKnotenweise Zusammenfassung:")
+print(f"{'Knoten':>6}  {'ux (mm)':>10}  {'uy (mm)':>10}  "
+      f"{'Fx (N)':>10}  {'Fy (N)':>10}  {'Typ':>8}")
+print("-" * 64)
+for n in range(anzahl_knoten):
+    ux  = verschiebung_gesamt[2 * n]     * 1e3
+    uy  = verschiebung_gesamt[2 * n + 1] * 1e3
+    fx  = reaktion[2 * n]
+    fy  = reaktion[2 * n + 1]
+    typ = "Lager" if n in lager_indizes else "frei"
+    print(f"{n:>6}  {ux:>10.4f}  {uy:>10.4f}  "
+          f"{fx:>10.2f}  {fy:>10.2f}  {typ:>8}")
+
+# Summenkontrolle
+summe_fx = np.sum(reaktion[0::2])
+summe_fy = np.sum(reaktion[1::2])
+print(f"\nSumme aller Kräfte: Fx = {summe_fx:.2f} N,  Fy = {summe_fy:.2f} N")
+```
+````
+
+---
+
+## Aufgabe 4: Stabkräfte und Visualisierung
+
+Berechnen Sie für jeden Stab die Stabkraft aus der Projektion der relativen
+Knotenverschiebung auf die Stabachse:
+
+\begin{equation*}
+F_{ij} = k \cdot \vec{e}^\top (\vec{u}_j - \vec{u}_i).
+\end{equation*}
+
+Positive Stabkraft bedeutet Zug, negative Stabkraft Druck. Stellen Sie
+anschließend die verformte Lage mit farblich kodierten Stabkräften dar und
+vergleichen Sie mit Ihrer Vorhersage aus der Skizze.
+
+```{code-cell} python
+# Hier Ihren Code eingeben
+```
+
+````{admonition} Lösung zu Aufgabe 4
+:class: tip
+:class: dropdown
+```python
+stabkraefte = {}
+
+print("Stabkräfte (positiv = Zug, negativ = Druck):")
+print(f"{'Stab':>6}  {'Länge (m)':>10}  {'Kraft (N)':>12}  {'Typ':>8}")
+print("-" * 44)
+
+for i in range(anzahl_knoten):
+    for j in range(i + 1, anzahl_knoten):
+        if verbindung[i, j]:
+            differenz        = knoten_pos[j] - knoten_pos[i]
+            staeblaenge      = np.linalg.norm(differenz)
+            winkel           = np.arctan2(differenz[1], differenz[0])
+            staebsteifigkeit = elastizitaetsmodul * querschnitt / staeblaenge
+            einheitsvektor   = np.array([np.cos(winkel), np.sin(winkel)])
+            u_i = verschiebung_gesamt[2 * i : 2 * (i + 1)]
+            u_j = verschiebung_gesamt[2 * j : 2 * (j + 1)]
+            u_parallel = np.dot(einheitsvektor, u_j - u_i)
+            F = staebsteifigkeit * u_parallel
+            stabkraefte[(i, j)] = F
+            typ = 'Zug' if F > 0 else 'Druck'
+            print(f"  {i}-{j}   {staeblaenge:>8.3f} m  {F:>12.2f} N  {typ:>8}")
+
+zeichne_fachwerk(knoten_pos, verbindung, lager_indizes,
+                 verschiebung=verschiebung_gesamt,
+                 skalierung=500,
+                 stabkraefte=stabkraefte,
+                 titel='Dachstuhl-Fachwerk: Stabkräfte (blau=Zug, rot=Druck)')
+```
+````
+
+---
+
+## Aufgabe 5: Vertiefende Aufgaben
+
+```{admonition} Hinweis zur Notebook-Reihenfolge
+:class: warning
+Arbeiten Sie in den folgenden Aufgaben in neuen Code-Zellen, ohne die
+Originalwerte oben zu überschreiben. So bleiben die Referenzergebnisse
+erhalten und Sie können die Resultate direkt vergleichen.
+```
+
+```{admonition} Vertiefung
+:class: tip
+1. **Maximale Beanspruchung:** Welcher Stab hat den größten Betrag der
+   Stabkraft? Ist das qualitativ plausibel, wenn Sie die Laststellung und
+   die Geometrie betrachten?
+
+2. **Einfluss des Querschnitts:** Halbieren Sie den Stabdurchmesser auf
+   $d = 0{,}5\,\text{cm}$ und berechnen Sie das System neu. Um welchen
+   Faktor ändert sich die maximale vertikale Absenkung? Begründen Sie den
+   Zusammenhang mithilfe von $k = EA/L$ ohne Code.
+
+3. **Asymmetrische Last:** Behalten Sie nur die Last von $3000\,\text{N}$
+   nach unten an Knoten 5 und entfernen Sie die Last an Knoten 4.
+   Warum sind die horizontalen Verschiebungen der Obergurtknoten nun
+   nicht mehr null? Prüfen Sie Ihre Antwort mit Code.
+```
+
+```{code-cell} python
+# Hier Ihren Code für die Vertiefungsaufgaben eingeben
+```
+
+````{admonition} Lösung zu Aufgabe 5 (Teilaufgabe 2)
+:class: tip
+:class: dropdown
+```python
+durchmesser_neu = 5.0e-3
+querschnitt_neu = np.pi * 0.25 * durchmesser_neu**2
+
+steifigkeit_neu = np.zeros((2 * anzahl_knoten, 2 * anzahl_knoten))
+for i in range(anzahl_knoten):
+    for j in range(i + 1, anzahl_knoten):
+        if verbindung[i, j]:
+            differenz        = knoten_pos[j] - knoten_pos[i]
+            staeblaenge      = np.linalg.norm(differenz)
+            winkel           = np.arctan2(differenz[1], differenz[0])
+            k_stab           = elastizitaetsmodul * querschnitt_neu / staeblaenge
+            cos_w = np.cos(winkel)
+            sin_w = np.sin(winkel)
+            k_el = k_stab * np.array([
+                [cos_w**2,       sin_w * cos_w],
+                [sin_w * cos_w,  sin_w**2     ],
+            ])
+            steifigkeit_neu[2*i : 2*(i+1), 2*i : 2*(i+1)] += k_el
+            steifigkeit_neu[2*j : 2*(j+1), 2*j : 2*(j+1)] += k_el
+            steifigkeit_neu[2*i : 2*(i+1), 2*j : 2*(j+1)] -= k_el
+            steifigkeit_neu[2*j : 2*(j+1), 2*i : 2*(i+1)] -= k_el
+
+K_red_neu = steifigkeit_neu[freie_dofs, :][:, freie_dofs]
+u_red_neu = np.linalg.solve(K_red_neu, kraft_vektor[freie_dofs])
+u_neu     = np.zeros(2 * anzahl_knoten)
+u_neu[freie_dofs] = u_red_neu
+
+max_uy_alt = np.max(np.abs(verschiebung_gesamt[1::2]))
+max_uy_neu = np.max(np.abs(u_neu[1::2]))
+print(f"Max |u_y| (d = 1.0 cm): {max_uy_alt * 1e3:.4f} mm")
+print(f"Max |u_y| (d = 0.5 cm): {max_uy_neu * 1e3:.4f} mm")
+print(f"Faktor:                  {max_uy_neu / max_uy_alt:.1f}")
+print()
+print("Begründung: A ~ d^2, also A_neu = 1/4 * A.")
+print("Da k = E*A/L gilt: k_neu = 1/4 * k.")
+print("Da u ~ 1/k gilt:   u_neu = 4 * u.  Erwarteter Faktor: 4.0")
+```
+````
+
+## Zusammenfassung
+
+In dieser Übung haben Sie das FEM-Schema für ebene Fachwerke ohne
+Schritt-für-Schritt-Anleitung auf ein sechsknötiges Dachstuhl-Fachwerk
+angewendet. Der Algorithmus aus den Kapiteln 4.1 bis 4.4 bleibt unverändert:
+Geometrie beschreiben, Steifigkeitsmatrix assemblieren, LGS reduzieren,
+lösen, Lagerkräfte und Stabkräfte zurückrechnen. Die Größe der Matrizen
+wächst mit der Knotenzahl, der Code ändert sich nicht.
+
+Im nächsten Kapitel erweitern Sie das Modell um ein neues Konzept: das
+Loslager (Rollenlager), das nur einen Freiheitsgrad sperrt. Dazu wird
+die bisherige Variable `lager_indizes` durch eine flexiblere Liste
+gesperrter Freiheitsgrade ersetzt.
