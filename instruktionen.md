@@ -218,10 +218,11 @@ Code + kurze Erklärung des Ergebnisses
 - Lösungen immer als `dropdown`, mit Code **und** kurzer Erklärung des
   Ergebnisses
 
-## Struktur des Übungskapitels (sec04)
+## Struktur des Übungskapitels
 
-Das vierte Kapitel enthält ausschließlich Übungsaufgaben für das Selbststudium.
-Es hat keine erklärenden Texte, keine Motivation und keine Zusammenfassung.
+Das Kapitel mit den Übungen für das vertiefende Selbststudium zuhause enthält
+ausschließlich Übungsaufgaben für das Selbststudium. Es hat keine erklärenden
+Texte, keine Motivation und keine Zusammenfassung.
 
 ### Schwierigkeitsgrade
 
@@ -233,7 +234,7 @@ Jede Aufgabe trägt einen Schwierigkeitsgrad im Titel:
 - `✩✩✩` Mini-Projekte: mehrere Konzepte des Kapitels kombinieren, komplexere
   Problemstellungen
 
-### Aufgabenformat
+### Aufgabenformat im Übungskapitel
 
 ```{admonition} Übung X.Y (✩)
 :class: tip
@@ -245,7 +246,7 @@ Aufgabentext mit nummerierten Teilaufgaben...
 Code + Erklärung des fachlichen Ergebnisses
 ```
 
-### Inhaltliche Merkmale
+### Inhaltliche Merkmale im Übungskapitel
 
 - ✩-Aufgaben: vorgegebener Code, Fragen zu Ausgabe und Verhalten, am Ende
   "Führen Sie den Code aus und überprüfen Sie Ihre Vorhersagen"
@@ -254,7 +255,7 @@ Code + Erklärung des fachlichen Ergebnisses
 - ✩✩✩-Aufgaben (Mini-Projekte): mehrere benannte Teile (`**Teil 1:**`, `**Teil
   2:**` usw.), Abschlussfrage zur Reflexion oder Erklärung
 
-### Lösungen im sec04
+### Lösungen im Übungskapitel
 
 - Zeigen vollständigen, lauffähigen Code mit Kommentaren
 - Geben die erwartete Ausgabe als Codeblock an
@@ -269,7 +270,7 @@ Vor dem Ausgeben einer Sektion prüfen:
 - [ ] YAML-Header vorhanden?
 - [ ] Einleitung beginnt mit einem konkreten Szenario oder Problem, nicht mit
   einer Definition?
-- [ ] Lernziele mit `* [ ]` formatiert, unmittelbar nach dem H1-Titel?
+- [ ] Lernziele mit `* [ ]` formatiert, unmittelbar nach der Einleitung?
 - [ ] Unterabschnittsüberschriften als Fragen oder natürliche Aussagen formuliert?
 - [ ] Prinzip "Erst Beispiel, dann abstrakt" eingehalten?
 - [ ] Mindestens eine rhetorische Frage im Fließtext, kursiv gesetzt?
@@ -480,7 +481,7 @@ entsprechend dem tatsächlichen Fluss (nicht Vorzeichenkonvention).
 
 ### Einbindung in MyST Markdown
 
-SVG-Dateien werden im Unterordner `bilder/` abgelegt und mit der
+SVG-Dateien werden im Unterordner `pics/` abgelegt und mit der
 `{figure}`-Direktive eingebunden:
 
 ````markdown
@@ -501,3 +502,80 @@ Keine Informationen wiederholen, die bereits im umgebenden Fließtext stehen.
 Dateinamen beschreibend, in Kleinbuchstaben mit Unterstrichen, ohne
 Kapitel- oder Sektionsnummer. Das Sprachkürzel `_DE` oder `_EN` nur
 anhängen, wenn zwei Sprachversionen derselben Abbildung existieren.
+
+---
+
+## Didaktisches Konzept der Präsenzvorlesung
+
+### Kurskontext
+
+Der Kurs hat **5 Studierende** im Bachelor Maschinenbau. Die Vorlesung findet
+montags in einem Computerraum statt: 90 Minuten vor der Mittagspause und 90
+Minuten danach. Zwei Studierende haben geringe Python-Vorkenntnisse; sie
+wurden explizit darauf hingewiesen, dass eigenständiges Üben außerhalb der
+Vorlesung Voraussetzung für das Mitkommen ist.
+
+### Das Buchklammern-Format (45-Minuten-Zyklus)
+
+Die Vorlesung ist in **45-Minuten-Zyklen** gegliedert. Pro 90-Minuten-Block
+gibt es zwei Zyklen. Jeder Zyklus folgt demselben Schema:
+
+| Phase | Dauer | Beschreibung |
+| ----- | ----- | ----------- |
+| Einstieg | 10 min | Dozent motiviert das Thema und führt die **erste Code-Zelle** der Sektion live vor. Keine vollständige Durchführung, nur genug für den Orientierungsanker. |
+| Arbeitsphase | 25 min | Studierende arbeiten **eigenständig** durch die restlichen Code-Zellen und Mini-Übungen. Dozent ist bilateral für Rückfragen verfügbar. |
+| Abschluss | 10 min | Dozent kommentiert Stolperstellen und überraschende Ergebnisse, die beim Herumgehen aufgefallen sind. Keine Studierendenpräsentationen (hat sich nicht bewährt). |
+
+### Konsequenzen für die Sektionsgestaltung
+
+**Erste Code-Zelle als Einstieg:** Die erste Code-Zelle einer Sektion muss
+für einen 10-minütigen Frontalanteil geeignet sein. Sie soll das zentrale
+neue Konzept einführen und einen vollständigen, lauffähigen Eindruck
+vermitteln, ohne das ganze Thema vorwegzunehmen.
+
+**Restliche Zellen für die Arbeitsphase:** Alle weiteren Code-Zellen und
+Mini-Übungen sind auf 25 Minuten eigenständige Arbeit ausgelegt. Als
+Faustregel gilt: 2 Code-Zellen + 2 Mini-Übungen passen gut in 25 Minuten
+(Wiederholungsanteil reduziert die Zeit).
+
+**Keine Studierendenpräsentationen:** Der Abschluss wird nicht als
+Studierendenpräsentation gestaltet, weil niemand freiwillig präsentiert.
+Der Dozent greift stattdessen selbst auf und kommentiert.
+
+### Sektionsstruktur pro Kapitel
+
+Jedes Kapitel folgt dieser Aufteilung:
+
+| Sektion | Einsatz | Beschreibung |
+| ------- | ------- | ----------- |
+| sec01 | Zyklus 1 (vor Mittagspause) | Vorlesungsinhalt, erste Code-Zelle für Einstieg |
+| sec02 | Zyklus 2 (vor Mittagspause) | Vorlesungsinhalt, erste Code-Zelle für Einstieg |
+| sec03 | Zyklus 3 (nach Mittagspause) | Vorlesungsinhalt, erste Code-Zelle für Einstieg |
+| sec04 | Zyklus 4 (nach Mittagspause) | Vorlesungsinhalt, erste Code-Zelle für Einstieg |
+| sec05 | Selbststudium zuhause | Übungsaufgaben ✩/✩✩/✩✩✩ |
+
+### Vorlesungsplan Kapitel 4 (Referenzbeispiel)
+
+**Block 1 (vor Mittagspause):**
+
+| Zeit | Dauer | Format | Inhalt |
+| ---- | ---- | ----- | ------ |
+| 0-10 min | 10 min | Frontal | Einstieg Zyklus 1: sec01 Code-Zelle 1 (Impedanzoperatoren) |
+| 10-35 min | 25 min | Selbststudium | sec01 ab LGS-Abschnitt (Code-Zellen 2+3, Mini-Übungen 2+3) |
+| 35-45 min | 10 min | Plenum | Abschluss: Frequenzgang, Resonanz, `dtype=complex` |
+| 45-55 min | 10 min | Frontal | Einstieg Zyklus 2: sec02 Code-Zelle 1 (`getUebertragung`) |
+| 55-80 min | 25 min | Selbststudium | sec02 ab Frequenzgang (Code-Zellen 2+3, Mini-Übungen 1+2) |
+| 80-90 min | 10 min | Plenum | Abschluss: Bode-Diagramm, −3 dB-Grenzfrequenzen |
+
+**Block 2 (nach Mittagspause):**
+
+| Zeit | Dauer | Format | Inhalt |
+| ---- | ----- | ----- | ------ |
+| 0-10 min | 10 min | Frontal | Einstieg Zyklus 3: FEM-Konzept, sec03 Code-Zelle 1 |
+| 10-35 min | 25 min | Selbststudium | sec03 ab Steifigkeitsmatrix (Code-Zellen 2+3, Mini-Übungen 2+3) |
+| 35-45 min | 10 min | Plenum | Abschluss: Lagerkräfte, Linearität, Vorzeichen |
+| 45-55 min | 10 min | Frontal | Einstieg Zyklus 4: sec04 Kernpunkte zeigen (Konnektivitätsmatrix) |
+| 55-80 min | 25 min | Selbststudium | sec04 (Brücke, Eigengewicht einbauen) |
+| 80-90 min | 10 min | Plenum | Abschluss: Eigengewichts-Paradoxon, Vergleich mit Lösungs-Notebook |
+
+**Selbststudium zuhause:** sec04 (sec05 (Übungsaufgaben ✩-✩✩✩).

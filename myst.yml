@@ -36,7 +36,14 @@ project:
       - file: chapter03/chapter03_sec06.md
       - file: chapter03/chapter03_sec07.md
       - file: chapter03/chapter03_sec08.md
-
+    - title: 4. Lineare Gleichungssysteme II 
+      children:
+      - file: chapter04/chapter04_sec01.md
+      - file: chapter04/chapter04_sec02.md
+      - file: chapter04/chapter04_sec03.md
+      - file: chapter04/chapter04_sec04.md
+      - file: chapter04/chapter04_sec05.md
+      - file: chapter04/chapter04_sec06.md
 #    - title: Numerische Analysis
 #      children:
 #      - file: chapter05/chapter04_sec01.md
