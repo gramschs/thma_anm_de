@@ -108,13 +108,13 @@ i, j = 0, 1
 
 # knoten_pos[j] - knoten_pos[i] liefert den Differenzvektor als 1D-Array [Δx, Δy]
 differenz   = knoten_pos[j] - knoten_pos[i]           # Vektor von i nach j
-staeblaenge = np.linalg.norm(differenz)               # Länge L in m
+stablaenge = np.linalg.norm(differenz)               # Länge L in m
 winkel      = np.arctan2(differenz[1], differenz[0])  # Winkel φ in rad
 
 # Ausgabe
 print(f"Stab {i}-{j}:")
 print(f"  Differenzvektor : {differenz} m")
-print(f"  Länge L         : {staeblaenge:.4f} m")
+print(f"  Länge L         : {stablaenge:.4f} m")
 print(f"  Winkel φ        : {np.degrees(winkel):.1f}°")
 ```
 
@@ -147,16 +147,16 @@ desto nachgiebiger. (Quelle: eigene Abbildung; Lizenz [CC BY-SA
 
 ```{code-cell} python
 # Stabsteifigkeit k = E * A / L für Stab 0-1
-staebsteifigkeit = elastizitaetsmodul * querschnitt / staeblaenge
+stabsteifigkeit = elastizitaetsmodul * querschnitt / stablaenge
 
 # Ausgabe
-print(f"Stabsteifigkeit k (Stab {i}-{j}): {staebsteifigkeit:.4e} N/m")
+print(f"Stabsteifigkeit k (Stab {i}-{j}): {stabsteifigkeit:.4e} N/m")
 ```
 
 ```{admonition} Mini-Übung
 :class: tip
 Stab 0-1 hat die Länge $\sqrt{2}\,\text{m}$ und die berechnete Steifigkeit
-`staebsteifigkeit`. Überlegen Sie zuerst im Kopf:
+`stabsteifigkeit`. Überlegen Sie zuerst im Kopf:
 
 1. Um welchen Faktor ändert sich $k$, wenn der Durchmesser von $1\,\text{cm}$
    auf $2\,\text{cm}$ verdoppelt wird?
@@ -173,11 +173,11 @@ Stab 0-1 hat die Länge $\sqrt{2}\,\text{m}$ und die berechnete Steifigkeit
 ```python
 durchmesser_neu     = 2.0e-2
 querschnitt_neu     = np.pi * 0.25 * durchmesser_neu**2
-steifigkeit_neu     = elastizitaetsmodul * querschnitt_neu / staeblaenge
+steifigkeit_neu     = elastizitaetsmodul * querschnitt_neu / stablaenge
 
-print(f"k (d = 1 cm): {staebsteifigkeit:.4e} N/m")
+print(f"k (d = 1 cm): {stabsteifigkeit:.4e} N/m")
 print(f"k (d = 2 cm): {steifigkeit_neu:.4e} N/m")
-print(f"Faktor:       {steifigkeit_neu / staebsteifigkeit:.1f}")
+print(f"Faktor:       {steifigkeit_neu / stabsteifigkeit:.1f}")
 ```
 
 Der Querschnitt wächst quadratisch mit dem Durchmesser ($A = \pi d^2 / 4$),
@@ -252,7 +252,7 @@ cos_w = np.cos(winkel)
 sin_w = np.sin(winkel)
 
 # Steifigkeitsblock b = k * e * e^T  (2x2-Matrix)
-k_element = staebsteifigkeit * np.array([
+k_element = stabsteifigkeit * np.array([
     [cos_w**2,       sin_w * cos_w],
     [sin_w * cos_w,  sin_w**2     ],
 ])
@@ -297,16 +297,16 @@ for i in range(anzahl_knoten):
         if verbindung[i, j]:
             # Schritt 2: Geometrie
             differenz        = knoten_pos[j] - knoten_pos[i]
-            staeblaenge      = np.linalg.norm(differenz)
+            stablaenge      = np.linalg.norm(differenz)
             winkel           = np.arctan2(differenz[1], differenz[0])
 
             # Schritt 3: Stabsteifigkeit
-            staebsteifigkeit = elastizitaetsmodul * querschnitt / staeblaenge
+            stabsteifigkeit = elastizitaetsmodul * querschnitt / stablaenge
 
             # Schritt 4: Steifigkeitsblock b = k * e * e^T
             cos_w     = np.cos(winkel)
             sin_w     = np.sin(winkel)
-            k_element = staebsteifigkeit * np.array([
+            k_element = stabsteifigkeit * np.array([
                 [cos_w**2,       sin_w * cos_w],
                 [sin_w * cos_w,  sin_w**2     ],
             ])

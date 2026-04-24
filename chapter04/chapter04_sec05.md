@@ -239,13 +239,13 @@ steifigkeit_global = np.zeros((2 * anzahl_knoten, 2 * anzahl_knoten))
 for i in range(anzahl_knoten):
     for j in range(i + 1, anzahl_knoten):
         if verbindung[i, j]:
-            differenz        = knoten_pos[j] - knoten_pos[i]
-            staeblaenge      = np.linalg.norm(differenz)
-            winkel           = np.arctan2(differenz[1], differenz[0])
-            staebsteifigkeit = elastizitaetsmodul * querschnitt / staeblaenge
+            differenz       = knoten_pos[j] - knoten_pos[i]
+            stablaenge      = np.linalg.norm(differenz)
+            winkel          = np.arctan2(differenz[1], differenz[0])
+            stabsteifigkeit = elastizitaetsmodul * querschnitt / stablaenge
             cos_w = np.cos(winkel)
             sin_w = np.sin(winkel)
-            k_element = staebsteifigkeit * np.array([
+            k_element = stabsteifigkeit * np.array([
                 [cos_w**2,       sin_w * cos_w],
                 [sin_w * cos_w,  sin_w**2     ],
             ])
@@ -357,18 +357,18 @@ print("-" * 44)
 for i in range(anzahl_knoten):
     for j in range(i + 1, anzahl_knoten):
         if verbindung[i, j]:
-            differenz        = knoten_pos[j] - knoten_pos[i]
-            staeblaenge      = np.linalg.norm(differenz)
-            winkel           = np.arctan2(differenz[1], differenz[0])
-            staebsteifigkeit = elastizitaetsmodul * querschnitt / staeblaenge
-            einheitsvektor   = np.array([np.cos(winkel), np.sin(winkel)])
+            differenz       = knoten_pos[j] - knoten_pos[i]
+            stablaenge      = np.linalg.norm(differenz)
+            winkel          = np.arctan2(differenz[1], differenz[0])
+            stabsteifigkeit = elastizitaetsmodul * querschnitt / stablaenge
+            einheitsvektor  = np.array([np.cos(winkel), np.sin(winkel)])
             u_i = verschiebung_gesamt[2 * i : 2 * (i + 1)]
             u_j = verschiebung_gesamt[2 * j : 2 * (j + 1)]
             u_parallel = np.dot(einheitsvektor, u_j - u_i)
-            F = staebsteifigkeit * u_parallel
+            F = stabsteifigkeit * u_parallel
             stabkraefte[(i, j)] = F
             typ = 'Zug' if F > 0 else 'Druck'
-            print(f"  {i}-{j}   {staeblaenge:>8.3f} m  {F:>12.2f} N  {typ:>8}")
+            print(f"  {i}-{j}   {stablaenge:>8.3f} m  {F:>12.2f} N  {typ:>8}")
 
 zeichne_fachwerk(knoten_pos, verbindung, lager_indizes,
                  verschiebung=verschiebung_gesamt,
@@ -421,10 +421,10 @@ steifigkeit_neu = np.zeros((2 * anzahl_knoten, 2 * anzahl_knoten))
 for i in range(anzahl_knoten):
     for j in range(i + 1, anzahl_knoten):
         if verbindung[i, j]:
-            differenz        = knoten_pos[j] - knoten_pos[i]
-            staeblaenge      = np.linalg.norm(differenz)
-            winkel           = np.arctan2(differenz[1], differenz[0])
-            k_stab           = elastizitaetsmodul * querschnitt_neu / staeblaenge
+            differenz       = knoten_pos[j] - knoten_pos[i]
+            stablaenge      = np.linalg.norm(differenz)
+            winkel          = np.arctan2(differenz[1], differenz[0])
+            k_stab          = elastizitaetsmodul * querschnitt_neu / stablaenge
             cos_w = np.cos(winkel)
             sin_w = np.sin(winkel)
             k_el = k_stab * np.array([

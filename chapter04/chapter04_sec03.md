@@ -65,12 +65,12 @@ for i in range(anzahl_knoten):
     for j in range(i + 1, anzahl_knoten):
         if verbindung[i, j]:
             differenz        = knoten_pos[j] - knoten_pos[i]
-            staeblaenge      = np.linalg.norm(differenz)
+            stablaenge      = np.linalg.norm(differenz)
             winkel           = np.arctan2(differenz[1], differenz[0])
-            staebsteifigkeit = elastizitaetsmodul * querschnitt / staeblaenge
+            stabsteifigkeit = elastizitaetsmodul * querschnitt / stablaenge
             cos_w     = np.cos(winkel)
             sin_w     = np.sin(winkel)
-            k_element = staebsteifigkeit * np.array([
+            k_element = stabsteifigkeit * np.array([
                 [cos_w**2,       sin_w * cos_w],
                 [sin_w * cos_w,  sin_w**2     ],
             ])
@@ -135,10 +135,10 @@ for i in range(anzahl_knoten):
     for j in range(i + 1, anzahl_knoten):
         if verbindung[i, j]:
             # Geometrie
-            differenz        = knoten_pos[j] - knoten_pos[i]
-            staeblaenge      = np.linalg.norm(differenz)
-            winkel           = np.arctan2(differenz[1], differenz[0])
-            staebsteifigkeit = elastizitaetsmodul * querschnitt / staeblaenge
+            differenz       = knoten_pos[j] - knoten_pos[i]
+            stablaenge      = np.linalg.norm(differenz)
+            winkel          = np.arctan2(differenz[1], differenz[0])
+            stabsteifigkeit = elastizitaetsmodul * querschnitt / stablaenge
 
             # Einheitsvektor entlang der Stabachse
             einheitsvektor = np.array([np.cos(winkel), np.sin(winkel)])
@@ -151,13 +151,13 @@ for i in range(anzahl_knoten):
             u_parallel = np.dot(einheitsvektor, u_j - u_i)
 
             # Schritt 2: Stabkraft
-            stabkraft = staebsteifigkeit * u_parallel
+            stabkraft = stabsteifigkeit * u_parallel
 
             # Schritt 3: Vorzeichen
             stabtyp = 'Zug' if stabkraft > 0 else 'Druck'
 
             # Ausgabe
-            print(f"  {i}-{j}   {staeblaenge:.3f} m   "
+            print(f"  {i}-{j}   {stablaenge:.3f} m   "
                   f"{u_parallel*1e3:.4f} mm   "
                   f"{stabkraft:.2f} N   {stabtyp}")
 ```
@@ -449,14 +449,14 @@ for i in range(anzahl_knoten):
     for j in range(i + 1, anzahl_knoten):
         if verbindung[i, j]:
             differenz        = knoten_pos[j] - knoten_pos[i]
-            staeblaenge      = np.linalg.norm(differenz)
+            stablaenge       = np.linalg.norm(differenz)
             winkel           = np.arctan2(differenz[1], differenz[0])
-            staebsteifigkeit = elastizitaetsmodul * querschnitt / staeblaenge
+            stabsteifigkeit  = elastizitaetsmodul * querschnitt / stablaenge
             einheitsvektor   = np.array([np.cos(winkel), np.sin(winkel)])
             u_i              = verschiebung_gesamt[2 * i : 2 * (i + 1)]
             u_j              = verschiebung_gesamt[2 * j : 2 * (j + 1)]
             u_parallel       = np.dot(einheitsvektor, u_j - u_i)
-            stabkraefte[(i, j)] = staebsteifigkeit * u_parallel
+            stabkraefte[(i, j)] = stabsteifigkeit * u_parallel
 
 # Fachwerk mit Stabkräften zeichnen
 zeichne_fachwerk_kraefte(verschiebung=verschiebung_gesamt,
@@ -499,14 +499,14 @@ for i in range(anzahl_knoten):
     for j in range(i + 1, anzahl_knoten):
         if verbindung[i, j]:
             differenz        = knoten_pos[j] - knoten_pos[i]
-            staeblaenge      = np.linalg.norm(differenz)
+            stablaenge       = np.linalg.norm(differenz)
             winkel           = np.arctan2(differenz[1], differenz[0])
-            staebsteifigkeit = elastizitaetsmodul * querschnitt / staeblaenge
+            stabsteifigkeit  = elastizitaetsmodul * querschnitt / stablaenge
             einheitsvektor   = np.array([np.cos(winkel), np.sin(winkel)])
             u_i              = verschiebung_2[2 * i : 2 * (i + 1)]
             u_j              = verschiebung_2[2 * j : 2 * (j + 1)]
             u_parallel       = np.dot(einheitsvektor, u_j - u_i)
-            stabkraefte_2[(i, j)] = staebsteifigkeit * u_parallel
+            stabkraefte_2[(i, j)] = stabsteifigkeit * u_parallel
 
 zeichne_fachwerk_kraefte(verschiebung=verschiebung_2,
                          skalierung=500,

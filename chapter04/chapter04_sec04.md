@@ -319,17 +319,17 @@ for i in range(anzahl_knoten):
     for j in range(i + 1, anzahl_knoten):
         if verbindung[i, j]:
             # Geometrie
-            differenz   = knoten_pos[j] - knoten_pos[i]
-            staeblaenge = np.linalg.norm(differenz)
-            winkel      = np.arctan2(differenz[1], differenz[0])
+            differenz  = knoten_pos[j] - knoten_pos[i]
+            stablaenge = np.linalg.norm(differenz)
+            winkel     = np.arctan2(differenz[1], differenz[0])
 
             # Stabsteifigkeit
-            staebsteifigkeit = elastizitaetsmodul * querschnitt / staeblaenge
+            stabsteifigkeit = elastizitaetsmodul * querschnitt / stablaenge
 
             # Elementsteifigkeitsmatrix
             cos_w = np.cos(winkel)
             sin_w = np.sin(winkel)
-            k_element = staebsteifigkeit * np.array([
+            k_element = stabsteifigkeit * np.array([
                 [cos_w**2,      sin_w * cos_w],
                 [sin_w * cos_w, sin_w**2     ],
             ])
@@ -533,7 +533,7 @@ for i in range(anzahl_knoten):
             #       u_i = verschiebung_gesamt[2*i : 2*(i+1)]
             #       u_j = verschiebung_gesamt[2*j : 2*(j+1)]
             #       delta = np.dot(einheitsvektor, u_j - u_i)
-            #       stabkraft = staebsteifigkeit * delta
+            #       stabkraft = stabsteifigkeit * delta
             pass
 ```
 
@@ -549,9 +549,9 @@ for i in range(anzahl_knoten):
     for j in range(i + 1, anzahl_knoten):
         if verbindung[i, j]:
             differenz   = knoten_pos[j] - knoten_pos[i]
-            staeblaenge = np.linalg.norm(differenz)
+            stablaenge  = np.linalg.norm(differenz)
             winkel      = np.arctan2(differenz[1], differenz[0])
-            staebsteifigkeit = elastizitaetsmodul * querschnitt / staeblaenge
+            stabsteifigkeit = elastizitaetsmodul * querschnitt / stablaenge
 
             # Einheitsvektor entlang der Stabachse
             einheitsvektor = np.array([np.cos(winkel), np.sin(winkel)])
@@ -562,10 +562,10 @@ for i in range(anzahl_knoten):
             delta = np.dot(einheitsvektor, u_j - u_i)
 
             # Stabkraft
-            stabkraft = staebsteifigkeit * delta
+            stabkraft = stabsteifigkeit * delta
 
             stabtyp = 'Zug' if stabkraft > 0 else 'Druck'
-            print(f"{i}-{j:>1}   {staeblaenge:>8.3f} m  "
+            print(f"{i}-{j:>1}   {stablaenge:>8.3f} m  "
                   f"{stabkraft:>12.2f} N  {stabtyp:>8}")
 ```
 ````
@@ -630,9 +630,9 @@ for i in range(anzahl_knoten):
     for j in range(i + 1, anzahl_knoten):
         if verbindung[i, j]:
             differenz   = knoten_pos[j] - knoten_pos[i]
-            staeblaenge = np.linalg.norm(differenz)
+            stablaenge = np.linalg.norm(differenz)
             winkel      = np.arctan2(differenz[1], differenz[0])
-            k_stab      = elastizitaetsmodul * querschnitt_neu / staeblaenge
+            k_stab      = elastizitaetsmodul * querschnitt_neu / stablaenge
             cos_w, sin_w = np.cos(winkel), np.sin(winkel)
             k_el = k_stab * np.array([
                 [cos_w**2,      sin_w * cos_w],
@@ -688,9 +688,9 @@ for i in range(anzahl_knoten):
     for j in range(i + 1, anzahl_knoten):
         if verbindung_a3[i, j]:
             differenz   = knoten_pos[j] - knoten_pos[i]
-            staeblaenge = np.linalg.norm(differenz)
+            stablaenge  = np.linalg.norm(differenz)
             winkel      = np.arctan2(differenz[1], differenz[0])
-            k_stab      = elastizitaetsmodul * querschnitt / staeblaenge
+            k_stab      = elastizitaetsmodul * querschnitt / stablaenge
             cos_w, sin_w = np.cos(winkel), np.sin(winkel)
             k_el = k_stab * np.array([
                 [cos_w**2,      sin_w * cos_w],
