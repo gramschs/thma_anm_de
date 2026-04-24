@@ -1,0 +1,310 @@
+---
+kernelspec:
+  name: python3
+  display_name: 'Python 3'
+---
+
+# 5.2 Übung: Drehmatrizen
+
+In Abschnitt 5.1 haben wir die 2D-Drehmatrix $\mathbf{R}(\varphi)$ und die
+drei Grunddrehmatrizen für den 3D-Raum kennengelernt. In dieser Übung wenden
+wir sie auf konkrete Aufgaben an.
+
++++
+
+```{code-cell} python
+# --- Importe und Hilfsfunktionen für alle Aufgaben ---
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.patches import Polygon as MplPolygon
+
+# 2D-Drehmatrix
+def drehmatrix_2d(phi):
+    return np.array([
+        [np.cos(phi), -np.sin(phi)],
+        [np.sin(phi),  np.cos(phi)],
+    ])
+
+# Grunddrehmatrizen in 3D (Kardan Z-Y-X)
+def R_gieren(alpha):
+    return np.array([[ np.cos(alpha), -np.sin(alpha), 0],
+                     [ np.sin(alpha),  np.cos(alpha), 0],
+                     [             0,              0, 1]])
+
+def R_nicken(beta):
+    return np.array([[ np.cos(beta), 0, np.sin(beta)],
+                     [            0, 1,            0],
+                     [-np.sin(beta), 0, np.cos(beta)]])
+
+def R_rollen(gamma):
+    return np.array([[1,              0,               0],
+                     [0,  np.cos(gamma), -np.sin(gamma)],
+                     [0,  np.sin(gamma),  np.cos(gamma)]])
+
+# Unser Dreieck
+dreieck = np.array([
+    [0.0, 0.0],   # Eckpunkt A
+    [2.0, 0.0],   # Eckpunkt B
+    [1.0, 2.0],   # Eckpunkt C
+])
+```
+
+## Aufgabe 1: Das Dreieck in vier Lagen
+
+Drehen Sie das Dreieck um $45°$, $135°$, $225°$ und $315°$ und stellen Sie
+alle vier Lagen zusammen mit dem Original in einer Abbildung dar.
+
+Wir haben in Abschnitt 5.1 gesehen, dass `(R @ dreieck.T).T` alle drei
+Eckpunkte gleichzeitig dreht. `dreieck.T` hat die Form $(2, 3)$: zwei
+Koordinatenzeilen, drei Spalten für die Eckpunkte. `R @ dreieck.T`
+multipliziert die $2 \times 2$-Matrix mit jeder Spalte, also mit jedem
+Eckpunkt. Das abschließende `.T` bringt das Ergebnis zurück in die Form
+$(3, 2)$.
+
+```{admonition} Aufgabe 1
+:class: tip
+1. Berechnen Sie die vier gedrehten Dreiecke mit einer `for`-Schleife über
+   die vier Winkel.
+2. Stellen Sie Original und alle vier gedrehten Dreiecke in einer Abbildung
+   dar. Verwenden Sie für jedes Dreieck eine andere Farbe oder Linienart.
+3. Beschreiben Sie in einem Satz: Was passiert geometrisch, wenn man die
+   vier Winkel $45°$, $135°$, $225°$, $315°$ wählt?
+```
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.patches import Polygon as MplPolygon
+
+dreieck = np.array([[0.0, 0.0], [2.0, 0.0], [1.0, 2.0]])
+
+def drehmatrix_2d(phi):
+    return np.array([[np.cos(phi), -np.sin(phi)],
+                     [np.sin(phi),  np.cos(phi)]])
+
+winkel_grad = [45, 135, 225, 315]
+farben = ['red', 'green', 'orange', 'purple']
+
+fig, ax = plt.subplots(figsize=(5, 5))
+ax.add_patch(MplPolygon(dreieck, closed=True, fill=False,
+                         edgecolor='blue', linewidth=2, label='Original'))
+
+for winkel, farbe in zip(winkel_grad, farben):
+    phi = np.deg2rad(winkel)
+    R = drehmatrix_2d(phi)
+    dreieck_gedreht = (R @ dreieck.T).T
+    ax.add_patch(MplPolygon(dreieck_gedreht, closed=True, fill=False,
+                             edgecolor=farbe, linewidth=1.5,
+                             label=f'{winkel}°'))
+
+ax.set_xlim(-3, 3); ax.set_ylim(-3, 3)
+ax.set_aspect('equal'); ax.grid(True); ax.legend()
+plt.show()
+```
+
+Die vier Winkel sind gleichmäßig um $90°$ versetzt. Die vier gedrehten
+Dreiecke liegen deshalb wie die Zacken eines Rades gleichmäßig um den
+Ursprung verteilt, jedes um eine Vierteldrehung gegenüber dem vorherigen
+versetzt.
+````
+
+## Aufgabe 2: Eine Drehung rückgängig machen
+
+Drehen Sie Eckpunkt C um $\varphi = 55°$ und machen Sie die Drehung danach
+mit der Inversen wieder rückgängig. Verwenden Sie dafür die
+Orthogonalitätseigenschaft $\mathbf{R}^{-1} = \mathbf{R}^\top$.
+
+```{admonition} Aufgabe 2
+:class: tip
+1. Drehen Sie `dreieck[2]` (Eckpunkt C) um $55°$ und geben Sie das Ergebnis
+   aus.
+2. Wenden Sie `R.T` auf den gedrehten Punkt an. Erhalten Sie den
+   ursprünglichen Punkt zurück? Prüfen Sie mit `np.allclose`.
+3. Warum ist `R.T` die Inverse von `R`? Erklären Sie in einem Satz ohne
+   Code.
+```
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+import numpy as np
+
+dreieck = np.array([[0.0, 0.0], [2.0, 0.0], [1.0, 2.0]])
+
+def drehmatrix_2d(phi):
+    return np.array([[np.cos(phi), -np.sin(phi)],
+                     [np.sin(phi),  np.cos(phi)]])
+
+phi = np.deg2rad(55)
+R = drehmatrix_2d(phi)
+
+# Eckpunkt C drehen
+punkt_C = dreieck[2]
+punkt_C_gedreht = R @ punkt_C
+print(f"Eckpunkt C original: {punkt_C}")
+print(f"Eckpunkt C gedreht:  {np.round(punkt_C_gedreht, 4)}")
+
+# Rückdrehung mit R^T
+punkt_C_zurueck = R.T @ punkt_C_gedreht
+print(f"Eckpunkt C zurück:   {np.round(punkt_C_zurueck, 4)}")
+print(f"Gleich wie Original: {np.allclose(punkt_C, punkt_C_zurueck)}")
+```
+
+$\mathbf{R}^\top$ ist die Inverse von $\mathbf{R}$, weil für orthogonale
+Matrizen $\mathbf{R}^\top \mathbf{R} = \mathbf{I}$ gilt: die Transponierte
+"macht" genau das, was $\mathbf{R}$ getan hat, wieder rückgängig.
+````
+
+## Aufgabe 3: Kardan-Winkel
+
+Ein Bauteil ist in der Ausgangslage mit dem Vektor $\vec{v} = (1, 0, 0)^\top$
+ausgerichtet. Wenden Sie verschiedene Kombinationen von Kardan-Winkeln an und
+beobachten Sie, wie sich $\vec{v}$ verändert.
+
+```{admonition} Aufgabe 3
+:class: tip
+1. Berechnen Sie $\mathbf{R}_\text{ges} \cdot \vec{v}$ für
+   $\alpha = 45°$, $\beta = 30°$, $\gamma = 0°$.
+2. Setzen Sie nun $\alpha = 0°$, $\beta = 0°$, $\gamma = 45°$. Beschreiben
+   Sie in einem Satz den Unterschied zum Ergebnis aus Teilaufgabe 1, bevor
+   Sie den Code ausführen.
+3. Welche einzelne Grunddrehung dreht $\vec{v} = (1, 0, 0)^\top$ in die
+   Richtung $(0, 0, -1)^\top$? Finden Sie die Antwort zuerst durch
+   Überlegen, dann durch Ausprobieren.
+```
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+import numpy as np
+
+def R_gieren(alpha):
+    return np.array([[ np.cos(alpha), -np.sin(alpha), 0],
+                     [ np.sin(alpha),  np.cos(alpha), 0],
+                     [             0,              0, 1]])
+
+def R_nicken(beta):
+    return np.array([[ np.cos(beta), 0, np.sin(beta)],
+                     [            0, 1,            0],
+                     [-np.sin(beta), 0, np.cos(beta)]])
+
+def R_rollen(gamma):
+    return np.array([[1,              0,               0],
+                     [0,  np.cos(gamma), -np.sin(gamma)],
+                     [0,  np.sin(gamma),  np.cos(gamma)]])
+
+v = np.array([1.0, 0.0, 0.0])
+
+# Teilaufgabe 1
+R1 = R_rollen(0) @ R_nicken(np.deg2rad(30)) @ R_gieren(np.deg2rad(45))
+print(f"Teilaufgabe 1: {np.round(R1 @ v, 4)}")
+
+# Teilaufgabe 2
+R2 = R_rollen(np.deg2rad(45)) @ R_nicken(0) @ R_gieren(0)
+print(f"Teilaufgabe 2: {np.round(R2 @ v, 4)}")
+
+# Teilaufgabe 3: (1,0,0) -> (0,0,-1) ist eine Drehung um y um +90 Grad
+R3 = R_nicken(np.deg2rad(90))
+print(f"Teilaufgabe 3: {np.round(R3 @ v, 4)}")
+```
+
+Zu Teilaufgabe 2: Rollen dreht in der $yz$-Ebene, lässt die $x$-Achse also
+unberührt. Der Vektor $(1, 0, 0)^\top$ bleibt deshalb unverändert. Zu
+Teilaufgabe 3: Nicken um $+90°$ dreht die $x$-Achse in Richtung $-z$, weil
+$\mathbf{R}_y(90°) \cdot (1, 0, 0)^\top = (0, 0, -1)^\top$.
+````
+````
+
+## Aufgabe 4: Zwei Drehungen hintereinander
+
+Wir verketten zwei verschiedene 2D-Drehungen. Das Ergebnis hängt von der
+Reihenfolge ab, denn Matrizenmultiplikation ist nicht kommutativ.
+
+````{admonition} Aufgabe 4
+:class: tip
+1. Berechnen Sie $\mathbf{R}_1 = \mathbf{R}(60°)$ und
+   $\mathbf{R}_2 = \mathbf{R}(30°)$. Was erwarten Sie für
+   $\mathbf{R}_1 \cdot \mathbf{R}_2$? Berechnen Sie das Produkt und
+   vergleichen Sie mit $\mathbf{R}(90°)$.
+2. Bilden Sie auch $\mathbf{R}_2 \cdot \mathbf{R}_1$. Ergibt sich dasselbe
+   wie $\mathbf{R}_1 \cdot \mathbf{R}_2$?
+3. Wenden Sie $\mathbf{R}_1 \cdot \mathbf{R}_2$ auf das Dreieck an und
+   zeichnen Sie Original und Ergebnis. Entspricht das Bild Ihrer Erwartung
+   aus Teilaufgabe 1?
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.patches import Polygon as MplPolygon
+
+dreieck = np.array([[0.0, 0.0], [2.0, 0.0], [1.0, 2.0]])
+
+def drehmatrix_2d(phi):
+    return np.array([[np.cos(phi), -np.sin(phi)],
+                     [np.sin(phi),  np.cos(phi)]])
+
+R1 = drehmatrix_2d(np.deg2rad(60))
+R2 = drehmatrix_2d(np.deg2rad(30))
+
+# Teilaufgabe 1: R1 * R2 und Vergleich mit R(90°)
+R12 = R1 @ R2
+R90 = drehmatrix_2d(np.deg2rad(90))
+print("R1 @ R2:")
+print(np.round(R12, 4))
+print(f"Gleich wie R(90°): {np.allclose(R12, R90)}")
+
+# Teilaufgabe 2: R2 * R1
+R21 = R2 @ R1
+print(f"\nR2 @ R1 gleich wie R1 @ R2: {np.allclose(R12, R21)}")
+
+# Teilaufgabe 3: Dreieck drehen
+dreieck_gedreht = (R12 @ dreieck.T).T
+fig, ax = plt.subplots(figsize=(4, 4))
+ax.add_patch(MplPolygon(dreieck, closed=True, fill=False,
+                         edgecolor='blue', linewidth=2, label='Original'))
+ax.add_patch(MplPolygon(dreieck_gedreht, closed=True, fill=False,
+                         edgecolor='red', linewidth=2, label='Gedreht 90°'))
+ax.set_xlim(-3, 3); ax.set_ylim(-3, 3)
+ax.set_aspect('equal'); ax.grid(True); ax.legend()
+plt.show()
+```
+
+$\mathbf{R}_1 \cdot \mathbf{R}_2 = \mathbf{R}(60°) \cdot \mathbf{R}(30°) =
+\mathbf{R}(90°)$. Bei 2D-Drehmatrizen ist die Reihenfolge egal, weil das
+Ergebnis stets eine Drehung um den Summenwinkel ist. Das gilt jedoch nicht
+mehr für 3D-Drehmatrizen um verschiedene Achsen.
+````
+````
+
+## Zusammenfassung und Ausblick
+
+Wir haben die Drehmatrix auf ein vollständiges Objekt angewendet, Drehungen
+rückgängig gemacht und gesehen, dass die Reihenfolge bei 2D-Drehungen keine
+Rolle spielt, bei 3D-Drehungen um verschiedene Achsen aber sehr wohl. Im
+nächsten Abschnitt erweitern wir unser Werkzeug: Wir lernen die homogenen
+Koordinaten kennen, mit denen wir auch Verschiebungen als Matrixmultiplikation
+darstellen können.
