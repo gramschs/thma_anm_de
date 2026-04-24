@@ -15,11 +15,24 @@ wird mit **MyST Markdown** erstellt und ist für **Jupyter Book** konzipiert.
 
 ## Struktur eines Kapitels
 
+Jedes Kapitel folgt dieser Aufteilung:
+
+| Sektion | Dauer | Beschreibung |
+| ------- | ------- | ----------- |
+| sec01 | 45 min | Vorlesung, interaktiv als Jupyter Notebook präsentiert |
+| sec02 | 45 min | Übung in Einzelarbeit oder in Kleingruppen |
+| sec03 | 45 min | Vorlesung, interaktiv als Jupyter Notebook präsentiert |
+| sec04 | 45 min | Übung in Einzelarbeit oder in Kleingruppen |
+| sec05 | 180 min | Übungsaufgaben ✩/✩✩/✩✩✩  für das vertiefende Selbststudium zuhause |
+
+Sections, die als Vorlesung dienen, folgen folgendem Schema:
+
 - Kurze **Motivation** am Anfang, die an Bekanntes anknüpft ("Bisher haben wir…
   In diesem Kapitel…")
-- **Lernziele** als Checkliste mit Checkboxen, direkt nach der Motivation
+- **Lernziele** als Checkliste mit Checkboxen, direkt nach der Motivation mit der H2-Überschrift Lernziele
 - Roter Faden: Code-Beispiel → Erklärung & Verallgemeinerung → Mini-Übung →
   Lösung
+- nach Möglichkeit **drei Unterabschnitte** (mit H2-Überschriften), deren Präsentation ca. 10 min dauert und die mit einer Mini-Übung von 5 min abschließt
 - Kurze **Zusammenfassung** am Ende mit explizitem Ausblick auf das nächste
   Kapitel
 
@@ -103,20 +116,6 @@ muss aber auch ohne ihn verständlich sein.
 Code-Zelle in ein bis zwei Sätzen erklärt. Studierende, die ohne Begleitung
 arbeiten, haben keine Möglichkeit, spontan nachzufragen.
 
-### Zeitschätzung für Sektionen
-
-Als Faustregel gilt: Studierende verbringen kaum Zeit mit dem Lesen des
-Fließtexts. Die tatsächliche Bearbeitungszeit setzt sich zusammen aus:
-
-- ca. 3 bis 5 Minuten pro Code-Zelle (nachvollziehen, ausführen,
-  verstehen)
-- ca. 10 bis 15 Minuten pro Mini-Übung (je nach Schwierigkeit)
-- Wiederholungsanteil aus früheren Kapiteln reduziert die Zeit spürbar
-
-Eine Sektion mit 3 Code-Zellen und 2 Mini-Übungen erfordert also etwa
-30 bis 40 Minuten. Sektionen mit Wiederholungsanteil aus dem Vorkapitel
-können dabei am unteren Ende der Schätzung liegen.
-
 ## Storytelling
 
 - Ein durchgehendes Beispiel pro Kapitel, das sich wie ein roter Faden zieht
@@ -168,7 +167,6 @@ print("Beispiel")
 
 ### Mini-Übungen (innerhalb der Vorlesungskapitel)
 
-````markdown
 ```{admonition} Mini-Übung
 :class: tip
 Aufgabentext hier.
@@ -176,7 +174,6 @@ Aufgabentext hier.
 
 ```{code-cell} python
 # Code-Zelle
-
 ```
 
 ````{admonition} Lösung
@@ -204,7 +201,7 @@ Code + kurze Erklärung des Ergebnisses
 - Variablennamen und Funktionsnamen ausschließlich **ASCII-Zeichen**: keine
   Umlaute (ä, ö, ü) und kein ß
 - Erlaubt: `messwerte`, `groesse`, `standardabweichung`, `daempfung`
-- Nicht erlaubt: `messwärte`, `größe`, `dämpfung`
+- Nicht erlaubt: `meßwerte`, `größe`, `dämpfung`
 - **Kommentare und Strings dürfen und sollen Umlaute enthalten**, damit sie
   natürliches Deutsch bleiben und gut lesbar sind. Beispiel:
   `# Temperaturdifferenz über jede Schicht` ist korrekt,
@@ -213,8 +210,9 @@ Code + kurze Erklärung des Ergebnisses
 ## Admonition-Blöcke
 
 - `attention` für Lernziele (als Checkliste mit `* [ ]`)
-- `note` für konzeptuelle Hinweise und Unterschiede (z.B. Liste vs. Array)
+- `note` für Definitionen und Erläuterungen von Faachbegriffen
 - `tip` für Mini-Übungen und deren Lösungen
+- `warning` für Hinweise
 - Lösungen immer als `dropdown`, mit Code **und** kurzer Erklärung des
   Ergebnisses
 
@@ -222,7 +220,7 @@ Code + kurze Erklärung des Ergebnisses
 
 Das Kapitel mit den Übungen für das vertiefende Selbststudium zuhause enthält
 ausschließlich Übungsaufgaben für das Selbststudium. Es hat keine erklärenden
-Texte, keine Motivation und keine Zusammenfassung.
+Texte, keine Motivation, keine Lernziele und keine Zusammenfassung.
 
 ### Schwierigkeitsgrade
 
@@ -298,7 +296,7 @@ MyST-Markdown-Quelldatei eingebunden. Die Kompilierung erfolgt mit `lualatex`.
 
 ### Präambel-Vorlage
 
-Jede TikZ-Datei verwendet ausnahmslos die folgende Präambel:
+Jede TikZ-Datei verwendet mindestens die folgende Präambel:
 
 ```latex
 \documentclass[11pt]{standalone}
@@ -317,8 +315,9 @@ Jede TikZ-Datei verwendet ausnahmslos die folgende Präambel:
 \usepackage{pifont}
 ```
 
-`pgfplots` wird in jeder Datei eingebunden, auch wenn die Abbildung nur
-reines TikZ verwendet, damit die Präambel über alle Dateien identisch bleibt.
+`pgfplots` wird in jeder Datei eingebunden, auch wenn die Abbildung nur reines
+TikZ verwendet, damit die Präambel über alle Dateien identisch bleibt. Die
+Präamble darf erweitert werden.
 
 ### Schrift
 
@@ -502,80 +501,3 @@ Keine Informationen wiederholen, die bereits im umgebenden Fließtext stehen.
 Dateinamen beschreibend, in Kleinbuchstaben mit Unterstrichen, ohne
 Kapitel- oder Sektionsnummer. Das Sprachkürzel `_DE` oder `_EN` nur
 anhängen, wenn zwei Sprachversionen derselben Abbildung existieren.
-
----
-
-## Didaktisches Konzept der Präsenzvorlesung
-
-### Kurskontext
-
-Der Kurs hat **5 Studierende** im Bachelor Maschinenbau. Die Vorlesung findet
-montags in einem Computerraum statt: 90 Minuten vor der Mittagspause und 90
-Minuten danach. Zwei Studierende haben geringe Python-Vorkenntnisse; sie
-wurden explizit darauf hingewiesen, dass eigenständiges Üben außerhalb der
-Vorlesung Voraussetzung für das Mitkommen ist.
-
-### Das Buchklammern-Format (45-Minuten-Zyklus)
-
-Die Vorlesung ist in **45-Minuten-Zyklen** gegliedert. Pro 90-Minuten-Block
-gibt es zwei Zyklen. Jeder Zyklus folgt demselben Schema:
-
-| Phase | Dauer | Beschreibung |
-| ----- | ----- | ----------- |
-| Einstieg | 10 min | Dozent motiviert das Thema und führt die **erste Code-Zelle** der Sektion live vor. Keine vollständige Durchführung, nur genug für den Orientierungsanker. |
-| Arbeitsphase | 25 min | Studierende arbeiten **eigenständig** durch die restlichen Code-Zellen und Mini-Übungen. Dozent ist bilateral für Rückfragen verfügbar. |
-| Abschluss | 10 min | Dozent kommentiert Stolperstellen und überraschende Ergebnisse, die beim Herumgehen aufgefallen sind. Keine Studierendenpräsentationen (hat sich nicht bewährt). |
-
-### Konsequenzen für die Sektionsgestaltung
-
-**Erste Code-Zelle als Einstieg:** Die erste Code-Zelle einer Sektion muss
-für einen 10-minütigen Frontalanteil geeignet sein. Sie soll das zentrale
-neue Konzept einführen und einen vollständigen, lauffähigen Eindruck
-vermitteln, ohne das ganze Thema vorwegzunehmen.
-
-**Restliche Zellen für die Arbeitsphase:** Alle weiteren Code-Zellen und
-Mini-Übungen sind auf 25 Minuten eigenständige Arbeit ausgelegt. Als
-Faustregel gilt: 2 Code-Zellen + 2 Mini-Übungen passen gut in 25 Minuten
-(Wiederholungsanteil reduziert die Zeit).
-
-**Keine Studierendenpräsentationen:** Der Abschluss wird nicht als
-Studierendenpräsentation gestaltet, weil niemand freiwillig präsentiert.
-Der Dozent greift stattdessen selbst auf und kommentiert.
-
-### Sektionsstruktur pro Kapitel
-
-Jedes Kapitel folgt dieser Aufteilung:
-
-| Sektion | Einsatz | Beschreibung |
-| ------- | ------- | ----------- |
-| sec01 | Zyklus 1 (vor Mittagspause) | Vorlesungsinhalt, erste Code-Zelle für Einstieg |
-| sec02 | Zyklus 2 (vor Mittagspause) | Vorlesungsinhalt, erste Code-Zelle für Einstieg |
-| sec03 | Zyklus 3 (nach Mittagspause) | Vorlesungsinhalt, erste Code-Zelle für Einstieg |
-| sec04 | Zyklus 4 (nach Mittagspause) | Vorlesungsinhalt, erste Code-Zelle für Einstieg |
-| sec05 | Selbststudium zuhause | Übungsaufgaben ✩/✩✩/✩✩✩ |
-
-### Vorlesungsplan Kapitel 4 (Referenzbeispiel)
-
-**Block 1 (vor Mittagspause):**
-
-| Zeit | Dauer | Format | Inhalt |
-| ---- | ---- | ----- | ------ |
-| 0-10 min | 10 min | Frontal | Einstieg Zyklus 1: sec01 Code-Zelle 1 (Impedanzoperatoren) |
-| 10-35 min | 25 min | Selbststudium | sec01 ab LGS-Abschnitt (Code-Zellen 2+3, Mini-Übungen 2+3) |
-| 35-45 min | 10 min | Plenum | Abschluss: Frequenzgang, Resonanz, `dtype=complex` |
-| 45-55 min | 10 min | Frontal | Einstieg Zyklus 2: sec02 Code-Zelle 1 (`getUebertragung`) |
-| 55-80 min | 25 min | Selbststudium | sec02 ab Frequenzgang (Code-Zellen 2+3, Mini-Übungen 1+2) |
-| 80-90 min | 10 min | Plenum | Abschluss: Bode-Diagramm, −3 dB-Grenzfrequenzen |
-
-**Block 2 (nach Mittagspause):**
-
-| Zeit | Dauer | Format | Inhalt |
-| ---- | ----- | ----- | ------ |
-| 0-10 min | 10 min | Frontal | Einstieg Zyklus 3: FEM-Konzept, sec03 Code-Zelle 1 |
-| 10-35 min | 25 min | Selbststudium | sec03 ab Steifigkeitsmatrix (Code-Zellen 2+3, Mini-Übungen 2+3) |
-| 35-45 min | 10 min | Plenum | Abschluss: Lagerkräfte, Linearität, Vorzeichen |
-| 45-55 min | 10 min | Frontal | Einstieg Zyklus 4: sec04 Kernpunkte zeigen (Konnektivitätsmatrix) |
-| 55-80 min | 25 min | Selbststudium | sec04 (Brücke, Eigengewicht einbauen) |
-| 80-90 min | 10 min | Plenum | Abschluss: Eigengewichts-Paradoxon, Vergleich mit Lösungs-Notebook |
-
-**Selbststudium zuhause:** sec04 (sec05 (Übungsaufgaben ✩-✩✩✩).

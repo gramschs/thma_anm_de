@@ -44,6 +44,20 @@ project:
       - file: chapter04/chapter04_sec04.md
       - file: chapter04/chapter04_sec05.md
       - file: chapter04/chapter04_sec06.md
+    - title: 5. Koordinatentransformation I
+      children:
+      - file: chapter05/chapter05_sec01.md
+      - file: chapter05/chapter05_sec02.md
+      - file: chapter05/chapter05_sec03.md
+      - file: chapter05/chapter05_sec04.md
+      - file: chapter05/chapter05_sec05.md
+#    - title: 6. Koordinatentransformation II
+#      children:
+#      - file: chapter06/chapter06_sec01.md
+#      - file: chapter06/chapter06_sec02.md
+#      - file: chapter06/chapter06_sec03.md
+#      - file: chapter06/chapter06_sec04.md
+#      - file: chapter06/chapter06_sec05.md
 #    - title: Numerische Analysis
 #      children:
 #      - file: chapter05/chapter04_sec01.md
