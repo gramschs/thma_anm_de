@@ -4,92 +4,231 @@ kernelspec:
   display_name: 'Python 3'
 ---
 
-# Geometrische Interpretation: Sekante und Tangente
+# 7.2 Fehleranalyse und optimale Schrittweite
 
-Im vorigen Abschnitt haben wir den Differenzenquotienten als mittlere Änderungsrate
-und den Differentialquotienten als momentane Änderungsrate kennengelernt. In diesem
-Kapitel interpretieren wir beide Begriffe geometrisch. Das liefert uns nicht nur ein
-tieferes Verständnis der Ableitung, sondern auch die entscheidende Brücke zur
-**numerischen Differentiation**: Was wir analytisch als Grenzwert beschreiben, werden
-wir numerisch durch einen Differenzenquotienten mit kleinem, aber endlichem $\Delta x$
-approximieren.
+In Abschnitt 7.1 haben wir den Fehler der drei Differenzenformeln im
+Log-Log-Plot dargestellt. Dabei haben wir Schrittweiten bis $10^{-10}$
+betrachtet. Was passiert, wenn wir $\Delta x$ noch viel kleiner machen?
+Wir starten direkt mit einem Experiment.
 
 ## Lernziele
 
 ```{admonition} Lernziele
 :class: attention
-* [ ] Sie können den **Differenzenquotienten** geometrisch als Steigung einer
-  **Sekante** interpretieren.
-* [ ] Sie können den **Differentialquotienten** geometrisch als Steigung einer
-  **Tangente** interpretieren.
-* [ ] Sie verstehen, wie die Sekante beim Grenzübergang $\Delta x \to 0$ in die
-  Tangente übergeht.
+* [ ] Sie können den Abschneidefehler der Vorwärtsdifferenz mithilfe der
+  Taylor-Entwicklung herleiten und die Fehlerordnung $O(\Delta x)$ angeben.
+* [ ] Sie können erklären, warum der zentrale Differenzenquotient die
+  Fehlerordnung $O(\Delta x^2)$ erreicht.
+* [ ] Sie wissen, was Maschinengenauigkeit ist, und können erklären, warum
+  sehr kleine Schrittweiten den Fehler wieder vergrößern.
+* [ ] Sie können die optimale Schrittweite für die Vorwärtsdifferenz und
+  den zentralen Differenzenquotienten der Größenordnung nach angeben.
 ```
 
-## Der Differenzenquotient als Steigung der Sekante
++++
 
-Bisher haben wir zwei verschiedene Kontrollpunkte auf der Autobahn oder
-allgemein zwei verschiedene Ursachen $x_1$ und $x_2$ betrachtet. Betrachten wir
-die Punkte $(x_1, f(x_1))$ und $(x_2, f(x_2))$ rein geometrisch, also mit ihren
-Koordinaten $(x_1, y_1)$ und $(x_2, y_2)$, so lautet der Differenzenquotient
+## Einstieg: Ein überraschender Befund
+
+Wir erweitern den Log-Log-Plot aus Abschnitt 7.1 und verlängern den
+Bereich der Schrittweiten bis $\Delta x = 10^{-16}$:
+
+```{code-cell} python
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Funktion und analytische Ableitung
+def f(x):
+    return np.sin(x)
+
+def f_strich(x):
+    return np.cos(x)
+
+# Differenzenformeln aus Abschnitt 7.1
+def vorwaerts(f, x, dx):
+    return (f(x + dx) - f(x)) / dx
+
+def zentral(f, x, dx):
+    return (f(x + dx) - f(x - dx)) / (2 * dx)
+
+# Auswertestelle und exakter Wert
+x0    = 1.0
+exakt = f_strich(x0)
+
+# 200 Schrittweiten gleichmäßig im Log-Maßstab von 0.1 bis 1e-16
+dx_werte = np.logspace(-1, -16, 200)
+
+# Fehler für jede Schrittweite berechnen und speichern
+fehler_v = []
+fehler_z = []
+for dx in dx_werte:
+    fehler_v.append(abs(exakt - vorwaerts(f, x0, dx)))
+    fehler_z.append(abs(exakt - zentral(f, x0, dx)))
+
+# Log-Log-Plot: beide Achsen logarithmisch
+fig, ax = plt.subplots()
+ax.loglog(dx_werte, fehler_v, label='Vorwärtsdifferenz')
+ax.loglog(dx_werte, fehler_z, label='Zentraler Differenzenquot.')
+ax.set_xlabel('Schrittweite Δx')
+ax.set_ylabel('Fehler |f′(x₀) − Näherung|')
+ax.set_title('Fehler für sehr kleine Schrittweiten')
+ax.legend()
+ax.grid(True, which='both')
+plt.show()
+```
+
+Für sehr kleine Schrittweiten steigt der Fehler wieder an, anstatt
+weiter zu fallen. Es gibt also eine optimale Schrittweite. Diesen Befund
+erklären wir in zwei Schritten: Zunächst analysieren wir mit der
+Taylor-Entwicklung, warum der Fehler bei größeren $\Delta x$ abnimmt und
+warum die zentrale Formel dabei besser abschneidet. Dann untersuchen wir,
+was bei sehr kleinen $\Delta x$ passiert.
+
+## Abschneidefehler: Warum die Formeln unterschiedlich genau sind
+
+Die **Taylor-Entwicklung** schreibt den Funktionswert $f(x + \Delta x)$
+als unendliche Reihe um den Punkt $x$:
 
 \begin{equation*}
-\frac{f(x_2) - f(x_1)}{x_2 - x_1} = \frac{y_2 - y_1}{x_2 - x_1} =
-\frac{\Delta y}{\Delta x}.
+f(x + \Delta x)
+= f(x) + \Delta x \cdot f'(x) +
+  \frac{\Delta x^2}{2} \cdot f''(x) +
+  \frac{\Delta x^3}{6} \cdot f'''(x) + \cdots
 \end{equation*}
 
-Verbinden wir die beiden Punkte $(x_1, y_1)$ und $(x_2, y_2)$ durch eine Gerade,
-dann ist der Differenzenquotient die **Steigung** dieser Gerade. Diese spezielle
-Gerade, die zwei Punkte eines Funktionsgraphen miteinander verbindet, wird
-**Sekante** genannt.
+Wir lösen nach $f'(x)$ auf. Dazu subtrahieren wir $f(x)$ auf beiden
+Seiten und teilen durch $\Delta x$:
 
-```{admonition} Was ist ... die Sekante?
+\begin{equation*}
+f'(x)
+= \frac{f(x + \Delta x) - f(x)}{\Delta x} - \frac{\Delta x}{2} \cdot f''(x) -
+  \frac{\Delta x^2}{6} \cdot f'''(x) - \cdots
+\end{equation*}
+
+Der erste Term rechts ist genau unsere Vorwärtsdifferenz. Die übrigen
+Terme sind der Fehler, der entsteht, wenn wir die unendliche Reihe nach
+dem ersten Glied abschneiden. Diesen Fehler nennen wir **Abschneidefehler**
+(englisch: truncation error).
+
+Der führende Fehlerterm ist $\frac{\Delta x}{2} \cdot |f''(x)|$. Er ist
+proportional zu $\Delta x$. Wir schreiben das als **Fehlerordnung**
+$O(\Delta x)$: halbieren wir $\Delta x$, halbiert sich auch der Fehler.
+Das haben wir in Abschnitt 7.1 in der Fehlertabelle genau so beobachtet.
+
+### Warum der zentrale Differenzenquotient besser ist
+
+Für den zentralen Differenzenquotienten brauchen wir zwei
+Taylor-Entwicklungen:
+
+\begin{align*}
+f(x + \Delta x)
+&= f(x) + \Delta x \cdot f'(x) +
+   \frac{\Delta x^2}{2} \cdot f''(x) +
+   \frac{\Delta x^3}{6} \cdot f'''(x) + \cdots \\[6pt]
+f(x - \Delta x)
+&= f(x) - \Delta x \cdot f'(x) +
+   \frac{\Delta x^2}{2} \cdot f''(x) -
+   \frac{\Delta x^3}{6} \cdot f'''(x) + \cdots
+\end{align*}
+
+Wir subtrahieren die zweite von der ersten Gleichung:
+
+\begin{equation*}
+f(x + \Delta x) - f(x - \Delta x)
+= 2 \Delta x \cdot f'(x) + \frac{\Delta x^3}{3} \cdot f'''(x) + \cdots
+\end{equation*}
+
+Die $f''$-Terme heben sich durch die Symmetrie exakt auf. Teilen wir
+durch $2 \Delta x$, ergibt sich:
+
+\begin{equation*}
+f'(x)
+= \frac{f(x + \Delta x) - f(x - \Delta x)}{2 \Delta x} -
+  \frac{\Delta x^2}{6} \cdot f'''(x) - \cdots
+\end{equation*}
+
+Der führende Fehlerterm ist $\frac{\Delta x^2}{6} \cdot |f'''(x)|$,
+also Fehlerordnung $O(\Delta x^2)$. Halbieren wir $\Delta x$, wird der
+Fehler viermal kleiner. Das ist der Grund für die steilere Gerade im
+Log-Log-Plot.
+
+```{admonition} Fehlerordnungen im Überblick
 :class: note
-Die **Sekante** ist eine Gerade, die den Graphen einer Funktion $f$ in zwei
-Punkten $(x_1, f(x_1))$ und $(x_2, f(x_2))$ schneidet. Ihre Steigung ist
-gleich dem Differenzenquotienten:
-\begin{equation*}
-m_\text{s} = \frac{f(x_2) - f(x_1)}{x_2 - x_1} = \frac{\Delta y}{\Delta x}.
-\end{equation*}
+| Formel | Führender Fehlerterm | Fehlerordnung |
+|---|---|---|
+| Vorwärtsdifferenz | $\frac{\Delta x}{2} \cdot \lvert f''(x)\rvert$ | $O(\Delta x)$ |
+| Rückwärtsdifferenz | $\frac{\Delta x}{2} \cdot \lvert f''(x)\rvert$ | $O(\Delta x)$ |
+| Zentraler Differenzenquot. | $\frac{\Delta x^2}{6} \cdot \lvert f'''(x)\rvert$ | $O(\Delta x^2)$ |
 ```
 
-In der obigen Definition werden allgemein zwei Punkte $(x_1, y_1)$ und $(x_2,
-y_2)$ betrachtet. Im Folgenden möchten wir einen der beiden Punkte fixieren und
-nur den zweiten Punkt für die Sekante variieren. Wir notieren den fixierten
-Punkt als $(x_0, y_0)$ und den variablen, zweiten Punkt mit $(x,y)$. Damit
-ist der Differenzenquotient und die Steigung der Sekante
+Wir überprüfen die Fehlerordnungen numerisch. Dazu vergleichen wir den
+tatsächlichen Fehler mit dem theoretisch vorhergesagten:
 
-\begin{equation*}
-m_{\text{s}} = \frac{f(x) - f(x_0)}{x - x_0} = \frac{y - y_0}{x - x_0} =
-\frac{\Delta y}{\Delta x}.
-\end{equation*}
+```{code-cell} python
+import numpy as np
 
-Nun untersuchen wir die Beispielfunktion
+# Funktion, Ableitung, zweite und dritte Ableitung von sin(x)
+def f(x):
+    return np.sin(x)
 
-\begin{equation*}
-f(x)=x^2-2x+3
-\end{equation*}
+def f_strich(x):
+    return np.cos(x)
 
-an der Stelle $x_0=2$.
+def f_zweimal(x):
+    """Zweite Ableitung von sin(x): -sin(x)."""
+    return -np.sin(x)
+
+def f_dreimal(x):
+    """Dritte Ableitung von sin(x): -cos(x)."""
+    return -np.cos(x)
+
+def vorwaerts(f, x, dx):
+    return (f(x + dx) - f(x)) / dx
+
+def zentral(f, x, dx):
+    return (f(x + dx) - f(x - dx)) / (2 * dx)
+
+x0    = 1.0
+exakt = f_strich(x0)
+
+# Vergleich für die Vorwärtsdifferenz:
+# Theoretischer Fehler laut Taylor: (dx/2) * |f''(x0)|
+print("Vorwärtsdifferenz:")
+for dx in [0.1, 0.01, 0.001]:
+    fehler_num  = abs(exakt - vorwaerts(f, x0, dx))
+    fehler_theo = (dx / 2) * abs(f_zweimal(x0))
+    print(f"  dx = {dx:.3f}: tatsächlicher Fehler = {fehler_num:.2e}, "
+          f"Theorie = {fehler_theo:.2e}")
+
+print()
+
+# Vergleich für den zentralen Differenzenquotienten:
+# Theoretischer Fehler laut Taylor: (dx^2/6) * |f'''(x0)|
+print("Zentraler Differenzenquotient:")
+for dx in [0.1, 0.01, 0.001]:
+    fehler_num  = abs(exakt - zentral(f, x0, dx))
+    fehler_theo = (dx**2 / 6) * abs(f_dreimal(x0))
+    print(f"  dx = {dx:.3f}: tatsächlicher Fehler = {fehler_num:.2e}, "
+          f"Theorie = {fehler_theo:.2e}")
+```
+
+Die theoretischen Vorhersagen stimmen gut mit den tatsächlichen Fehlern
+überein. Die Taylor-Entwicklung beschreibt das Verhalten der
+Differenzenformeln also korrekt.
 
 ```{admonition} Mini-Übung
 :class: tip
-Gegeben sei die Funktion $f(x) = x^2 - 2x + 3$ und der fixierte Punkt $(2, 3)$,
-also $x_0 = 2$ und $y_0 = 3$. Erstellen Sie ein Python-Programm, das den
-Differenzenquotienten bzw. die Sekantensteigung für die Intervalle
-
-| Intervall | $\Delta x$ |
-| --------- | ---------- |
-| \[2, 4\] | 2 |
-| \[2, 3\] | 1 |
-| \[2, 2.5\] | 0.5 |
-| \[2, 2.1\] | 0.1 |
-| \[2, 2.01\] | 0.01 |
-
-berechnet und als Tabelle ausgibt.
-
-Was vermuten Sie: Welchem Wert nähert sich die Sekantensteigung an, je kleiner
-das Intervall wird?
+1. Die Rückwärtsdifferenz lautet
+   $f'(x) \approx \frac{f(x) - f(x - \Delta x)}{\Delta x}$.
+   Entwickeln Sie $f(x - \Delta x)$ nach Taylor und leiten Sie den
+   führenden Fehlerterm her. Was stellen Sie im Vergleich zur
+   Vorwärtsdifferenz fest?
+2. Warum heben sich die $f''$-Terme bei der zentralen Formel auf, bei
+   der Vorwärtsdifferenz aber nicht? Begründen Sie in zwei Sätzen ohne
+   Rechnung.
+3. Der Fehler des zentralen Differenzenquotienten ist proportional zu
+   $\Delta x^2$. Verdoppeln wir $\Delta x$ von 0.01 auf 0.02, um wie
+   viel wächst der Fehler dann ungefähr? Überprüfen Sie Ihre Antwort
+   mit Python.
 ```
 
 ```{code-cell} python
@@ -100,150 +239,251 @@ das Intervall wird?
 :class: tip
 :class: dropdown
 ```python
-# Eingabe
+import numpy as np
+
+# Funktion und Ableitung
 def f(x):
-    return x**2 - 2*x + 3
+    return np.sin(x)
 
-x0 = 2
-y0 = 3
+def f_strich(x):
+    return np.cos(x)
 
-# Verarbeitung und Ausgabe
-print('Delta x \t| Differenzenquotient')
-for delta_x in [2, 1, 0.5, 0.1, 0.01]:
-    # Berechnung Differenzenquotient
-    x = x0 + delta_x
-    y = f(x)
-    differenzenquotient = (y-y0) / (x - x0)
+# Zentraler Differenzenquotient
+def zentral(f, x, dx):
+    return (f(x + dx) - f(x - dx)) / (2 * dx)
 
-    # Ausgabe als Tabelle
-    print(f'{delta_x:1.2f} \t| {differenzenquotient:.4f}')
+# Auswertestelle und exakter Wert
+x0    = 1.0
+exakt = f_strich(x0)
+
+# Frage 3: Fehler bei dx = 0.01 und dx = 0.02 berechnen
+fehler_klein = abs(exakt - zentral(f, x0, 0.01))
+fehler_gross = abs(exakt - zentral(f, x0, 0.02))
+
+# Verhältnis der beiden Fehler: sollte ungefähr 4 sein (Faktor 2^2)
+verhaeltnis = fehler_gross / fehler_klein
+
+print(f"Fehler bei dx = 0.01: {fehler_klein:.2e}")
+print(f"Fehler bei dx = 0.02: {fehler_gross:.2e}")
+print(f"Verhältnis (gross/klein): {verhaeltnis:.2f}")
 ```
-Bei kleineren Intervallen $\Delta x$ scheint der Differenzenquotient gegen $2$
-zu streben. Das stimmt mit der analytischen Ableitung überein, denn
 
-\begin{equation*}
-f'(x) = 2x -2 \quad\Rightarrow\quad f'(2)=2\cdot 2-2=2.
-\end{equation*}
-Die numerische Berechnung bestätigt also das analytische Ergebnis.
+Zu Frage 1: Die Taylor-Entwicklung von $f(x - \Delta x)$ liefert denselben
+führenden Fehlerterm $\frac{\Delta x}{2} \cdot |f''(x)|$ wie bei der
+Vorwärtsdifferenz. Beide haben die Fehlerordnung $O(\Delta x)$.
+
+Zu Frage 2: Die Vorwärtsdifferenz nutzt nur einen Punkt rechts von $x$.
+Der $f''$-Term bleibt im Zähler erhalten. Der zentrale Differenzenquotient
+ist symmetrisch um $x$: Der $f''$-Term von $f(x + \Delta x)$ und der von
+$f(x - \Delta x)$ haben dasselbe Vorzeichen und heben sich bei der
+Subtraktion exakt auf.
+
+Zu Frage 3: Der Fehler ist proportional zu $\Delta x^2$. Verdoppeln wir
+$\Delta x$, wächst der Fehler um den Faktor $2^2 = 4$. Das Verhältnis
+von etwa 4 bestätigt das numerisch.
 ````
 
-Die folgende interaktive Abbildung zeigt den Graphen der Beispielfunktion und
-eine Sekante durch den fixierten Punkt $(2,3)$ und einen weiteren Punkt. Mit dem
-Schieberegler können wir den zweiten Punkt variieren und sehen, wie sich die
-Steigung der Sekante ändert. Die Tabelle aus der Mini-Übung entspricht genau
-dem, was der Schieberegler im Applet visualisiert. Der Differenzenquotient bzw.
-die Sekantensteigung finden wir unten links.
+## Rundungsfehler und optimale Schrittweite
 
-<!-- markdownlint-disable MD033 -->
-<div id="applet-container-720">
+Der Abschneidefehler sinkt mit kleiner werdendem $\Delta x$. Aber der
+Einstiegsplot zeigt, dass der Gesamtfehler irgendwann wieder ansteigt.
+Die Ursache ist der **Rundungsfehler**.
 
-<iframe
-  src="https://gramschs.github.io/thma_anm_de_assets/interactive/chapter04/sekante.html"
-  width="100%"
-  frameborder="0"
-  scrolling="no">
-</iframe>
+Computer speichern Fließkommazahlen nicht exakt. Der relative Fehler
+einer einzelnen Zahl ist durch die **Maschinengenauigkeit**
+$\varepsilon_M$ begrenzt. Für `float64` gilt
+$\varepsilon_M \approx 2.2 \cdot 10^{-16}$, was etwa 16 gültigen
+Dezimalstellen entspricht:
 
-</div>
-<!-- markdownlint-enable MD033 -->
+```{code-cell} python
+import numpy as np
 
-```{dropdown} Video zu "Mittlere Änderungsrate" von Mathematrick
-<iframe width="560" height="315" src="https://www.youtube.com/embed/sXxK-JATrc0?si=bdcHhSJOUHSl3fNg"
-title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media;
-gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+# np.finfo(float) liefert Informationen über den float64-Datentyp.
+# eps ist die kleinste Zahl, für die der Computer 1.0 + eps != 1.0 erkennt.
+eps = np.finfo(float).eps
+print(f"Maschinengenauigkeit: {eps:.2e}")
 ```
 
-## Der Differentialquotient als Steigung der Tangente
+Das Problem bei sehr kleinen $\Delta x$ ist die **Auslöschung**. Im
+Zähler $f(x + \Delta x) - f(x)$ subtrahieren wir zwei fast gleich große
+Zahlen. Die führenden Stellen heben sich auf, und die hinteren Stellen
+sind durch Rundungsfehler verfälscht. Je kleiner $\Delta x$, desto mehr
+gültige Stellen gehen verloren.
 
-Während der Differenzenquotient die Steigung einer Sekante zwischen zwei Punkten
-eines Funktionsgraphen beschreibt, gibt der Differentialquotient die Steigung
-der **Tangente** an einem bestimmten Punkt des Graphen an.
-
-```{admonition} Was ist ... die Tangente?
-:class: note
-Die **Tangente** ist eine Gerade, die den Graphen der Funktion $f$ an einem
-bestimmten Punkt $(x_0, f(x_0))$ berührt. Ihre Steigung ist gleich dem
-Differentialquotienten (der Ableitung) an dieser Stelle:
-\begin{equation*}
-m_\text{Tangente} = f'(x_0) =
-\lim_{\Delta x \to 0} \frac{f(x_0 + \Delta x) - f(x_0)}{\Delta x}.
-\end{equation*}
-```
-
-Mathematisch gesehen: Wenn der Abstand $\Delta x$ zwischen den beiden x-Werten
-$x_0$ und $x_0 + \Delta x$ gegen Null geht, nähert sich die Sekante immer mehr
-der Tangente an. Die folgende interaktive Abbildung veranschaulicht diesen
-Grenzübergang. Unten rechts ist zusätzlich angegeben, welchen Fehler wir machen,
-wenn wir die Sekantensteigung als Approximation für die Tangentensteigung
-nehmen.
-
-<!-- markdownlint-disable MD033 -->
-<div id="applet-container-750">
-<iframe
-  src="https://gramschs.github.io/thma_anm_de_assets/interactive/chapter04/sekante-tangente.html"
-  width="100%"
-  frameborder="0"
-  scrolling="no">
-</iframe>
-</div>
-<!-- markdownlint-enable MD033 -->
-
-Man erkennt deutlich: Je kleiner $\Delta x$ wird, desto näher liegt die Sekante
-an der Tangente. Im Grenzfall $\Delta x \to 0$ fallen beide zusammen.
-
-Geometrisch ist die Tangente die **beste lineare Näherung** der Funktion in der
-unmittelbaren Umgebung des Punktes $(x_0, f(x_0))$.
-
-```{dropdown} Video zu "Differentialquotient" von Mathematrick
-<iframe width="560" height="315"
-src="https://www.youtube.com/embed/_L6wmTzod_I?si=Fj3jbGIOcc3mC4wc"
-title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
-encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-```
-
-```{dropdown} Video zu "Ableitung" von Mathematische Methoden
-<iframe width="560" height="315"
-src="https://www.youtube.com/embed/FW7Vd1VI3uw?si=Ij7j2mb5CIKNYUEH"
-title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write;
-encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-```
-
-## Von der Sekante zur numerischen Differentiation
-
-Die geometrische Betrachtung führt uns direkt zur zentralen Idee der numerischen
-Differentiation. Analytisch berechnen wir die Ableitung als Grenzwert:
+Wir können das Zusammenspiel von Abschneide- und Rundungsfehler
+näherungsweise durch ein einfaches Modell beschreiben. Dabei interessieren
+uns vor allem die Abhängigkeiten von $\Delta x$; konstante Faktoren und
+die genaue Größe von $f(x)$, $f''(x)$ fassen wir als Größenordnung~1
+zusammen. Heuristisch schreiben wir den Gesamtfehler als
 
 \begin{equation*}
-f'(x_0) = \lim_{\Delta x \to 0} \frac{f(x_0 + \Delta x) - f(x_0)}{\Delta x}.
+E(\Delta x)
+\approx \underbrace{\frac{\Delta x}{2} \cdot |f''(x)|}_{\text{Abschneidefehler}} +
+\underbrace{\frac{\varepsilon_M}{\Delta x} \cdot |f(x)|}_{\text{Rundungsfehler}}
 \end{equation*}
 
-In der Praxis scheitert die analytische Ableitung oft an zwei Problemen:
+Diese Gleichung ist also kein exakter Ausdruck, sondern ein
+**Fehlermodell**, das die wesentliche Abhängigkeit von $\Delta x$ (und
+groben Größenordnungen von $f$ und seinen Ableitungen) erfasst.
 
-* Die Funktion $f$ ist zwar bekannt, aber ihre analytische Ableitung ist nicht
-  geschlossen berechenbar oder nur sehr aufwendig zu berechnen.
-* Die Funktion $f$ ist nur als Messpunkte, Tabelle oder Simulationsergebnis
-  bekannt, d.h. eine Formel existiert gar nicht.
-
-In diesen Fällen verzichten wir auf den Grenzübergang und **approximieren** die
-Ableitung durch einen Differenzenquotienten mit kleinem, aber endlichem $\Delta x$:
+Das Minimum dieser modellhaften Summe liegt bei der **optimalen
+Schrittweite**. Wenn wir für die Vorwärtsdifferenz nur die Abhängigkeit
+von $\Delta x$ betrachten und annehmen, dass $|f(x)|$ und $|f''(x)|$
+in der Größenordnung~1 liegen, erhalten wir
 
 \begin{equation*}
-f'(x_0) \approx \frac{f(x_0 + \Delta x) - f(x_0)}{\Delta x}.
+\Delta x_\text{opt}
+\approx \sqrt{\varepsilon_M}
+\approx \sqrt{2.2 \cdot 10^{-16}}
+\approx 1.5 \cdot 10^{-8}
 \end{equation*}
 
-Geometrisch ersetzen wir also die Tangente durch eine Sekante und akzeptieren
-dabei einen kleinen Fehler. Wie groß dieser Fehler ist und wie man ihn minimiert,
-ist Gegenstand des nächsten Abschnitts über die **Finite-Differenzen-Formeln**.
+Für den zentralen Differenzenquotienten ist der Abschneidefehler
+proportional zu $\Delta x^2$. Die analoge Rechnung (wieder bis auf
+Faktoren der Größenordnung~1) liefert
+
+\begin{equation*}
+\Delta x_\text{opt}
+\approx \varepsilon_M^{1/3}
+\approx (2.2 \cdot 10^{-16})^{1/3}
+\approx 6 \cdot 10^{-6}
+\end{equation*}
+
+Streng genommen hängt die optimale Schrittweite also sowohl von
+$\varepsilon_M$ als auch von $|f(x)|$ und den Ableitungen ab; für viele
+"normale" Funktionen liegen diese Beiträge aber in der Größenordnung~1,
+sodass in erster Linie die Maschinengenauigkeit den Maßstab vorgibt.
+
+```{admonition} Mini-Übung
+:class: tip
+1. Erstellen Sie den Einstiegsplot neu, aber diesmal mit allen drei
+   Differenzenformeln (Vorwärts, Rückwärts, Zentral) im Bereich
+   $\Delta x \in [10^{-1}, 10^{-16}]$. Beschriften Sie alle drei Kurven.
+2. Lesen Sie die optimale Schrittweite für Vorwärtsdifferenz und
+   zentralen Differenzenquotienten aus dem Plot ab. Berechnen Sie
+   anschließend `np.sqrt(np.finfo(float).eps)` und
+   `np.finfo(float).eps ** (1/3)` und vergleichen Sie mit Ihrer Ablesung.
+3. Führen Sie dieselbe Analyse für $g(x) = \exp(x)$ an der Stelle
+   $x_0 = 0$ durch. Ändert sich die optimale Schrittweite?
+```
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+
+# --- Funktionen für sin(x) ---
+def f(x):
+    return np.sin(x)
+
+def f_strich(x):
+    return np.cos(x)
+
+# --- Funktionen für exp(x) ---
+# Die Ableitung von exp(x) ist wieder exp(x)
+def g(x):
+    return np.exp(x)
+
+def g_strich(x):
+    return np.exp(x)
+
+# --- Differenzenformeln ---
+def vorwaerts(funk, x, dx):
+    return (funk(x + dx) - funk(x)) / dx
+
+def rueckwaerts(funk, x, dx):
+    return (funk(x) - funk(x - dx)) / dx
+
+def zentral(funk, x, dx):
+    return (funk(x + dx) - funk(x - dx)) / (2 * dx)
+
+# --- Fragen 1 und 2: Plot für alle drei Formeln, f(x) = sin(x) ---
+x0    = 1.0
+exakt = f_strich(x0)
+
+# 200 Schrittweiten von 0.1 bis 1e-16 im Log-Maßstab
+dx_werte = np.logspace(-1, -16, 200)
+
+# Fehler aller drei Formeln für jede Schrittweite berechnen
+fehler_v = []
+fehler_r = []
+fehler_z = []
+for dx in dx_werte:
+    fehler_v.append(abs(exakt - vorwaerts(f, x0, dx)))
+    fehler_r.append(abs(exakt - rueckwaerts(f, x0, dx)))
+    fehler_z.append(abs(exakt - zentral(f, x0, dx)))
+
+fig, ax = plt.subplots()
+ax.loglog(dx_werte, fehler_v, label='Vorwärtsdifferenz')
+ax.loglog(dx_werte, fehler_r, label='Rückwärtsdifferenz')
+ax.loglog(dx_werte, fehler_z, label='Zentraler Differenzenquot.')
+ax.set_xlabel('Schrittweite Δx')
+ax.set_ylabel('Fehler |f′(x₀) − Näherung|')
+ax.set_title('sin(x) bei x₀ = 1: alle drei Formeln')
+ax.legend()
+ax.grid(True, which='both')
+plt.show()
+
+# Optimale Schrittweiten aus der Formel berechnen
+eps              = np.finfo(float).eps
+dx_opt_vorwaerts = np.sqrt(eps)
+dx_opt_zentral   = eps ** (1/3)
+
+print(f"Optimales dx für Vorwärtsdifferenz:          {dx_opt_vorwaerts:.2e}")
+print(f"Optimales dx für zentralen Differenzenquot.: {dx_opt_zentral:.2e}")
+
+# --- Frage 3: dieselbe Analyse für g(x) = exp(x) bei x0 = 0 ---
+x1      = 0.0
+exakt_g = g_strich(x1)
+
+# Fehler für exp(x) berechnen
+fehler_gv = []
+fehler_gz = []
+for dx in dx_werte:
+    fehler_gv.append(abs(exakt_g - vorwaerts(g, x1, dx)))
+    fehler_gz.append(abs(exakt_g - zentral(g, x1, dx)))
+
+fig, ax = plt.subplots()
+ax.loglog(dx_werte, fehler_gv, label='Vorwärtsdifferenz')
+ax.loglog(dx_werte, fehler_gz, label='Zentraler Differenzenquot.')
+ax.set_xlabel('Schrittweite Δx')
+ax.set_ylabel('Fehler |g′(x₁) − Näherung|')
+ax.set_title('exp(x) bei x₁ = 0')
+ax.legend()
+ax.grid(True, which='both')
+plt.show()
+```
+
+Zu Frage 2: Das Minimum der Vorwärtsdifferenz liegt bei etwa
+$\Delta x \approx 10^{-8}$, das der zentralen Formel bei etwa
+$10^{-5}$ bis $10^{-6}$. Beide Werte stimmen gut mit den theoretischen
+Formeln überein.
+
+Zu Frage 3: Die optimale Schrittweite hängt hauptsächlich von der
+Maschinengenauigkeit $\varepsilon_M$ ab und kaum von der konkreten
+Funktion. Der Plot für $g(x) = \exp(x)$ zeigt dasselbe Bild wie für
+$f(x) = \sin(x)$.
+````
 
 ## Zusammenfassung und Ausblick
 
-| Begriff | Geometrische Interpretation | Formel |
-| --- | --- | --- |
-| Differenzenquotient | Steigung der Sekante | $\dfrac{f(x_2)-f(x_1)}{x_2-x_1}$ |
-| Differentialquotient / Ableitung | Steigung der Tangente | $\lim_{\Delta x \to 0}\dfrac{f(x_0+\Delta x)-f(x_0)}{\Delta x}$ |
-| Numerische Näherung | Sekante mit kleinem $\Delta x$ | $\dfrac{f(x_0+\Delta x)-f(x_0)}{\Delta x}$ |
+Die Taylor-Entwicklung erklärt, warum die drei Differenzenformeln
+unterschiedlich genau sind. Vorwärts- und Rückwärtsdifferenz haben den
+Abschneidefehler $O(\Delta x)$: ihr Fehler ist proportional zu $\Delta x$.
+Der zentrale Differenzenquotient erreicht $O(\Delta x^2)$, weil der
+$f''$-Term durch Symmetrie herausfällt. Für sehr kleine Schrittweiten
+dominiert die Auslöschung den Gesamtfehler. Die optimalen Schrittweiten
+liegen bei $\Delta x \approx \sqrt{\varepsilon_M} \approx 1.5 \cdot 10^{-8}$
+für die Vorwärtsdifferenz und bei
+$\Delta x \approx \varepsilon_M^{1/3} \approx 6 \cdot 10^{-6}$
+für den zentralen Differenzenquotienten.
 
-Im nächsten Abschnitt lernen wir verschiedene Varianten dieser numerischen
-Näherung kennen: den **Vorwärtsdifferenzenquotienten**, den
-**Rückwärtsdifferenzenquotienten** sowie den **zentralen Differenzenquotienten**
-und analysieren jeweils ihren Approximationsfehler.
+Im Übungskapitel wenden wir die Differenzenformeln auf reale Messdaten
+an. Dort liegen die Funktionswerte nicht mehr an frei wählbaren Stellen
+vor, sondern sind durch den Sensor fest vorgegeben.

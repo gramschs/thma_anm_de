@@ -51,17 +51,18 @@ project:
       - file: chapter05/chapter05_sec03.md
       - file: chapter05/chapter05_sec04.md
       - file: chapter05/chapter05_sec05.md
-    - title: 6. Koordinatentransformation II
-      children:
-      - file: chapter06/chapter06_sec01.md
-      - file: chapter06/chapter06_sec02.md
-      - file: chapter06/chapter06_sec03.md
-      - file: chapter06/chapter06_sec04.md
-      - file: chapter06/chapter06_sec05.md
-#    - title: Numerische Analysis
+#    - title: 6. Koordinatentransformation II
 #      children:
-#      - file: chapter05/chapter04_sec01.md
-#      - file: chapter05/chapter04_sec02.md
+#      - file: chapter06/chapter06_sec01.md
+#      - file: chapter06/chapter06_sec02.md
+#      - file: chapter06/chapter06_sec03.md
+#      - file: chapter06/chapter06_sec04.md
+#      - file: chapter06/chapter06_sec05.md
+    - title: 7. Numerische Differentialrechnung
+      children:
+      - file: chapter07/chapter07_sec01.md
+      - file: chapter07/chapter07_sec02.md
+      - file: chapter07/chapter07_sec03.md
     
 site:
   template: book-theme
