@@ -1,0 +1,9 @@
+---
+kernelspec:
+  name: python3
+  display_name: 'Python 3'
+---
+
+# 6.4 Übung Welt- und Körperkoordinatensysteme
+
+TODO
