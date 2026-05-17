@@ -15,13 +15,13 @@ Wir starten direkt mit einem Experiment.
 
 ```{admonition} Lernziele
 :class: attention
-* [ ] Sie können den Abschneidefehler der Vorwärtsdifferenz mithilfe der
+* [ ] Sie können den **Abschneidefehler der Vorwärtsdifferenz** mithilfe der
   Taylor-Entwicklung herleiten und die Fehlerordnung $O(\Delta x)$ angeben.
 * [ ] Sie können erklären, warum der zentrale Differenzenquotient die
-  Fehlerordnung $O(\Delta x^2)$ erreicht.
-* [ ] Sie wissen, was Maschinengenauigkeit ist, und können erklären, warum
+  **Fehlerordnung $O(\Delta x^2)$** erreicht.
+* [ ] Sie wissen, was **Maschinengenauigkeit** ist, und können erklären, warum
   sehr kleine Schrittweiten den Fehler wieder vergrößern.
-* [ ] Sie können die optimale Schrittweite für die Vorwärtsdifferenz und
+* [ ] Sie können die **optimale Schrittweite** für die Vorwärtsdifferenz und
   den zentralen Differenzenquotienten der Größenordnung nach angeben.
 ```
 

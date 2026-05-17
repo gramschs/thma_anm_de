@@ -21,10 +21,10 @@ Grenzwerts, den wir aus der Analysis kennen.
 
 ```{admonition} Lernziele
 :class: attention
-* [ ] Sie können erklären, wie der Differenzenquotient aus der
+* [ ] Sie können erklären, wie der **Differenzenquotient** aus der
   Grenzwertdefinition der Ableitung entsteht.
-* [ ] Sie können die Vorwärtsdifferenz, die Rückwärtsdifferenz und den
-  zentralen Differenzenquotienten als Formeln aufschreiben und den
+* [ ] Sie können die **Vorwärtsdifferenz**, die **Rückwärtsdifferenz** und den
+  **zentralen Differenzenquotienten** als Formeln aufschreiben und den
   Unterschied zwischen den drei Varianten benennen.
 * [ ] Sie können die drei Differenzenformeln als Python-Funktionen
   implementieren und auf eine bekannte Funktion anwenden.
@@ -240,7 +240,7 @@ print(f"Zentraler Differenzenquot.: {naeherung:.8f}  Fehler: {fehler:.2e}")
 ```
 
 Der zentrale Differenzenquotient ist deutlich genauer als die anderen
-beiden Varianten, obwohl alle drei dieselbe Schrittweite $\Delta x = 0{,}1$
+beiden Varianten, obwohl alle drei dieselbe Schrittweite $\Delta x = 0.1$
 verwenden. Abschnitt 7.2 liefert die mathematische Begründung.
 
 ```{admonition} Mini-Übung
