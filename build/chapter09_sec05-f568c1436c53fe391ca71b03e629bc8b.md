@@ -1,0 +1,290 @@
+---
+kernelspec:
+  name: python3
+  display_name: 'Python 3'
+---
+
+# 9.5 Übungen
+
+````{admonition} Übung 9.5 (✩)
+:class: tip
+Gegeben ist der folgende Code, der den Bremsweg mit einer Trapezregel-Schleife
+berechnet.
+
+```python
+import numpy as np
+
+def trapez_falsch(t, v):
+    n     = len(v)
+    dt    = t[1] - t[0]
+    summe = 0.0
+    for i in range(n - 2):           # Zeile A
+        summe += 0.5 * (v[i] + v[i + 1]) * dt
+    return summe
+
+t = np.array([0.0, 1.0, 2.0, 3.0, 4.0])
+v = np.array([20.0, 15.0, 10.0, 5.0, 0.0])
+
+print(f"trapez_falsch:  {trapez_falsch(t, v):.1f} m")
+print(f"np.trapezoid:   {np.trapezoid(v, t):.1f} m")
+```
+
+1. Über welche Indizes läuft `range(n - 2)` für `n = 5`?
+   Welches Intervall wird dadurch nicht berücksichtigt?
+   Antworten Sie ohne Code.
+2. Um wie viel weicht das Ergebnis von `trapez_falsch` vom korrekten
+   Wert ab? Berechnen Sie die fehlende Trapezfläche von Hand.
+3. Nennen Sie den Typ des Fehlers in Zeile A in einem Satz und geben
+   Sie die Korrektur an.
+4. Führen Sie den Code aus, korrigieren Sie Zeile A und überprüfen Sie,
+   dass das korrigierte Ergebnis mit `np.trapezoid` übereinstimmt.
+````
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+import numpy as np
+
+def trapez_falsch(t, v):
+    n     = len(v)
+    dt    = t[1] - t[0]
+    summe = 0.0
+    for i in range(n - 2):       # Fehler: n-2 statt n-1
+        summe += 0.5 * (v[i] + v[i + 1]) * dt
+    return summe
+
+def trapez_korrekt(t, v):
+    n     = len(v)
+    dt    = t[1] - t[0]
+    summe = 0.0
+    for i in range(n - 1):       # Korrektur: n-1 Intervalle
+        summe += 0.5 * (v[i] + v[i + 1]) * dt
+    return summe
+
+t = np.array([0.0, 1.0, 2.0, 3.0, 4.0])
+v = np.array([20.0, 15.0, 10.0, 5.0, 0.0])
+
+print(f"trapez_falsch:   {trapez_falsch(t, v):.1f} m")
+print(f"trapez_korrekt:  {trapez_korrekt(t, v):.1f} m")
+print(f"np.trapezoid:    {np.trapezoid(v, t):.1f} m")
+```
+
+Erwartete Ausgabe:
+```
+trapez_falsch:   37.5 m
+trapez_korrekt:  40.0 m
+np.trapezoid:    40.0 m
+```
+
+Zu Frage 1: Für `n = 5` gilt `range(n - 2)` = `range(3)` = [0, 1, 2].
+Die Schleife bildet drei Trapeze für die Intervalle [0,1], [1,2] und [2,3].
+Das letzte Intervall [3,4] wird nicht berücksichtigt.
+
+Zu Frage 2: Die fehlende Trapezfläche ist
+$(v[3] + v[4]) / 2 \cdot 1.0 = (5 + 0) / 2 = 2.5$ m.
+`trapez_falsch` liefert $37.5$ m statt $40.0$ m, also $2.5$ m zu wenig.
+
+Zu Frage 3: Es handelt sich um einen **Off-by-One-Fehler** (Zaunpfahlfehler).
+Ein Array mit $n$ Punkten hat $n - 1$ Intervalle, nicht $n - 2$.
+Die Korrektur lautet `range(n - 1)`.
+````
+
+````{admonition} Übung 9.6 (✩✩)
+:class: tip
+In einem kreisförmigen Rohr mit Radius $R$ bildet sich unter laminaren
+Strömungsbedingungen ein parabolisches Geschwindigkeitsprofil:
+
+$$v(r) = v_\text{max}\left(1 - \frac{r^2}{R^2}\right),$$
+
+wobei $r$ der radiale Abstand von der Rohrachse ist. Der **Volumenstrom**
+durch das gesamte Rohr ist:
+
+$$Q = 2\pi \int_0^R v(r)\cdot r\,\mathrm{d}r.$$
+
+Gegeben: $v_\text{max} = 2.0$ m/s, $R = 0.05$ m.
+
+1. Berechnen Sie $Q$ numerisch mit `np.trapezoid`. Verwenden Sie 101
+   gleichmäßig verteilte Stützstellen von $r = 0$ bis $r = R$.
+   Geben Sie das Ergebnis in m³/s aus.
+2. Berechnen Sie $Q$ mit `scipy.integrate.quad`.
+3. Das analytische Ergebnis lautet $Q = \frac{1}{2}\,v_\text{max}\,\pi R^2$.
+   Berechnen Sie den relativen Fehler beider Methoden in Prozent.
+4. Zeigen Sie die Herleitung des analytischen Ergebnisses in drei
+   Rechenschritten (auf Papier oder als Kommentar im Code).
+5. Das Ergebnis $Q = \frac{1}{2}\,v_\text{max}\,\pi R^2$ lässt sich
+   anschaulich interpretieren: Es ist genau die Hälfte des Volumenstroms
+   $Q_\text{block} = v_\text{max} \cdot \pi R^2$, der bei gleichmäßiger
+   Strömung mit $v_\text{max}$ überall entstehen würde. Erklären Sie
+   diesen Faktor $\frac{1}{2}$ in einem Satz ohne Rechnung.
+````
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+import numpy as np
+from scipy.integrate import quad
+
+# --- Eingabe ---
+vmax = 2.0    # maximale Strömungsgeschwindigkeit in m/s
+R    = 0.05   # Rohrradius in m
+
+# --- Teilaufgabe 1: Trapezregel ---
+r_werte   = np.linspace(0, R, 101)
+integrand = 2 * np.pi * vmax * (1 - r_werte**2 / R**2) * r_werte
+Q_trapez  = np.trapezoid(integrand, r_werte)
+print(f"Q (Trapezregel, n=101): {Q_trapez:.6f} m^3/s")
+
+# --- Teilaufgabe 2: quad ---
+def integrand_Q(r):
+    """Integrand des Volumenstroms: 2*pi * v(r) * r."""
+    return 2 * np.pi * vmax * (1 - r**2 / R**2) * r
+
+Q_quad, fehler_quad = quad(integrand_Q, 0, R)
+print(f"Q (quad):               {Q_quad:.6f} m^3/s  (Fehler: {fehler_quad:.2e})")
+
+# --- Teilaufgabe 3: relativer Fehler ---
+Q_exakt = 0.5 * vmax * np.pi * R**2
+print(f"Q (analytisch):         {Q_exakt:.6f} m^3/s")
+print()
+print(f"Rel. Fehler Trapez: {abs(Q_trapez - Q_exakt) / Q_exakt * 100:.4f} %")
+print(f"Rel. Fehler quad:   {abs(Q_quad   - Q_exakt) / Q_exakt * 100:.4f} %")
+```
+
+Erwartete Ausgabe:
+```
+Q (Trapezregel, n=101): 0.007853 m^3/s  
+Q (quad):               0.007854 m^3/s  (Fehler: 4.37e-19)
+Q (analytisch):         0.007854 m^3/s
+
+Rel. Fehler Trapez: 0.0100 %
+Rel. Fehler quad:   0.0000 %
+```
+
+Zu Frage 4: Herleitung in drei Schritten:
+$$Q = 2\pi\int_0^R v_\text{max}\!\left(1 - \frac{r^2}{R^2}\right)r\,\mathrm{d}r
+    = 2\pi v_\text{max}\int_0^R \!\left(r - \frac{r^3}{R^2}\right)\mathrm{d}r$$
+$$= 2\pi v_\text{max}\left[\frac{r^2}{2} - \frac{r^4}{4R^2}\right]_0^R
+  = 2\pi v_\text{max}\left(\frac{R^2}{2} - \frac{R^2}{4}\right)
+  = 2\pi v_\text{max}\cdot\frac{R^2}{4}
+  = \frac{1}{2}\,v_\text{max}\,\pi R^2.$$
+
+Zu Frage 5: Das parabolische Profil hat in Wandnähe $v \approx 0$ und
+nur in der Rohrmitte $v = v_\text{max}$; im Mittel über die Querschnittsfläche
+ergibt sich daher genau die halbe Maximalgeschwindigkeit.
+````
+
+````{admonition} Übung 9.7 (✩✩✩)
+:class: tip
+Das **polare Massenträgheitsmoment** $I_p$ eines Kreisrings mit
+innerem Radius $R_i$, äußerem Radius $R_a$, Dichte $\rho$ und
+Wanddicke $h$ lautet:
+
+$$I_p = \int_{R_i}^{R_a} r^3 \cdot \rho \cdot h \cdot 2\pi\,\mathrm{d}r.$$
+
+Gegeben: $R_i = 0.05$ m, $R_a = 0.15$ m, $\rho = 7800$ kg/m³.
+
+**Teil 1: Konstante Wanddicke**
+
+Für eine konstante Wanddicke $h = 10$ mm:
+
+1. Berechnen Sie $I_p$ mit `scipy.integrate.quad`.
+2. Die analytische Lösung lautet
+   $I_p = \frac{\pi\,\rho\,h}{2}(R_a^4 - R_i^4)$.
+   Berechnen Sie damit den Referenzwert und überprüfen Sie, dass `quad`
+   ihn reproduziert.
+
+**Teil 2: Variables Wanddickenprofil**
+
+Ein gefertigter Kreisring hat aufgrund seiner Kontur eine radial
+veränderliche Wanddicke. Die folgende Tabelle gibt die gemessenen Werte an:
+
+| $r$ in m | 0.050 | 0.060 | 0.070 | 0.080 | 0.090 | 0.100 | 0.110 | 0.120 | 0.130 | 0.140 | 0.150 |
+|----------|-------|-------|-------|-------|-------|-------|-------|-------|-------|-------|-------|
+| $h$ in mm | 15.0 | 14.2 | 13.1 | 11.8 | 10.3 | 8.5 | 6.8 | 5.9 | 5.2 | 5.0 | 5.0 |
+
+3. Berechnen Sie $I_p$ für dieses Profil mit `np.trapezoid`.
+4. Vergleichen Sie das Ergebnis mit dem Wert aus Teil 1. Wie groß ist
+   der Unterschied in Prozent, und warum ist er so groß?
+5. Warum kann `scipy.integrate.quad` hier nicht direkt eingesetzt werden,
+   und welche Voraussetzung müsste erfüllt sein, damit es möglich wäre?
+````
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+import numpy as np
+from scipy.integrate import quad
+
+# --- Gegebene Größen ---
+Ri  = 0.05     # innerer Radius in m
+Ra  = 0.15     # äußerer Radius in m
+rho = 7800.0   # Dichte Stahl in kg/m^3
+
+# ===== Teil 1: Konstante Wanddicke =====
+h_konst = 0.010   # Wanddicke in m
+
+# Teilaufgabe 1: quad
+def integrand_konst(r):
+    """Integrand des polaren Massenträgheitsmoments bei konstanter Dicke."""
+    return r**3 * rho * h_konst * 2 * np.pi
+
+I_quad, fehler = quad(integrand_konst, Ri, Ra)
+print(f"Teil 1 - quad:       {I_quad:.6f} kg*m^2  (Fehler: {fehler:.2e})")
+
+# Teilaufgabe 2: analytische Probe
+I_exakt = np.pi * rho * h_konst / 2 * (Ra**4 - Ri**4)
+print(f"Teil 1 - analytisch: {I_exakt:.6f} kg*m^2")
+print(f"Übereinstimmung:     {np.isclose(I_quad, I_exakt)}")
+
+# ===== Teil 2: Variables Wanddickenprofil =====
+r_tab = np.array([0.050, 0.060, 0.070, 0.080, 0.090, 0.100,
+                  0.110, 0.120, 0.130, 0.140, 0.150])
+h_tab = np.array([15.0,  14.2,  13.1,  11.8,  10.3,   8.5,
+                   6.8,   5.9,   5.2,   5.0,   5.0]) * 1e-3   # Umrechnung mm -> m
+
+# Teilaufgabe 3: Trapezregel auf den Tabellenwerten
+integrand_tab = r_tab**3 * rho * h_tab * 2 * np.pi
+I_var = np.trapezoid(integrand_tab, r_tab)
+print(f"\nTeil 2 - Trapezregel: {I_var:.6f} kg*m^2")
+
+# Teilaufgabe 4: Vergleich
+abweichung = (I_var - I_exakt) / I_exakt * 100
+print(f"Abweichung zu Teil 1: {abweichung:.1f} %")
+```
+
+Erwartete Ausgabe:
+```
+Teil 1 - quad:       0.061261 kg*m^2  (Fehler: 6.80e-16)
+Teil 1 - analytisch: 0.061261 kg*m^2
+Übereinstimmung:     True
+
+Teil 2 - Trapezregel: 0.040862 kg*m^2
+Abweichung zu Teil 1: -33.3 %
+```
+
+Zu Frage 4: Das Profil ist außen deutlich dünner als innen (5 mm statt
+15 mm). Da große Radien wegen des Faktors $r^3$ im Integranden besonders
+stark zum Trägheitsmoment beitragen, verringert die dünnere Wand außen
+$I_p$ überproportional stark, was die Abweichung von rund 33 % erklärt.
+
+Zu Frage 5: `scipy.integrate.quad` erwartet eine auswertbare Funktion
+$h(r)$. Die Tabelle liefert $h$ nur an elf diskreten Stellen ohne
+bekannte Formel dahinter. Man könnte `quad` einsetzen, wenn man die
+Tabelle zunächst durch eine Interpolationsfunktion (zum Beispiel
+`scipy.interpolate.interp1d`) annähert und diese als Argument übergibt.
+````
