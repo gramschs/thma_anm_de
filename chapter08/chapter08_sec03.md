@@ -74,7 +74,7 @@ K_gitter = np.array([[kosten(T, l) for l in lam_werte]
                       for T in T_inf_werte])
 
 fig, ax = plt.subplots()
-cp = ax.contourf(lam_werte, T_inf_werte, K_gitter, levels=40)
+cp = ax.contourf(lam_werte, T_inf_werte, K_gitter, levels=40, cmap='viridis')
 plt.colorbar(cp, label='K(T_∞, λ) in °C²')
 ax.set_xlabel('λ in 1/s')
 ax.set_ylabel('T_inf in °C')
@@ -226,7 +226,7 @@ T_inf_aktuell = 35.0   # Startwert: deutlich über wahrem T_inf = 20 °C
 lam_aktuell   = 0.02   # Startwert: deutlich unter wahrem λ = 0.05 1/s
 alpha_T_inf   = 5e-3   # Lernrate für T_inf (größer wegen kleinem Gradienten)
 alpha_lam     = 2e-7   # Lernrate für lam   (kleiner wegen großem Gradienten)
-n_iterationen = 8000
+n_iterationen = 2000
 
 kosten_verlauf = []
 
@@ -252,8 +252,14 @@ def kosten_vektor(params):
     T_inf, lam = params
     return kosten(T_inf, lam)
 
+# sinnvolle Grenzen für die Parameter festlegen
+grenzen = [
+    (None, None),   # T_inf: unbegrenzt
+    (1e-6, 10),     # lam:   muss positiv sein!
+]
+
 # minimize() findet das Minimum automatisch, ohne dass wir alpha wählen müssen
-ergebnis = minimize(kosten_vektor, x0=[35.0, 0.02])
+ergebnis = minimize(kosten_vektor, x0=[35.0, 0.02], bounds=grenzen)
 T_inf_scipy, lam_scipy = ergebnis.x
 
 print("--- scipy.optimize.minimize ---")
@@ -305,7 +311,7 @@ Lernprozessen.
 ```{admonition} Mini-Übung
 :class: tip
 1. `scipy` meldet in `ergebnis.nit` die Anzahl der benötigten Iterationen.
-   Vergleichen Sie diese Zahl mit den 8000 GD-Iterationen. Was schlussfolgern
+   Vergleichen Sie diese Zahl mit den 2000 GD-Iterationen. Was schlussfolgern
    Sie über die Effizienz der beiden Methoden?
 2. Ändern Sie den Startwert für scipy auf `x0=[50.0, 0.001]` (weit entfernt
    vom Minimum). Findet `scipy` trotzdem das richtige Ergebnis?
@@ -339,7 +345,7 @@ print(f"GD (schlechter Start):    T_inf = {T_inf_weit:.4f} °C,  lam = {lam_weit
 ```
 
 Zu Frage 1: `scipy` benötigt typischerweise unter 100 Iterationen, während
-unser GD 8000 Schritte braucht. `scipy` passt die Schrittgröße adaptiv an
+unser GD 2000 Schritte und mehr braucht. `scipy` passt die Schrittgröße adaptiv an
 und ist daher effizienter.
 
 Zu Frage 2: `scipy` findet das Minimum auch vom schlechten Startwert aus,

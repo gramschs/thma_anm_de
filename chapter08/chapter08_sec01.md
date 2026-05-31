@@ -108,7 +108,9 @@ def kosten(lam):
 
 # --- Kostenfunktion für 300 lambda-Werte im Bereich [0.01, 0.12] berechnen ---
 lambda_werte = np.linspace(0.01, 0.12, 300)
-kosten_werte = np.array([kosten(lam) for lam in lambda_werte])
+kosten_werte = []
+for lam in lambda_werte:
+   kosten_werte.append(kosten(lam))
 
 # --- Kostenfunktion plotten: das Minimum ist direkt sichtbar ---
 fig, ax = plt.subplots()
@@ -144,18 +146,19 @@ $100^{10}$ Auswertungen. Wir brauchen eine gezieltere Suchmethode.
 ````{admonition} Lösung
 :class: tip
 :class: dropdown
+Zu Frage 1: $K = 0$ würde bedeuten, dass das Modell jeden einzelnen Messwert
+exakt trifft. Bei Sensorrauschen ist das mit einem glatten parametrischen Modell
+nicht möglich. Der verbleibende Minimalwert entspricht ungefähr der Varianz des
+Messrauschens.
+
+Zu Frage 2:
 ```python
 print(f"K(0.02) = {kosten(0.02):.2f} °C²")
 print(f"K(0.05) = {kosten(0.05):.2f} °C²")
 print(f"K(0.10) = {kosten(0.10):.2f} °C²")
 ```
 
-Zu Frage 1: $K = 0$ würde bedeuten, dass das Modell jeden einzelnen Messwert
-exakt trifft. Bei Sensorrauschen ist das mit einem glatten parametrischen Modell
-nicht möglich. Der verbleibende Minimalwert entspricht ungefähr der Varianz des
-Messrauschens.
-
-Zu Frage 2: $K(0.05)$ ist am kleinsten. Das Minimum liegt also nahe bei
+$K(0.05)$ ist am kleinsten. Das Minimum liegt also nahe bei
 $\lambda = 0.05\,\text{1/s}$, dem wahren Wert, der zur Datenerzeugung verwendet
 wurde.
 
@@ -188,8 +191,8 @@ def ableitung_kosten(lam, dx=1e-6):
 
 # --- Gradient-Descent-Algorithmus ---
 lam_aktuell   = 0.01   # Startwert: bewusst weit vom Minimum entfernt
-alpha         = 2e-7   # Lernrate: muss zur Skala der Kostenfunktion passen
-n_iterationen = 3000   # feste Anzahl von Schritten
+alpha         = 1e-8   # Lernrate: muss zur Skala der Kostenfunktion passen
+n_iterationen = 1000   # feste Anzahl von Schritten
 
 kosten_verlauf = []    # Kostenwert nach jedem Schritt speichern
 
@@ -214,7 +217,7 @@ nicht identisch mit dem wahren Parameter.
 :class: tip
 1. In welche Richtung ändert sich $\lambda$, wenn $K'(\lambda) > 0$?
    Begründen Sie anhand der Update-Formel, ohne Code auszuführen.
-2. Setzen Sie `alpha = 1e-4` (etwa 500-mal größer als im Beispiel) und
+2. Setzen Sie `alpha = 1e-4` (1000-mal größer als im Beispiel) und
    starten Sie den Algorithmus neu. Was beobachten Sie?
 3. Setzen Sie `alpha = 1e-10` (sehr klein) und starten Sie neu.
    Was beobachten Sie, und warum ist dieses Verhalten ein Problem?
@@ -227,35 +230,41 @@ nicht identisch mit dem wahren Parameter.
 ````{admonition} Lösung
 :class: tip
 :class: dropdown
-```python
-# Frage 2: zu große Lernrate
-lam_test = 0.01
-for i in range(3000):
-    grad     = ableitung_kosten(lam_test)
-    lam_test = lam_test - 1e-4 * grad
-print(f"Zu groß  (alpha=1e-4):  λ = {lam_test:.3f} 1/s")
-
-# Frage 3: zu kleine Lernrate
-lam_test = 0.01
-for i in range(3000):
-    grad     = ableitung_kosten(lam_test)
-    lam_test = lam_test - 1e-10 * grad
-print(f"Zu klein (alpha=1e-10): λ = {lam_test:.5f} 1/s")
-```
-
 Zu Frage 1: Wenn $K'(\lambda) > 0$, ist der Term $\alpha \cdot K'(\lambda) > 0$
 und damit $\lambda_\text{neu} < \lambda_\text{alt}$. $\lambda$ nimmt also ab.
 Das ist korrekt: ein positiver Gradient zeigt nach rechts, das Minimum liegt
 also links vom aktuellen Punkt.
 
-Zu Frage 2: Bei zu großer Lernrate überspringt der Algorithmus das Minimum und
+Zu Frage 2:
+
+```python
+# Frage 2: zu große Lernrate
+lam_test = 0.01
+for i in range(1000):
+    grad     = ableitung_kosten(lam_test)
+    lam_test = lam_test - 1e-4 * grad
+print(f"Zu groß  (alpha=1e-4):  λ = {lam_test:.3f} 1/s")
+```
+
+Bei zu großer Lernrate überspringt der Algorithmus das Minimum und
 springt auf die andere Seite. Dort ist der Gradient entgegengesetzt und der
 nächste Schritt überspringt es erneut. Der ausgegebene $\lambda$-Wert ist
 unbrauchbar oder sogar negativ.
 
-Zu Frage 3: Die Schritte sind so winzig, dass der Algorithmus nach 3000
-Iterationen kaum vom Startwert wegkommt. Er würde konvergieren, benötigt aber
-viele Millionen Schritte. Die Lernrate muss zur Skala der Kostenfunktion passen.
+Zu Frage 3: 
+
+```python
+# Frage 3: zu kleine Lernrate
+lam_test = 0.01
+for i in range(1000):
+    grad     = ableitung_kosten(lam_test)
+    lam_test = lam_test - 1e-10 * grad
+print(f"Zu klein (alpha=1e-10): λ = {lam_test:.5f} 1/s")
+```
+
+Die Schritte sind so winzig, dass der Algorithmus nach 1000 Iterationen kaum vom
+Startwert wegkommt. Er würde konvergieren, benötigt aber viele Millionen
+Schritte. Die Lernrate muss zur Skala der Kostenfunktion passen.
 ````
 
 ## Lernrate und Konvergenz
@@ -291,7 +300,7 @@ Iterationszahl als Sicherheitsgrenze gegen Endlosschleifen.
 1. Lesen Sie aus dem Konvergenzplot ab: nach ungefähr wie vielen Iterationen
    ist der Kostenwert auf die Hälfte des Startwerts gesunken? Schätzen Sie
    ab, ohne zu rechnen.
-2. Starten Sie den GD-Loop von `lam_aktuell = 0.09` (rechts vom Minimum) und
+2. Starten Sie die GD-Schleife von `lam_aktuell = 0.09` (rechts vom Minimum) und
    zeichnen Sie die Konvergenzkurve. Konvergiert der Algorithmus zum selben
    Ergebnis?
 3. Was würde der Algorithmus tun, wenn der Startwert bereits exakt dem Minimum
@@ -305,6 +314,11 @@ Iterationszahl als Sicherheitsgrenze gegen Endlosschleifen.
 ````{admonition} Lösung
 :class: tip
 :class: dropdown
+Zu Frage 1: Die Halbierung des Startkostenwerts ist im Plot schwer ablesbar,
+es könnten 4-5 Iterationen sein.
+
+Zu Frage 2:
+
 ```python
 # Frage 2: Start von der rechten Seite des Minimums
 lam_rechts       = 0.09
@@ -329,10 +343,7 @@ print(f"Endwert (Start 0.01): λ = {lam_aktuell:.5f} 1/s")
 print(f"Endwert (Start 0.09): λ = {lam_rechts:.5f} 1/s")
 ```
 
-Zu Frage 1: Die Halbierung des Startkostenwerts ist im Plot direkt ablesbar,
-typischerweise nach den ersten 100 bis 500 Iterationen.
-
-Zu Frage 2: Ja. Von rechts ($\lambda = 0.09$) ist der Gradient positiv, der
+Ja. Von rechts ($\lambda = 0.09$) ist der Gradient positiv, der
 Schritt also negativ, und $\lambda$ nimmt ab in Richtung Minimum. Beide
 Startwerte konvergieren zum selben Ergebnis.
 

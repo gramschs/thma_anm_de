@@ -77,6 +77,20 @@ project:
       - file: chapter09/chapter09_sec03.md
       - file: chapter09/chapter09_sec04.md
       - file: chapter09/chapter09_sec05.md
+    - title: 10. Numerik DGL 1. Ordnung
+      children:
+      - file: chapter10/chapter10_sec01.md
+      - file: chapter10/chapter10_sec02.md
+      - file: chapter10/chapter10_sec03.md
+      - file: chapter10/chapter10_sec04.md
+      - file: chapter10/chapter10_sec05.md
+    - title: 11. Numerik DGL 2. Ordnung
+      children:
+      - file: chapter11/chapter11_sec01.md
+      - file: chapter11/chapter11_sec02.md
+      - file: chapter11/chapter11_sec03.md
+      - file: chapter11/chapter11_sec04.md
+      - file: chapter11/chapter11_sec05.md
 
 site:
   template: book-theme

@@ -111,7 +111,6 @@ import matplotlib.style as style
 style.use('seaborn-v0_8')
 
 # --- Frage 1: Funktion plotten und Minima bestimmen ---
-
 def f(x):
     """f(x) = x^4 - 4x^2"""
     return x**4 - 4 * x**2
