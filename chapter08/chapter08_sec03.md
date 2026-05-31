@@ -328,7 +328,7 @@ Lernprozessen.
 :class: dropdown
 ```python
 # Frage 2: schlechter Startwert für scipy
-ergebnis_weit = minimize(kosten_vektor, x0=[50.0, 0.001])
+ergebnis_weit = minimize(kosten_vektor, x0=[50.0, 0.001], bounds=grenzen)
 T_inf_w, lam_w = ergebnis_weit.x
 print(f"scipy (schlechter Start): T_inf = {T_inf_w:.4f} °C,  lam = {lam_w:.5f} 1/s")
 print(f"Iterationen: {ergebnis_weit.nit}")

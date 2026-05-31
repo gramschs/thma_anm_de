@@ -124,25 +124,23 @@ print(f"Lokale Minima bei x = +-{x_min_analytisch:.4f},  f = {f(x_min_analytisch
 
 x_plot = np.linspace(-2.5, 2.5, 300)
 fig, ax = plt.subplots()
-ax.plot(x_plot, f(x_plot), label='f(x) = x⁴ − 4x²')
-ax.axhline(0, color='gray', linewidth=0.8)
+ax.plot(x_plot, f(x_plot), label='f(x) = x^4 − 4x^2')
 ax.scatter([-x_min_analytisch, x_min_analytisch],
            [f(-x_min_analytisch), f(x_min_analytisch)],
            color='red', zorder=5, label=f'Minima bei x = ±√2 ≈ ±{x_min_analytisch:.2f}')
 ax.set_xlabel('x')
 ax.set_ylabel('f(x)')
-ax.set_title('f(x) = x⁴ − 4x² mit zwei lokalen Minima')
+ax.set_title('f(x) = x^4 − 4x^2 mit zwei lokalen Minima')
 ax.legend()
 ax.grid(True)
 plt.show()
 
 # --- Gradient-Descent-Implementierung ---
-
 def ableitung_f(x, dx=1e-6):
     """Numerische Ableitung von f mit der zentralen Differenz."""
     return (f(x + dx) - f(x - dx)) / (2 * dx)
 
-def gradient_descent(x_start, alpha=0.02, n_iterationen=500):
+def gradient_descent(x_start, alpha=0.01, n_iterationen=200):
     """GD-Loop: gibt den Endwert und den Kostenverlauf zurück."""
     x_aktuell     = x_start
     kosten_verlauf = []
