@@ -348,8 +348,11 @@ Zu Frage 1: `scipy` benötigt typischerweise unter 100 Iterationen, während
 unser GD 2000 Schritte und mehr braucht. `scipy` passt die Schrittgröße adaptiv an
 und ist daher effizienter.
 
-Zu Frage 2: `scipy` findet das Minimum auch vom schlechten Startwert aus,
-benötigt aber mehr Iterationen.
+Zu Frage 2: `scipy` findet vom Startwert `x0=[50.0, 0.001]` **nicht** das
+richtige Minimum. Stattdessen konvergiert es zu einem *lokalen* Minimum bei
+$T_\infty \approx 31.86\,°\text{C}$ und $\lambda \approx 4.47\,\text{s}^{-1}$
+mit einem MSE von rund $295\,°\text{C}^2$, also etwa 80-mal schlechter als das
+globale Minimum. `scipy.optimize.minimize` ist ein **lokaler** Optimierer: Es findet das nächstgelegene Minimum, nicht zwingend das globale. Für globale Suche wären andere Verfahren nötig, etwa [`scipy.optimize.differential_evolution`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.differential_evolution.html).
 
 Zu Frage 3: GD mit den gewählten Lernraten konvergiert vom schlechten
 Startwert möglicherweise nicht mehr korrekt, weil die Lernraten auf den
