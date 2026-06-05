@@ -6,12 +6,12 @@ kernelspec:
 
 # 9.3 Simpson-Regel und scipy.integrate.quad
 
-In Abschnitt 9.1 haben wir die Trapezregel kennengelernt: lineare
-Interpolation zwischen Messpunkten. *Geht es noch genauer?* Ja, wenn wir
-statt einer Geraden eine Parabel durch je drei aufeinanderfolgende Punkte
-legen. Das ist die Idee der Simpson-Regel. Außerdem lernen wir heute
-`scipy.integrate.quad` kennen, das Werkzeug der Wahl, wenn nicht
-Messdaten, sondern ein analytisches Modell vorliegt.
+In Abschnitt 9.1 haben wir die Trapezregel kennengelernt: lineare Interpolation
+zwischen Messpunkten. *Geht es noch genauer?* Ja, wenn wir statt einer Geraden
+eine Parabel durch je drei aufeinanderfolgende Punkte legen. Das ist die Idee
+der Simpson-Regel. Außerdem lernen wir `scipy.integrate.quad` kennen, das
+Werkzeug der Wahl, wenn nicht Messdaten, sondern ein analytisches Modell
+vorliegt.
 
 ## Lernziele
 
@@ -62,8 +62,8 @@ np.random.seed(12)
 
 v0_bremsung = 100 / 3.6   # Anfangsgeschwindigkeit in m/s
 k_bremsung  = 0.35        # Abklingkonstante in 1/s
-T_bremsung  = 8.0         # Messdauer in s
-dt_sensor   = 0.5         # Abtastrate in s
+T_bremsung  = 8.0         # Messdauer (Gesamtdauer der Messung) in s
+dt_sensor   = 0.5         # Messintervall (Zeitabstand zwischen zwei Messungen) in s
 
 t_mess  = np.arange(0, T_bremsung + dt_sensor, dt_sensor)
 v_exakt = v0_bremsung * np.exp(-k_bremsung * t_mess)
@@ -144,6 +144,13 @@ Funktionen ist, zeigt der nächste Unterabschnitt.
 ````{admonition} Lösung
 :class: tip
 :class: dropdown
+
+Zu Frage 1: Die Formel fasst immer drei Punkte zu einem Doppelintervall
+zusammen. Bei gerader Punktanzahl bleibt am Ende ein einzelner Punkt
+übrig, der kein vollständiges Doppelintervall bilden kann.
+
+Zu Frage 2:
+
 ```python
 import numpy as np
 
@@ -160,12 +167,8 @@ print(f"simpson():      {s_simpson:.4f} m")
 print(f"np.trapezoid:   {np.trapezoid(v, t):.4f} m")
 ```
 
-Zu Frage 1: Die Formel fasst immer drei Punkte zu einem Doppelintervall
-zusammen. Bei gerader Punktanzahl bleibt am Ende ein einzelner Punkt
-übrig, der kein vollständiges Doppelintervall bilden kann.
-
-Simpson liefert $85/3 \approx 28{,}33$ m, `np.trapezoid` liefert
-$27{,}5$ m. Bei diesem kleinen Datensatz ist der Unterschied gering;
+Simpson liefert $85/3 \approx 28.33$ m, `np.trapezoid` liefert
+$27.5$ m. Bei diesem kleinen Datensatz ist der Unterschied gering;
 bei glatten Funktionen und mehr Punkten wächst der Vorteil von Simpson
 deutlich.
 ````
@@ -220,9 +223,9 @@ for n in [9, 17]:
           f"Faktor = {fehler_t/fehler_s:.0f}x")
 ```
 
-Bei rauschfreien Daten ist Simpson hier um einen Faktor 10 bis 100 genauer. Bei
-den verrauschten Sensordaten aus der Übung war der Unterschied dagegen
-vernachlässigbar, weil das Rauschen den Integrationsfehler überwog.
+Bei rauschfreien Daten ist Simpson hier deutlich genauer. Bei den verrauschten
+Sensordaten aus der Übung war der Unterschied dagegen vernachlässigbar, weil das
+Rauschen den Integrationsfehler überwog.
 
 **Faustregel:** Simpson für glatte analytische Funktionen, Trapezregel
 für verrauschte Messdaten.
@@ -274,21 +277,20 @@ import numpy as np
 v0_modell = 100 / 3.6
 k_modell  = 0.35
 
-# --- Bremsweg bis zum vollständigen Stillstand: obere Grenze = unendlich ---
+# --- Theoretischer Gesamtbremsweg: obere Grenze = unendlich ---
 # Analytisch: Integral von v0*exp(-k*t) von 0 bis inf = v0/k
 bremsweg_inf, fehler_inf = quad(v_brems, 0, np.inf)
 
-print(f"Bremsweg bis Stillstand (quad):  {bremsweg_inf:.4f} m")
-print(f"Analytisch (v0/k):               {v0_modell / k_modell:.4f} m")
-print(f"Bremsweg bis T = 8 s:            {bremsweg_exakt:.4f} m")
-print(f"Anteil nach T = 8 s:             "
-      f"{(bremsweg_inf - bremsweg_exakt) / bremsweg_inf * 100:.1f} %")
+print(f"Theoretischer Gesamtbremsweg (quad):  {bremsweg_inf:.4f} m")
+print(f"Analytisch (v0/k):                    {v0_modell / k_modell:.4f} m")
+print(f"Bremsweg bis T = 8 s:                 {bremsweg_exakt:.4f} m")
+print(f"Anteil nach T = 8 s:                  "
+      f"{bremsweg_exakt / bremsweg_inf * 100:.1f} %")
 ```
 
-Das Integral bis Unendlich gibt den theoretischen Gesamtbremsweg an,
-wenn das Fahrzeug dem Exponentialmodell folgend nie vollständig zum
-Stillstand kommt. Bei $T = 8$ s sind bereits 93{,}9 % dieses Weges
-zurückgelegt.
+Das Integral bis Unendlich gibt den theoretischen Gesamtbremsweg an, das den
+Stillstand nur asymptotisch erreicht. Bei $T = 8$ s sind bereits 93.9 % dieses
+Weges zurückgelegt.
 
 ```{admonition} Wann welches Werkzeug?
 :class: note

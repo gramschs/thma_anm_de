@@ -38,8 +38,20 @@ berechnet. Das nennt man **numerische Quadratur**.
 
 ## Die Rechteckregel
 
-Wir erzeugen zunächst einen realistischen Bremsvorgang: das Fahrzeug startet
-bei 100 km/h und bremst gleichmäßig bis zum Stillstand in 5 Sekunden.
+Wir erzeugen zunächst ein vereinfachtes Bremsmodell: das Fahrzeug startet bei
+100 km/h und bremst gleichmäßig (mit konstanter Verzögerung, in der Realität
+nur näherungsweise erfüllt) bis zum Stillstand in 5 Sekunden. Physikalisch
+entspricht gleichmäßig bremsen einer **konstanten Verzögerung** $a$. Für
+konstante $a$ gilt $v(t) = v_0 + a t$; mit der Bedingung $v(T) = 0$ folgt $a =
+-v_0/T$ und damit
+
+\begin{equation*}
+v(t) = v_0 \bigl(1 - t/T\bigr).
+\end{equation*}
+
+Diesen linearen Verlauf setzen wir im Code bei den Messzeitpunkten $t_i$ als
+$v(t_i)$ ein. Der exakte Bremsweg ergibt sich aus dem bestimmten Integral $s =
+\int_0^T v_0(1 - t/T)\,\mathrm{d}t$ bzw. $s = v_0 \cdot \tfrac{T}{2}$.
 
 ```{code-cell} python
 import numpy as np
@@ -49,15 +61,15 @@ style.use('seaborn-v0_8')
 
 # --- Bremsvorgang: diskrete Messwerte ---
 # Anfangsgeschwindigkeit 100 km/h = 27.78 m/s, lineare Verzögerung bis v = 0
-v0 = 100 / 3.6          # Anfangsgeschwindigkeit in m/s
-T  = 5.0                # Bremsdauer in s
-n  = 6                  # Anzahl Messpunkte (bewusst klein für Visualisierung)
+v0 = 100 / 3.6  # Anfangsgeschwindigkeit in m/s
+T  = 5.0        # Bremsdauer in s
+n  = 6          # Anzahl Messpunkte (bewusst klein für Visualisierung)
 
-t_mess = np.linspace(0, T, n)              # Zeitpunkte in s
-v_mess = v0 * (1 - t_mess / T)            # Geschwindigkeit in m/s (linear fallend)
+t_mess = np.linspace(0, T, n)   # Zeitpunkte in s
+v_mess = v0 * (1 - t_mess / T)  # Geschwindigkeit in m/s (linear fallend)
 
 # Analytischer Bremsweg als Referenz: Integral von v0*(1 - t/T) von 0 bis T
-bremsweg_exakt = v0 * T / 2               # = 69.44 m
+bremsweg_exakt = v0 * T / 2     # = 69.44 m
 
 print(f"Anfangsgeschwindigkeit: {v0:.2f} m/s ({v0 * 3.6:.1f} km/h)")
 print(f"Bremsdauer:             {T:.1f} s")
@@ -65,7 +77,16 @@ print(f"Exakter Bremsweg:       {bremsweg_exakt:.2f} m")
 print()
 print("Messwerte:")
 for ti, vi in zip(t_mess, v_mess):
-    print(f"  t = {ti:.1f} s  →  v = {vi:.2f} m/s")
+    print(f"  t = {ti:.1f} s  -->  v = {vi:.2f} m/s")
+
+# Visualisierung
+fig, ax = plt.subplots()
+ax.scatter(t_mess, v_mess, color='#E60000', s=40)
+ax.set_title('Bremsvorgang mit konstanter Verzögerung -5.55 m/s^2')
+ax.set_xlabel('Zeit in s')
+ax.set_ylabel('Geschwindigkeit in m/s')
+ax.grid(True)
+
 ```
 
 Mit $n = 6$ Messpunkten entsteht ein Zeitraster mit Schrittweite
@@ -81,17 +102,17 @@ dt = t_mess[1] - t_mess[0]   # Schrittweite in s
 
 # --- Linkssumme: Höhe = v am linken Rand jedes Intervalls ---
 # Intervall [t_0, t_1], [t_1, t_2], ..., [t_{n-2}, t_{n-1}]
-# → verwendet v_mess[0], v_mess[1], ..., v_mess[n-2]  (alle außer dem letzten)
+# verwendet v_mess[0], v_mess[1], ..., v_mess[n-2]  (alle außer dem letzten)
 s_links = np.sum(v_mess[:-1]) * dt
 
 # --- Rechtssumme: Höhe = v am rechten Rand jedes Intervalls ---
-# → verwendet v_mess[1], v_mess[2], ..., v_mess[n-1]  (alle außer dem ersten)
+# verwendet v_mess[1], v_mess[2], ..., v_mess[n-1]  (alle außer dem ersten)
 s_rechts = np.sum(v_mess[1:]) * dt
 
 # --- Mittelpunktregel: Höhe = v in der Mitte jedes Intervalls ---
 # Mittelpunkte durch Mittelwert benachbarter Messpunkte
 t_mitte = 0.5 * (t_mess[:-1] + t_mess[1:])
-v_mitte = v0 * (1 - t_mitte / T)           # Modell an den Mittelpunkten auswerten
+v_mitte = 0.5 * (v_mess[:-1] + v_mess[1:])
 s_mitte = np.sum(v_mitte) * dt
 
 print(f"Exakter Bremsweg:  {bremsweg_exakt:.4f} m")
@@ -127,7 +148,7 @@ for axes, (titel, hoehen, x_start) in zip(ax, varianten):
                  color='#CCDEE9', edgecolor='#005A94', linewidth=1.2)
     # Genaue Kurve darüber
     axes.plot(t_fein, v_fein, color='#005A94', linewidth=2, label='v(t) exakt')
-    axes.scatter(t_mess, v_mess, color='#E60000', s=40, zorder=5)
+    axes.scatter(t_mess, v_mess, color='#E60000', s=40)
     axes.set_title(titel)
     axes.set_xlabel('Zeit in s')
     axes.grid(True)
@@ -146,14 +167,10 @@ Betrachten Sie die drei Plots für den monoton fallenden Geschwindigkeitsverlauf
 2. Wie würde sich die Antwort ändern, wenn das Fahrzeug nicht bremsen,
    sondern beschleunigen würde (monoton steigender Geschwindigkeitsverlauf)?
 3. Die Mittelpunktregel hat hier keinen Fehler. Liegt das an der Methode oder
-   an der gewählten Testfunktion? Begründen Sie kurz.
+   an der Geschwindigkeitsfunktion? Begründen Sie kurz.
 ```
 
-```{code-cell} python
-# Code-Zelle
-```
-
-````{admonition} Lösung
+```{admonition} Lösung
 :class: tip
 :class: dropdown
 Zu Frage 1: Bei einem monoton fallenden Verlauf liegt der linke Rand jedes
@@ -165,12 +182,12 @@ Die Mittelpunktregel liegt dazwischen.
 Zu Frage 2: Bei einem monoton steigenden Verlauf kehrt sich das Vorzeichen
 der Fehler um: die Linkssumme unterschätzt, die Rechtssumme überschätzt.
 
-Zu Frage 3: Das liegt an der Testfunktion. Eine lineare Funktion $v(t)$
-hat in jedem Intervall ihren Mittelpunkt exakt auf der Geraden. Die
-Mittelpunktregel ist für Polynome ersten Grades also exakt. Für einen
-nichtlinearen Geschwindigkeitsverlauf hätte die Mittelpunktregel ebenfalls
-einen Fehler.
-````
+Zu Frage 3: Das liegt an der Geschwindigkeitsfunktion. Eine lineare Funktion hat
+in jedem Intervall ihren Mittelpunkt exakt auf der Geraden. Die zusammengesetzte
+Mittelpunktregel ist für global lineare Funktionen (Polynome ersten Grades)
+exakt. Für einen nichtlinearen Geschwindigkeitsverlauf hätte die
+Mittelpunktregel ebenfalls einen Fehler.
+```
 
 +++
 
@@ -188,7 +205,10 @@ $$\Delta s_i = \frac{v(t_i) + v(t_{i+1})}{2} \cdot \Delta t.$$
 
 Die Summe über alle Intervalle ergibt die **Trapezregel**:
 
-$$s \approx \Delta t \cdot \left(\frac{v_0}{2} + v_1 + v_2 + \cdots + v_{n-2} + \frac{v_{n-1}}{2}\right).$$
+\begin{equation*}
+s \approx \Delta t \cdot \left(\frac{v(t_0)}{2} + v(t_1) + \cdots +
+v(t_{n-2}) + \frac{v(t_{n-1})}{2}\right).
+\end{equation*}
 
 Die Randpunkte gehen also mit dem halben Gewicht ein, alle inneren Punkte
 mit vollem Gewicht.
@@ -211,8 +231,42 @@ print(f"Exakter Bremsweg:       {bremsweg_exakt:.4f} m")
 print(f"Fehler:                 {bremsweg_trapez - bremsweg_exakt:+.4f} m")
 ```
 
-NumPy bietet seit Version 2.0 die Funktion `np.trapezoid`, die dieselbe
-Rechnung in einer Zeile erledigt.
+Der folgende Python-Code visualisert die Trapezregel.
+
+```{code-cell} python
+import matplotlib.pyplot as plt
+import matplotlib.style as style
+style.use('seaborn-v0_8')
+
+# --- Feiner aufgelöste Kurve als Referenz ---
+t_fein = np.linspace(0, T, 300)
+v_fein = v0 * (1 - t_fein / T)
+
+fig, ax = plt.subplots(figsize=(6, 4))
+
+# --- Trapeze einzeichnen: lineare Verbindung der Messpunkte ---
+for i in range(len(t_mess) - 1):
+    x_trap = [t_mess[i],   t_mess[i + 1]]
+    y_trap = [v_mess[i],   v_mess[i + 1]]
+    ax.fill_between(x_trap, y_trap, color='#CCDEE9',
+                    edgecolor='#005A94', linewidth=1.2, alpha=0.9)
+
+# Exakte Kurve und Messpunkte
+ax.plot(t_fein, v_fein, color='#005A94', linewidth=2, label='v(t) exakt')
+ax.scatter(t_mess, v_mess, color='#E60000', s=40, label='Messpunkte')
+
+ax.set_title('Trapezregel für den Bremsvorgang')
+ax.set_xlabel('Zeit in s')
+ax.set_ylabel('Geschwindigkeit in m/s')
+ax.grid(True)
+ax.legend()
+plt.tight_layout()
+plt.show()
+```
+
+NumPy bietet seit Version 2.0 die Funktion `np.trapezoid`, die dieselbe Rechnung
+in einer Zeile erledigt. In älteren NumPy-Versionen heißt die Funktion
+`np.trapz`; sie ist inhaltlich gleich.
 
 ```{code-cell} python
 import numpy as np
@@ -225,13 +279,6 @@ bremsweg_np = np.trapezoid(v_mess, t_mess)
 print(f"np.trapezoid:     {bremsweg_np:.4f} m")
 print(f"Schleife:         {bremsweg_trapez:.4f} m")
 print(f"Übereinstimmung:  {np.isclose(bremsweg_np, bremsweg_trapez)}")
-```
-
-```{admonition} Note
-:class: note
-`np.trapezoid` ersetzt seit NumPy 2.0 die ältere Funktion `np.trapz`, die
-als veraltet gilt. In älterem Code ist `np.trapz` noch häufig zu sehen;
-beide Funktionen liefern identische Ergebnisse.
 ```
 
 Die Trapezregel liefert für diesen linearen Geschwindigkeitsverlauf das

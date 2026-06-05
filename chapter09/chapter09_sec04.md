@@ -57,7 +57,14 @@ print(f"Experiment C: {ergebnis_c:.4f},  Fehlerabschätzung: {fehler_c:.2e}")
 ```
 
 ````{admonition} Lösung
-:class: tip, dropdown
+:class: tip
+:class: dropdown
+
+Zu Frage 1: `np.linspace(0, 4, 8)` erzeugt 8 Punkte. Die Funktion
+`simpson` prüft `n % 2 == 0` und wirft einen `ValueError`, weil 8
+gerade ist. Der `ValueError` kann mit `try-except` folgendermaßen
+abgefangen werden:
+
 ```python
 import numpy as np
 from scipy.integrate import quad
@@ -99,11 +106,9 @@ Experiment B: 21.3333
 Experiment C: 21.3333,  Fehlerabschätzung: 2.37e-13
 ```
 
-Zu Frage 1: `np.linspace(0, 4, 8)` erzeugt 8 Punkte. Die Funktion
-`simpson` prüft `n % 2 == 0` und wirft einen `ValueError`, weil 8
-gerade ist.
 
-Zu Frage 2: Die Simpson-Regel leitet ihre Formel aus einem Parabolfit ab und ist
+
+Zu Frage 2: Die Simpson-Regel leitet ihre Formel aus einem Parabelfit ab und ist
 daher für alle Polynome bis Grad 3 exakt. $f(x) = x^2$ ist ein Polynom zweiten
 Grades. Simpson macht also keinen Diskretisierungsfehler, unabhängig von der
 Anzahl der Punkte, solange die Schrittweite konstant ist und die Punktanzahl
@@ -126,8 +131,8 @@ Die Kennlinie folgt dem Modell
 
 $$F(x) = k_1\,x + k_3\,x^3,$$
 
-mit linearem Anteil $k_1$ und kubischem Anteil $k_3$. Die geleistete
-Arbeit beim Einfedern von $x = 0$ bis $x = x_\text{max}$ ist
+mit linearem Anteil $k_1$ und kubischem Anteil $k_3$. Die geleistete Arbeit beim
+langsamen Einfedern (Zusammendrücken) von $x = 0$ bis $x = x_\text{max}$ ist
 
 $$W = \int_0^{x_\text{max}} F(x)\,\mathrm{d}x.$$
 
@@ -148,18 +153,24 @@ F_mess  = F_exakt + np.random.normal(0, 0.4, size=len(x_mess))
 F_mess[0] = 0.0   # Federkraft bei x = 0 ist null
 ```
 
-1. Berechnen Sie die geleistete Arbeit $W$ mit `np.trapezoid` auf den
-   Messdaten. Geben Sie das Ergebnis in Joule aus.
-2. Berechnen Sie $W$ mit `scipy.integrate.quad` auf dem analytischen
-   Modell $F(x) = k_1\,x + k_3\,x^3$ mit den gegebenen Parametern.
-3. Das exakte Integral lautet $W_\text{exakt} = k_1 x_\text{max}^2/2
-   + k_3 x_\text{max}^4/4$. Berechnen Sie den relativen Fehler beider
-   Methoden in Prozent.
-4. Stellen Sie `F_exakt` und `F_mess` im selben Plot über $x$ dar.
-   Beschriften Sie Achsen mit Einheiten und fügen Sie eine Legende ein.
-5. Warum stimmt `quad` mit dem analytischen Wert praktisch exakt
-   überein, während `np.trapezoid` einen kleinen Fehler hat?
-   Antworten Sie in zwei Sätzen ohne Code.
+1. Berechnen Sie die geleistete Arbeit $W$ mit `np.trapezoid` auf den Messdaten.
+   Geben Sie das Ergebnis in Joule aus.
+2. Berechnen Sie $W$ mit `scipy.integrate.quad` auf dem analytischen Modell
+   $F(x) = k_1\,x + k_3\,x^3$ mit den gegebenen Parametern.
+3. Das exakte Integral lautet $W_\text{exakt} = k_1 x_\text{max}^2/2 + k_3
+   x_\text{max}^4/4$. Berechnen Sie den relativen Fehler beider Methoden in
+   Prozent.
+4. Stellen Sie `F_exakt` und `F_mess` im selben Plot über $x$ dar. Beschriften
+   Sie Achsen mit Einheiten und fügen Sie eine Legende ein.
+5. Warum stimmt `quad` mit dem analytischen Wert praktisch exakt überein,
+   während `np.trapezoid` einen kleinen Fehler hat? Antworten Sie in zwei Sätzen
+   ohne Code.
+6. Verwenden Sie die in Abschnitt 9.3 implementierte Funktion `simpson(t, v)`,
+   um die Arbeit $W$ auf der **glatten** Modellkennlinie `F_exakt` zu
+   berechnen (setzen Sie dazu `t = x_mess`, `v = F_exakt`). Vergleichen Sie den
+   relativen Fehler dieser Simpson-Lösung mit dem relativen Fehler der
+   Trapezregel aus Teilaufgabe 1 und interpretieren Sie das Ergebnis in zwei
+   Sätzen.
 ````
 
 ```{code-cell} python
@@ -167,7 +178,8 @@ F_mess[0] = 0.0   # Federkraft bei x = 0 ist null
 ```
 
 ````{admonition} Lösung
-:class: tip, dropdown
+:class: tip
+:class: dropdown
 ```python
 import numpy as np
 import matplotlib.pyplot as plt
@@ -241,4 +253,40 @@ Integrator, der intern adaptiv auswertet und die Genauigkeit bis zur
 Maschinengenauigkeit treibt. `np.trapezoid` kann nur auf den 13
 Messpunkten arbeiten und macht daher einen kleinen Diskretisierungsfehler,
 der zudem das Messrauschen widerspiegelt.
+
+Zu Frage 6: Implementierung
+```python
+# --- Teilaufgabe 6: Simpson ---
+def simpson(t, v):
+    """Zusammengesetzte Simpson-Regel für gleichmäßiges Raster."""
+    n  = len(v)
+    dt = t[1] - t[0]
+    if n % 2 == 0:
+        raise ValueError(
+            f"Simpson-Regel erfordert ungerade Punktanzahl, erhalten: {n}"
+        )
+    gewichte         = np.ones(n)
+    gewichte[1:-1:2] = 4
+    gewichte[2:-2:2] = 2
+    return (dt / 3) * np.dot(gewichte, v)
+
+# Simpson-Regel auf glatter Modellkennlinie F_exakt
+W_simpson = simpson(x_mess, F_exakt)
+rel_fehler_simpson = abs(W_simpson - W_exakt) / W_exakt * 100
+
+print(f"Arbeit (Simpson, glatt): {W_simpson:.4f} J")
+print(f"Rel. Fehler Simpson:     {rel_fehler_simpson:.6f} %")
+```
+
+Erwartete zusätzliche Ausgabe (ungefähr):
+```
+Arbeit (Simpson, glatt): 10.0125 J
+Rel. Fehler Simpson:     0.000000 %
+```
+
+Die Simpson-Regel integriert Polynome bis Grad 3 auf einem gleichmäßigen Raster
+exakt. Da $F(x) = k_1 x + k_3 x^3$ genau ein Polynom dritten Grades ist,
+liefert Simpson auf `F_exakt` (glatte Modellkennlinie) praktisch keinen
+Diskretisierungsfehler, während die Trapezregel auf den verrauschten Messdaten
+einen kleinen Fehler aufweist.
 ````
