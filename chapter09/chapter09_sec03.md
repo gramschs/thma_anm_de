@@ -32,7 +32,7 @@ vorliegt.
 
 +++
 
-## Die Simpson-Regel: Parabolapproximation statt Geraden
+## Die Simpson-Regel: Parabelapproximation statt Geraden
 
 Die Trapezregel verbindet je zwei benachbarte Messpunkte durch eine
 Gerade. Die **Simpson-Regel** legt stattdessen eine Parabel durch je
