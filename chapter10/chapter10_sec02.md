@@ -129,9 +129,8 @@ Zu Frage 3: Ausgehend von $T(10\,\text{min}) = 35.0\,°C$:
 $$T(15) = 35.0 + 5 \cdot (-0.1) \cdot (35.0 - 20.0) = 35.0 - 7.5 = 27.5\,°C.$$
 
 Zu Frage 4: Es handelt sich um einen **Off-by-One-Fehler** (Zaunpfahlfehler).
-Ein Zeitraster mit $n$ Schritten hat $n$ Intervalle; die Schleife muss
-daher `range(n)` laufen, nicht `range(n - 1)`. Korrektur: `range(n)` in
-Zeile A.
+Das Intervall $[0, t_{end}]$ wird in $n=t_{end}/\Delta t$ Schritte zerlegt. Wir
+benötigen daher genau $n$ Euler-Updates, also `range(n)` in Zeile A.
 ````
 
 ````{admonition} Übung 10.2 (✩✩)
@@ -270,13 +269,12 @@ gewählt wurde.
 Zu Teilaufgabe 4: Handrechnung für $\Delta t = 6\,\text{min}$:
 $$N_1 = 1000 + 6 \cdot (-0.2 \cdot 1000) = 1000 - 1200 = -200.$$
 
-$N_1 = 0$ gilt genau wenn $\Delta t \cdot \lambda = 1$, also
-$\Delta t = 1/\lambda = 5\,\text{min}$. Das ist die **kritische Schrittweite**:
-Beim Grenzfall $\Delta t = 5\,\text{min}$ fällt $N_1 = 0$ und alle weiteren
-Werte bleiben null, weil das Euler-Update $N_{i+1} = N_i + \Delta t \cdot
-(-\lambda N_i) = N_i (1 - \lambda \Delta t)$ dann $N_i \cdot 0 = 0$ ergibt.
-Für $\Delta t > 5\,\text{min}$ wird der Verstärkungsfaktor $(1 - \lambda
-\Delta t)$ negativ, was den Vorzeichenwechsel erklärt. Das Euler-Verfahren
-ist dann numerisch instabil in dem Sinne, dass es unphysikalische Werte
-erzeugt, selbst wenn die Lösung formal konvergiert.
+$N_1 = 0$ gilt genau wenn $\Delta t \cdot \lambda = 1$, also $\Delta t =
+1/\lambda = 5\,\text{min}$. Das ist die **kritische Schrittweite**: Beim
+Grenzfall $\Delta t = 5\,\text{min}$ fällt $N_1 = 0$ und alle weiteren Werte
+bleiben null, weil das Euler-Update $N_{i+1} = N_i + \Delta t \cdot (-\lambda
+N_i) = N_i (1 - \lambda \Delta t)$ dann $N_i \cdot 0 = 0$ ergibt. Für $\Delta t
+> 5\,\text{min}$ wird der Verstärkungsfaktor $(1 - \lambda \Delta t)$ negativ.
+Die Werte wechseln dann das Vorzeichen und liefern damit unphysikalische
+(negative) Atomzahlen.
 ````

@@ -25,20 +25,48 @@ der Temperaturverlauf $T(t)$ für $t \geq 0$.
 
 ```{admonition} Lernziele
 :class: attention
-* [ ] Sie können erklären, was eine **gewöhnliche Differentialgleichung 1. Ordnung** ist, und ein physikalisches Beispiel nennen.
-* [ ] Sie können das **explizite Euler-Verfahren** aus dem Vorwärts-Differenzenquotienten herleiten und als Python-Schleife implementieren.
-* [ ] Sie wissen, was **Schrittweite** und **Anfangsbedingung** bedeuten, und können beschreiben, wie die Schrittweite die Genauigkeit beeinflusst.
-* [ ] Sie können die Euler-Lösung mit einer analytischen Referenzlösung vergleichen und den globalen Fehler quantifizieren.
+* [ ] Sie können erklären, was eine **gewöhnliche Differentialgleichung 1.
+  Ordnung** ist, und ein physikalisches Beispiel nennen.
+* [ ] Sie können das **explizite Euler-Verfahren** aus dem
+  Vorwärts-Differenzenquotienten herleiten und als Python-Schleife
+  implementieren.
+* [ ] Sie wissen, was **Schrittweite** und **Anfangsbedingung** bedeuten, und
+  können beschreiben, wie die Schrittweite die Genauigkeit beeinflusst.
+* [ ] Sie können die Euler-Lösung mit einer analytischen Referenzlösung
+  vergleichen und den globalen Fehler quantifizieren.
 ```
 
 +++
 
-## Was ist eine Differentialgleichung?
+## Wie sieht die Abkühlung aus?
 
 Bevor wir das Abkühlproblem numerisch lösen, verschaffen wir uns einen
 Überblick: Wie sieht die Lösung eigentlich aus? Für das Newtonsche
-Abkühlungsgesetz lässt sich die Gleichung analytisch lösen; das Ergebnis
-kennen Sie aus der Analysis.
+Abkühlungsgesetz lässt sich die Gleichung analytisch lösen. Wir trennen die
+Variablen
+
+\begin{equation*}
+\frac{dT}{dt}=-k\,(T-T_{\infty}) \quad\Rightarrow\quad
+\frac{dT}{T-T_{\infty}}=-k\, dt,
+\end{equation*}
+
+integrieren auf beiden Seiten
+
+\begin{equation*}
+\ln |T - T_{\infty}| = -kt + \tilde{C}
+\end{equation*}
+
+und erhalten die allgemeine Lösung
+
+\begin{equation*}
+T(t) = T_{\infty} + C\, e^{-kt}.
+\end{equation*}
+
+Mit der Anfangsbedingung $T(0)=T_0$ lautet die Lösung
+
+\begin{equation*}
+T(t) = T_{\infty} + (T_0 - T_{\infty}) e^{-kt}.
+\end{equation*}
 
 ```{code-cell} python
 import numpy as np
@@ -60,43 +88,41 @@ k     = 0.1    # Abkühlkonstante in 1/min
 t_fein  = np.linspace(0, 50, 500)
 T_exakt = T_inf + (T0 - T_inf) * np.exp(-k * t_fein)
 
+# --- Ausgabe ---
 print(f"Anfangstemperatur:        {T0:.1f} °C")
 print(f"Umgebungstemperatur:      {T_inf:.1f} °C")
 print(f"Temperatur nach 10 min:   {T_inf + (T0 - T_inf) * np.exp(-k * 10):.2f} °C")
 print(f"Temperatur nach 30 min:   {T_inf + (T0 - T_inf) * np.exp(-k * 30):.2f} °C")
 print(f"Temperatur nach 50 min:   {T_inf + (T0 - T_inf) * np.exp(-k * 50):.2f} °C")
 
+# --- Visualisierung ---
 fig, ax = plt.subplots(figsize=(8, 4))
-ax.plot(t_fein, T_exakt, color='#005A94', linewidth=2,
-        label='Analytische Lösung $T(t) = T_\\infty + (T_0 - T_\\infty)\\,e^{-kt}$')
-ax.axhline(T_inf, color='#E87846', linewidth=1.2, linestyle='--',
+ax.plot(t_fein, T_exakt, label='analytische Lösung')
+ax.axhline(T_inf, color='black', linestyle='--',
            label=f'Gleichgewicht $T_\\infty = {T_inf:.0f}\\,°C$')
-ax.scatter([0], [T0], color='#E60000', s=60, zorder=5,
-           label=f'Anfangsbedingung $T_0 = {T0:.0f}\\,°C$')
 ax.set_xlabel('Zeit in min')
 ax.set_ylabel('Temperatur in °C')
 ax.set_title('Newtonsches Abkühlungsgesetz: analytische Lösung')
-ax.legend(fontsize=9)
+ax.legend()
 ax.grid(True)
-plt.tight_layout()
 plt.show()
 ```
 
-Die Temperatur nähert sich asymptotisch der Umgebungstemperatur. Nach 50 min
-ist der Unterschied bereits kleiner als 1 °C. Die Funktion $\dot{T}(t) =
--k\,(T - T_\infty)$ beschreibt eine einfache, aber wichtige Klasse von DGLen:
-**autonome Differentialgleichungen 1. Ordnung**. "Autonom" bedeutet, dass die
-rechte Seite nicht explizit von der Zeit $t$ abhängt, sondern nur vom
-aktuellen Zustand $T$.
+Die Temperatur nähert sich asymptotisch der Umgebungstemperatur $T_{\infty} =
+20~^{\circ}\text{C}$. Nach 50 min ist der Unterschied bereits kleiner als 1 °C.
+Die Funktion $\dot{T}(t) = -k\,(T - T_\infty)$ beschreibt eine einfache, aber
+wichtige Klasse von DGLen: **autonome Differentialgleichungen 1. Ordnung**.
+"Autonom" bedeutet, dass die rechte Seite nicht explizit von der Zeit $t$
+abhängt, sondern nur vom aktuellen Zustand $T$.
 
 ```{admonition} Begriffe im Überblick
 :class: note
 | Begriff | Bedeutung im Beispiel |
 |---|---|
 | **DGL 1. Ordnung** | Nur die erste Ableitung $\dot{T}$ taucht auf, keine $\ddot{T}$ |
-| **Anfangsbedingung** | $T(0) = T_0 = 80\,°C$; legt die spezifische Lösungskurve fest |
-| **Rechte Seite** $f(T)$ | $-k\,(T - T_\infty)$; gibt die Änderungsrate als Funktion des Zustands an |
-| **Autonome DGL** | $f$ hängt nicht explizit von $t$ ab |
+| **Anfangsbedingung** | $T(0) = T_0 = 80~^{\circ}\text{C}$; legt die spezifische Lösungskurve fest |
+| **rechte Seite** $f(T)$ | $-k\,(T - T_\infty)$; gibt die Änderungsrate als Funktion des Zustands an |
+| **autonome DGL** | $f$ hängt nicht explizit von $t$ ab |
 ```
 
 *Was passiert, wenn die Heizung im Raum läuft und $T_\infty$ selbst zeitabhängig
@@ -115,22 +141,23 @@ Diesen Fall behandeln wir in Abschnitt 10.3.
    Beantworten Sie die Frage ohne Code.
 ```
 
-````{admonition} Lösung
+```{admonition} Lösung
 :class: tip
 :class: dropdown
 Zu Frage 1: $T(0) = T_\infty + (T_0 - T_\infty)\,e^{0} = T_\infty + (T_0 -
-T_\infty) = T_0 = 80\,°C$. Die Anfangsbedingung ist also genau erfüllt.
+T_\infty) = T_0 = 80~^{\circ}\text{C}$. Die Anfangsbedingung ist also genau
+erfüllt.
 
-Zu Frage 2: $\dot{T} = -k(T - T_\infty) = 0$ gilt genau dann, wenn
-$T = T_\infty = 20\,°C$. Das ist der Gleichgewichtszustand: Der Stab hat
-Umgebungstemperatur angenommen und kühlt nicht mehr weiter ab. Im Plot
-ist das die Asymptote, der sich die Kurve von oben annähert.
+Zu Frage 2: $\dot{T} = -k(T - T_\infty) = 0$ gilt genau dann, wenn $T = T_\infty
+= 20~^{\circ}\text{C}$. Das ist der Gleichgewichtszustand: Der Stab hat
+Umgebungstemperatur angenommen und kühlt nicht mehr weiter ab. Im Plot ist das
+die Asymptote, der sich die Kurve von oben annähert.
 
-Zu Frage 3: Die Gleichgewichtstemperatur $T_\infty = 20\,°C$ hängt nicht
-von $k$ ab, sie ändert sich also nicht. Ein größeres $k$ bedeutet eine
-schnellere Abkühlung: Der Exponent $-kt$ wächst schneller, die Kurve
-fällt steiler ab und erreicht die Gleichgewichtstemperatur früher.
-````
+Zu Frage 3: Die Gleichgewichtstemperatur $T_\infty = 20~^{\circ}\text{C}$ hängt
+nicht von $k$ ab, sie ändert sich also nicht. Ein größeres $k$ bedeutet eine
+schnellere Abkühlung: Der Exponent $-kt$ fällt schneller, die Kurve fällt
+steiler ab und erreicht die Gleichgewichtstemperatur früher.
+```
 
 +++
 
@@ -152,16 +179,8 @@ Das ist das **explizite Euler-Verfahren**: vom bekannten Zustand $T_i$ einen
 Schritt der Länge $\Delta t$ in Richtung der aktuellen Steigung gehen.
 
 ```{code-cell} python
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.style as style
-style.use('seaborn-v0_8')
-
-# --- Parameter (identisch zu oben) ---
-T0    = 80.0
-T_inf = 20.0
-k     = 0.1
-t_end = 50.0
+# --- Parameter des Euler-Verfahrens ---
+t_end = 50.0   # Ende der Simulationsdauer in min
 dt    = 5.0    # Schrittweite in min (bewusst grob für Visualisierung)
 
 # --- Rechte Seite der DGL als Python-Funktion ---
@@ -172,7 +191,7 @@ def f_abkuehlung(T):
 # --- Euler-Schleife ---
 n_schritte = int(t_end / dt)            # Anzahl der Zeitschritte
 t_euler    = np.zeros(n_schritte + 1)   # Zeitpunkte (inklusive t=0)
-T_euler    = np.zeros(n_schritte + 1)   # Temperatur  (inklusive T0)
+T_euler    = np.zeros(n_schritte + 1)   # Temperatur (inklusive T0)
 
 # Anfangsbedingung
 t_euler[0] = 0.0
@@ -183,50 +202,49 @@ for i in range(n_schritte):
     t_euler[i + 1] = t_euler[i] + dt
     T_euler[i + 1] = T_euler[i] + dt * f_abkuehlung(T_euler[i])
 
-# --- Analytische Referenz an denselben Zeitpunkten ---
+# --- Analytische Referenz an denselben Zeitpunkten zum Vergleich ---
 T_exakt_euler = T_inf + (T0 - T_inf) * np.exp(-k * t_euler)
 
 # --- Ausgabe der ersten Schritte ---
-print(f"{'t [min]':>10}  {'Euler [°C]':>12}  {'Exakt [°C]':>12}  {'Fehler [°C]':>12}")
+print(f"{'t [min]'} \t {'Euler [°C]'} \t {'Exakt [°C]'} \t {'Fehler [°C]'}")
 print("-" * 52)
 for i in range(n_schritte + 1):
-    print(f"{t_euler[i]:>10.1f}  {T_euler[i]:>12.4f}  "
-          f"{T_exakt_euler[i]:>12.4f}  {T_euler[i] - T_exakt_euler[i]:>+12.4f}")
+    print(f"{t_euler[i]:.1f} \t {T_euler[i]:.4f} \t "
+          f"{T_exakt_euler[i]:.4f} \t {T_euler[i] - T_exakt_euler[i]:.4f}")
 
 # --- Plot: Euler vs. analytisch ---
 t_fein  = np.linspace(0, t_end, 500)
 T_fein  = T_inf + (T0 - T_inf) * np.exp(-k * t_fein)
 
+# --- Visualisierung ---
 fig, ax = plt.subplots(figsize=(8, 4))
-ax.plot(t_fein, T_fein, color='#005A94', linewidth=2, label='Analytische Lösung')
-ax.plot(t_euler, T_euler, color='#E60000', linewidth=1.5, linestyle='--',
-        marker='o', markersize=6, label=f'Euler-Verfahren ($\\Delta t = {dt:.0f}$ min)')
+ax.plot(t_fein, T_fein, label='analytische Lösung')
+ax.plot(t_euler, T_euler, linestyle='--',
+        marker='o', markersize=6, label=f'Euler-Verfahren')
 ax.set_xlabel('Zeit in min')
 ax.set_ylabel('Temperatur in °C')
 ax.set_title('Euler-Verfahren vs. analytische Lösung')
 ax.legend()
 ax.grid(True)
-plt.tight_layout()
 plt.show()
 ```
 
-Mit $\Delta t = 5$ min ist der Fehler bereits mit bloßem Auge sichtbar.
-Das Euler-Verfahren "überschießt" in jedem Schritt leicht, weil es die
+Mit $\Delta t = 5$ min ist der Fehler bereits mit bloßem Auge sichtbar. Das
+Euler-Verfahren unterschätzt in jedem Schritt die Temperatur leicht, weil es die
 Steigung am linken Rand des Intervalls als konstant annimmt. In Wirklichkeit
-nimmt die Abkühlrate während des Intervalls aber kontinuierlich ab.
+nimmt die Abkühlrate während des Intervalls aber kontinuierlich ab, so dass der
+Euler-Schritt die Temperatur zu stark absenkt.
 
 ```{admonition} Mini-Übung
 :class: tip
 1. Verfolgen Sie den ersten Euler-Schritt von Hand.
    Die Formel lautet: $T_1 = T_0 + \Delta t \cdot f(T_0)$.
-   Setzen Sie $T_0 = 80\,°C$, $\Delta t = 5$ und $f(T_0) = -k\,(T_0 - T_\infty)$
+   Setzen Sie $T_0 = 80~^{\circ}\text{C}$, $\Delta t = 5$ und $f(T_0) = -k\,(T_0 - T_\infty)$
    ein. Welchen Wert erhalten Sie für $T_1$? Lesen Sie den Wert anschließend
    aus der Tabelle ab und prüfen Sie Ihre Rechnung.
 2. Ist der Fehler nach dem ersten Schritt positiv oder negativ? Was bedeutet
    das physikalisch: Überschätzt oder unterschätzt das Euler-Verfahren die
    Temperatur?
-3. Warum wächst der Fehler im Plot mit der Zeit, obwohl jeder einzelne
-   Schritt nur einen kleinen lokalen Fehler macht?
 ```
 
 ```{code-cell} python
@@ -248,19 +266,12 @@ T1    = T0 + dt * f_T0       # = 80 + 5 * (-6.0) = 50.0 °C
 print(f"T1 = {T1:.4f} °C")
 ```
 
-Das ergibt $T_1 = 50.0\,°C$. Der Tabellenwert bestätigt dieses Ergebnis.
+Das ergibt $T_1 = 50.0~^{\circ}\text{C}$. Der Tabellenwert bestätigt dieses
+Ergebnis.
 
-Zu Frage 2: Der Fehler nach dem ersten Schritt ist positiv
-($T_\text{Euler} > T_\text{exakt}$). Das bedeutet, Euler überschätzt die
-Temperatur. Das Verfahren nimmt an, dass die Abkühlrate während des gesamten
-Intervalls konstant bei $-6.0\,°C/\text{min}$ bleibt. Tatsächlich sinkt die
-Rate aber schon während des Schritts, weil die Temperaturdifferenz kleiner
-wird. Euler kühlt daher zu wenig ab.
-
-Zu Frage 3: Die Fehler der einzelnen Schritte addieren sich auf. Da der
-Euler-Wert in jedem Schritt leicht zu hoch liegt, startet der nächste
-Schritt bereits von einem zu hohen Wert aus. Dieser **globale Fehler**
-(kumulierter Fehler über alle Schritte) wächst daher mit der Zeit.
+Zu Frage 2: Der Fehler nach dem ersten Schritt ist negativ ($T_\text{Euler} <
+T_\text{exakt}$). Das bedeutet, Euler unterschätzt die Temperatur. Das Verfahren
+nimmt eine übermäßig große (zu negative) Abkühlrate an, deshalb kühlt es zu stark ab.
 ````
 
 +++
@@ -268,14 +279,10 @@ Schritt bereits von einem zu hohen Wert aus. Dieser **globale Fehler**
 ## Schrittweite und Genauigkeit
 
 *Wie genau muss die Schrittweite sein?* Das hängt vom Problem ab, aber ein
-einfaches Experiment zeigt den Zusammenhang sehr deutlich.
+einfaches Experiment zeigt den Zusammenhang sehr deutlich. Dazu lagern wir
+zuerst das Euler-Verfahren in eine eigene Funktion aus.
 
 ```{code-cell} python
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.style as style
-style.use('seaborn-v0_8')
-
 # --- Parameter ---
 T0    = 80.0
 T_inf = 20.0
@@ -307,68 +314,77 @@ def euler_abkuehlung(T0, T_inf, k, t_end, dt):
         t[i + 1] = t[i] + dt
         T[i + 1] = T[i] + dt * (-k * (T[i] - T_inf))
     return t, T
+```
 
-# --- Drei Schrittweiten im Vergleich ---
-schrittweiten = [10.0, 2.0, 0.5]
-farben        = ['#E60000', '#E87846', '#CCDEE9']
+Danach vergleichen wir die analytische Lösung mit dem Euler-Verfahren zu drei
+verschiedenen Schrittweiten.
 
+```{code-cell} python
+# --- analytische Lösung ---
 t_fein  = np.linspace(0, t_end, 500)
 T_fein  = T_inf + (T0 - T_inf) * np.exp(-k * t_fein)
 
-fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+# --- Drei Schrittweiten im Vergleich ---
+schrittweiten = [10.0, 2.0, 0.5]
 
-# Linkes Bild: Temperaturverläufe
-axes[0].plot(t_fein, T_fein, color='#005A94', linewidth=2.5,
-             label='Analytisch (Referenz)')
-for dt_i, farbe in zip(schrittweiten, farben):
-    t_i, T_i = euler_abkuehlung(T0, T_inf, k, t_end, dt_i)
-    axes[0].plot(t_i, T_i, color=farbe, linewidth=1.5, linestyle='--',
-                 marker='o', markersize=4, label=f'Euler $\\Delta t = {dt_i}$ min')
-axes[0].set_xlabel('Zeit in min')
-axes[0].set_ylabel('Temperatur in °C')
-axes[0].set_title('Temperaturverlauf')
-axes[0].legend(fontsize=9)
-axes[0].grid(True)
+# --- Euler-Verfahren und Plot ---
+fig, ax = plt.subplots()
+ax.plot(t_fein, T_fein, label='analytisch (Referenz)')
+for dt in schrittweiten:
+    t, T = euler_abkuehlung(T0, T_inf, k, t_end, dt)
+    ax.plot(t, T, marker='o', markersize=4, label=f'Delta t = {dt} min')
+ax.set_xlabel('Zeit in min')
+ax.set_ylabel('Temperatur in °C')
+ax.set_title('Temperaturverlauf')
+ax.legend()
+ax.grid(True)
 
-# Rechtes Bild: Absoluter Fehler bei t = 20 min als Funktion der Schrittweite
-dt_werte      = [10.0, 5.0, 2.0, 1.0, 0.5, 0.2, 0.1]
+plt.show()
+```
+
+Im Plot sehen wir, dass kleinere Schrittweiten die Euler-Kurve immer näher an
+die analytische Lösung heranbringen. Um das genauer zu quantifizieren,
+betrachten wir nun den Unterschied zwischen numerischer und analytischer Lösung
+zu einem festen Zeitpunkt, z.B. bei $t = 20~\text{min}$. Als **lokaler Fehler**
+bezeichnen wir den Fehler eines einzelnen Euler-Schritts, wenn man annimmt, dass
+der Startwert dieses Schritts exakt ist; der Abstand zwischen numerischer und
+analytischer Lösung nach vielen Schritten heißt **globaler Fehler**. Der im
+nächsten Plot gezeigte Fehler bei $t = 20~\text{min}$ ist also ein globaler
+Fehler.
+
+```{code-cell} python
+# --- Berechnung absoluter Fehler bei t = 20 min als Funktion der Schrittweite ---
+schrittweiten = [10.0, 5.0, 2.0, 1.0, 0.5, 0.2, 0.1]
 fehler_bei_20 = []
 T_exakt_20    = T_inf + (T0 - T_inf) * np.exp(-k * 20)
 
-for dt_i in dt_werte:
-    t_i, T_i = euler_abkuehlung(T0, T_inf, k, t_end, dt_i)
-    # Nächster Gitterpunkt zu t = 20 min
-    idx = int(20.0 / dt_i)
-    fehler_bei_20.append(abs(T_i[idx] - T_exakt_20))
+for dt in schrittweiten:
+    t, T = euler_abkuehlung(T0, T_inf, k, t_end, dt)
+    # Gitterpunkt zu t = 20 min
+    idx = int(20.0 / dt)
+    fehler_bei_20.append(abs(T[idx] - T_exakt_20))
 
-axes[1].loglog(dt_werte, fehler_bei_20, color='#005A94', linewidth=2,
-               marker='o', markersize=6)
-axes[1].set_xlabel('Schrittweite $\\Delta t$ in min')
-axes[1].set_ylabel('Absoluter Fehler in °C')
-axes[1].set_title('Globaler Fehler bei $t = 20$ min')
-axes[1].grid(True, which='both')
-
+# --- Visualisierung ---
+fig, ax = plt.subplots()
+ax.loglog(schrittweiten, fehler_bei_20, marker='o')
+ax.set_xlabel('Schrittweite $\\Delta t$ in min')
+ax.set_ylabel('Absoluter Fehler in °C')
+ax.set_title('Globaler Fehler bei $t = 20$ min')
+ax.grid(True, which='both')
 plt.tight_layout()
 plt.show()
-
-# --- Zahlenwerte der Fehler ---
-print(f"{'dt [min]':>10}  {'Fehler bei t=20 min [°C]':>26}")
-print("-" * 40)
-for dt_i, fe in zip(dt_werte, fehler_bei_20):
-    print(f"{dt_i:>10.1f}  {fe:>26.6f}")
 ```
 
-Der rechte Plot zeigt eine typische **Konvergenzgerade** im doppelt
-logarithmischen Maßstab: Halbieren wir die Schrittweite, halbiert sich
-auch der Fehler ungefähr. Das bedeutet eine **Konvergenzordnung** von
-$O(\Delta t)$. Das Euler-Verfahren heißt deshalb ein Verfahren erster
-Ordnung. Zum Vergleich: Die Trapezregel aus Kapitel 9 hatte Ordnung
-$O(\Delta t^2)$. In Abschnitt 10.3 lernen wir Verfahren kennen, die
-Ordnung 4 oder höher erreichen.
+Der Plot des globalen Fehlers zeigt eine typische **Konvergenzgerade** im
+doppelt logarithmischen Maßstab: Halbieren wir die Schrittweite, halbiert sich
+auch der Fehler ungefähr. Das bedeutet einen globalen Fehler von $O(\Delta t)$,
+das Euler-Verfahren hat Konvergenzordnung 1. Zum Vergleich: Die Trapezregel aus
+Kapitel 9 hatte Ordnung $O(\Delta t^2)$. In Abschnitt 10.3 lernen wir Verfahren
+kennen, die Ordnung 4 oder höher erreichen.
 
 ```{admonition} Mini-Übung
 :class: tip
-1. Lesen Sie aus der Tabelle ab: Um welchen Faktor ändert sich der Fehler,
+1. Lassen Sie die Fehler bei 20 min ausgeben. Um welchen Faktor ändert sich der Fehler,
    wenn die Schrittweite von $\Delta t = 2.0$ auf $\Delta t = 1.0$ min
    halbiert wird? Stimmt das mit der erwarteten Konvergenzordnung $O(\Delta t)$
    überein?
@@ -387,36 +403,47 @@ Ordnung 4 oder höher erreichen.
 ````{admonition} Lösung
 :class: tip
 :class: dropdown
-Zu Frage 1:
+Zu Frage 1: Der Python-Code
 
 ```python
-import numpy as np
-
-T0    = 80.0
-T_inf = 20.0
-k     = 0.1
-t_end = 50.0
-T_exakt_20 = T_inf + (T0 - T_inf) * np.exp(-k * 20)
-
-for dt_i in [2.0, 1.0]:
-    t_i, T_i = euler_abkuehlung(T0, T_inf, k, t_end, dt_i)
-    idx = int(20.0 / dt_i)
-    fehler = abs(T_i[idx] - T_exakt_20)
-    print(f"dt = {dt_i:.1f} min   Fehler = {fehler:.6f} °C")
+for dt, f in zip(schrittweiten, fehler_bei_20):
+    print(f'dt = {dt:.1f} --> Fehler (20 min) = {f:.4f}')
 ```
 
-Der Fehler halbiert sich beim Halbieren der Schrittweite (von ca. 0.44 auf
-ca. 0.22 °C). Das entspricht genau der erwarteten Konvergenzordnung $O(\Delta t)$.
+liefert die Ausgabe
 
-Zu Frage 2: Aus der Tabelle: $\Delta t = 0.1\,\text{min}$ liefert einen Fehler
-von etwa $0.023\,°C$. Für $0.001\,°C$ braucht man rund die 23-fache Genauigkeit,
-also grob $\Delta t \approx 0.004\,\text{min}$. Das entspricht etwa 12500 Schritten
-für 50 min Simulationszeit.
+```code
+dt = 10.0 --> Fehler (20 min) = 8.1201
+dt = 5.0 --> Fehler (20 min) = 4.3701
+dt = 2.0 --> Fehler (20 min) = 1.6777
+dt = 1.0 --> Fehler (20 min) = 0.8255
+dt = 0.5 --> Fehler (20 min) = 0.4094
+dt = 0.2 --> Fehler (20 min) = 0.1629
+dt = 0.1 --> Fehler (20 min) = 0.0813
+```
+
+Der Fehler halbiert sich beim Halbieren der Schrittweite (von ca. 1.68 auf
+ca. 0.82 °C). Das entspricht genau der erwarteten Konvergenzordnung $O(\Delta t)$.
+
+Zu Frage 2: Die Tabelle liefert für $t = 20~\text{min}$ bei $\Delta t =
+0.1\,\text{min}$ einen Fehler von etwa $0.0813\,°C$. Für das Euler-Verfahren
+gilt ungefähr
+
+$$\text{Fehler} \approx C\cdot\Delta t \;\Rightarrow\;
+C\approx\frac{0.0813}{0.1}=0.813.$$
+
+Der gewünschte Fehler ist $F = 0.001~^{\circ}\text{C}$ und damit die benötigte
+Schrittweite
+
+$$\Delta t \approx \frac{F}{C} = \frac{0.001}{0.813} \approx
+0.0012~\text{min}.$$
+
+Damit ist der Rechenaufwand für 50 min grob 42.000 Zeitschritte.
 
 Zu Frage 3: Konvergenzordnung 1 bedeutet: um den Fehler um Faktor 1000 zu
 verringern, braucht man 1000-mal mehr Schritte. Das ist sehr teuer. Ein
 Verfahren 4. Ordnung würde nur $1000^{1/4} \approx 5.6$-mal mehr Schritte
-benötigen. Das ist der Hauptmotivation für höhere Verfahren wie Runge-Kutta,
+benötigen. Das ist die Hauptmotivation für höhere Verfahren wie Runge-Kutta,
 die wir in Abschnitt 10.3 einführen.
 ````
 
@@ -426,12 +453,11 @@ die wir in Abschnitt 10.3 einführen.
 
 Eine gewöhnliche Differentialgleichung 1. Ordnung verknüpft eine unbekannte
 Funktion mit ihrer Ableitung: $\dot{T} = f(t, T)$. Das explizite Euler-Verfahren
-löst sie schrittweise: vom aktuellen Zustand $T_i$ wird die Steigung $f(T_i)$
-berechnet und ein Schritt der Länge $\Delta t$ ausgeführt. Das Verfahren ist
-einfach zu implementieren, hat aber Konvergenzordnung 1: für eine zehnfache
+löst sie schrittweise: vom aktuellen Zustand $T_i$ wird die Steigung $f(t_i,
+T_i)$ berechnet und ein Schritt der Länge $\Delta t$ ausgeführt. Das Verfahren
+ist einfach zu implementieren, hat aber Konvergenzordnung 1: für eine zehnfache
 Genauigkeit braucht man zehnmal mehr Schritte.
 
-In Abschnitt 10.2 vertiefen wir das Euler-Verfahren durch Präsenzübungen.
-In Abschnitt 10.3 lernen wir `scipy.integrate.solve_ivp` kennen, das mit dem
-Runge-Kutta-Verfahren vierter Ordnung arbeitet und bei gleichem Rechenaufwand
-eine vielfach höhere Genauigkeit erreicht.
+Im nächsten Abschnitt lernen wir `scipy.integrate.solve_ivp` kennen, das mit
+einem Runge-Kutta-Verfahren arbeitet und bei gleichem Rechenaufwand eine
+vielfach höhere Genauigkeit erreicht.

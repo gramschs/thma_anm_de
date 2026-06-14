@@ -32,10 +32,11 @@ erreicht.
 
 +++
 
-## solve_ivp: das Kühlproblem in drei Zeilen
+## solve_ivp für das Abkühlproblem
 
-*Wie viel einfacher kann man eine DGL lösen?* Wir nehmen dasselbe
-Kühlproblem aus Abschnitt 10.1 und lösen es mit `solve_ivp`.
+*Wie viel einfacher kann man eine DGL lösen?* Wir nehmen dasselbe Kühlproblem
+aus Abschnitt 10.1 und lösen es mit `solve_ivp`. Dazu importieren wir zunächst
+die notwendigen Module und definieren die Abkühlung als Funktion.
 
 ```{code-cell} python
 import numpy as np
@@ -53,19 +54,31 @@ k       = 0.1    # Abkühlkonstante in 1/min
 # Pflichtformat: f(t, y)  ->  t ist Skalar, y ist Array
 # Auch für eine skalare DGL: y = [T_aktuell], Rückgabe = [dT/dt]
 # Wichtig: t steht an erster Stelle, auch wenn die DGL autonom ist (kein t auf der rechten Seite).
-def f_kuehl(t, y):
+def f_abkuehlung(t, y):
     T_aktuell = y[0]                      # Temperatur aus dem Zustandsvektor
     dTdt = -k * (T_aktuell - T_inf)       # Newtonsche Abkühlungsrate
     return [dTdt]                         # Rückgabe als Liste mit einem Eintrag
+```
 
+`solve_ivp` erfordert einige Argumente. Wir übergeben nicht nur die
+Differentialgleichung als Funktion `f_abkuehlung`, sondern auch das
+Integrationsintervall `t_span`, die Anfangsbedingung `y0` und die Zeitpunkte
+`t_eval`, zu denen die Lösung der Differentialgleichung ausgewertet werden soll.
+
+```{code-cell} python
 # --- solve_ivp Aufruf ---
 # fun:    rechte Seite der DGL, Signatur f(t, y)
 # t_span: Integrationsintervall als Tupel (Anfang, Ende)
 # y0:     Anfangsbedingung als Liste; y0 = [T0] für eine skalare DGL
 # t_eval: gewünschte Ausgabezeitpunkte (intern werden andere Punkte berechnet)
 t_auswertung = np.linspace(0, 50, 501)
-sol = solve_ivp(fun=f_kuehl, t_span=(0, 50), y0=[T0_wert], t_eval=t_auswertung)
+sol = solve_ivp(fun=f_abkuehlung, t_span=(0, 50), y0=[T0_wert], t_eval=t_auswertung)
+```
 
+Nachdem die Differentialgleichung gelöst wurde, können wir die Lösung über die
+Attribute einsehen.
+
+```{code-cell} python
 # --- Rückgabe auslesen ---
 # sol.t:    Ausgabezeitpunkte (= t_auswertung, da t_eval angegeben)
 # sol.y:    Array der Form (Anzahl_Zustände, Anzahl_Zeitpunkte)
@@ -73,17 +86,21 @@ sol = solve_ivp(fun=f_kuehl, t_span=(0, 50), y0=[T0_wert], t_eval=t_auswertung)
 # sol.success: True wenn die Integration erfolgreich war
 print(f"Integration erfolgreich:  {sol.success}")
 print(f"sol.y.shape:              {sol.y.shape}  "
-      f"→ {sol.y.shape[0]} Zustand, {sol.y.shape[1]} Zeitpunkte")
-print()
+      f"--> {sol.y.shape[0]} Zustand, {sol.y.shape[1]} Zeitpunkte")
+```
 
+Als nächstes analysieren wir die Genauigkeit der numerischen Lösung und
+vergleichen dazu die Temperatur nach 10 min Abkühlung mit der exakten Lösung.
+
+```{code-cell} python
 # --- Genauigkeitsvergleich bei t = 10 min ---
 # t_auswertung[100] = 10.0 min (linspace(0,50,501), Abstand = 0.1 min)
 T_exakt_10  = T_inf + (T0_wert - T_inf) * np.exp(-k * 10.0)
 T_ivp_10    = sol.y[0, 100]
 
 # Euler mit dt = 5 min als Referenz (zwei Schritte bis t = 10 min)
-T_euler_1   = T0_wert + 5.0 * (-k * (T0_wert - T_inf))   # t = 5 min
-T_euler_10  = T_euler_1 + 5.0 * (-k * (T_euler_1 - T_inf))  # t = 10 min
+T_euler_05  = T0_wert + 5.0 * (-k * (T0_wert - T_inf))   # t = 5 min
+T_euler_10  = T_euler_05 + 5.0 * (-k * (T_euler_05 - T_inf))  # t = 10 min
 
 print(f"Temperatur bei t = 10 min:")
 print(f"  Analytisch:         {T_exakt_10:.4f} °C")
@@ -99,12 +116,6 @@ liegt. Wie viele Schritte `solve_ivp` dafür intern benötigt, sehen wir im
 nächsten Unterabschnitt.
 
 ```{code-cell} python
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.style as style
-from scipy.integrate import solve_ivp
-style.use('seaborn-v0_8')
-
 # Euler mit dt = 5 min für den Vergleichsplot
 T0_wert = 80.0; T_inf = 20.0; k = 0.1
 n_e = 10; dt_e = 5.0
@@ -114,44 +125,34 @@ T_euler[0] = T0_wert
 for i in range(n_e):
     T_euler[i+1] = T_euler[i] + dt_e * (-k * (T_euler[i] - T_inf))
 
-# solve_ivp (selber sol wie oben, hier neu aufgerufen für autarke Zelle)
-def f_kuehl(t, y):
-    return [-k * (y[0] - T_inf)]
-t_eval = np.linspace(0, 50, 501)
-sol    = solve_ivp(f_kuehl, t_span=(0, 50), y0=[T0_wert], t_eval=t_eval)
-
 # Analytische Referenz
+t_eval = sol.t
 T_exakt = T_inf + (T0_wert - T_inf) * np.exp(-k * t_eval)
 
-fig, ax = plt.subplots(figsize=(8, 4))
-ax.plot(t_eval, T_exakt,   color='#005A94', linewidth=2.5,
-        label='Analytisch (Referenz)')
-ax.plot(t_eval, sol.y[0],  color='#E87846', linewidth=2.0, linestyle=':',
-        label='solve_ivp (RK45)')
-ax.plot(t_euler, T_euler,  color='#E60000', linewidth=1.5, linestyle='--',
-        marker='o', markersize=6, label='Euler ($\\Delta t = 5$ min)')
+# Visualisierung
+fig, ax = plt.subplots()
+ax.plot(t_eval, T_exakt, label='analytisch (Referenz)')
+ax.plot(t_eval, sol.y[0], linestyle=':', label='solve_ivp (RK45)')
+ax.plot(t_euler, T_euler, marker='o', label='Euler ($\\Delta t = 5$ min)')
 ax.set_xlabel('Zeit in min')
 ax.set_ylabel('Temperatur in °C')
-ax.set_title('Vergleich: Euler vs. solve\\_ivp vs. analytisch')
+ax.set_title('Vergleich: Euler vs. solve_ivp vs. analytisch')
 ax.legend()
 ax.grid(True)
 plt.tight_layout()
 plt.show()
 ```
 
-Die gestrichelte Euler-Linie weicht sichtbar von der analytischen Referenz
-ab; die gepunktete `solve_ivp`-Linie liegt darauf. Die Kurve des Euler-Verfahrens und die analytische Lösung sehen auf diesem Plot nah beieinander aus,
-da die Abweichung relativ zur Gesamtabkühlung klein wirkt. Erst der
-Zahlenvergleich macht den Fehler von über 7 °C sichtbar.
+Die Euler-Linie (durchgezogen mit Kreismarkern) weicht sichtbar von der
+analytischen Referenz ab; die gepunktete `solve_ivp`-Linie liegt darauf.
 
-```{admonition} Hinweis: Signatur von solve_ivp
-:class: warning
-`solve_ivp` erwartet immer die Signatur `f(t, y)`, wobei **`t` an erster
-Stelle steht** und **`y` ein Array ist**. Für eine skalare DGL ist `y` ein
-Array mit einem Element. Häufige Fehler sind: `f(y)` ohne `t`,
-`f(y, t)` in falscher Reihenfolge, oder `y` wie einen Skalar behandeln
-ohne `y[0]` zu schreiben.
-```
+**Hinweis**: `solve_ivp` erwartet immer die Signatur `f(t, y)`, wobei `t` an
+erster Stelle steht und `y` ein Array ist. Für eine skalare DGL ist `y` ein
+Array mit einem Element. Häufige Fehler sind:
+
+* `f(y)` ohne `t`,
+* `f(y, t)` in falscher Reihenfolge, oder
+* `y` wie einen Skalar behandeln ohne `y[0]` zu schreiben.
 
 ```{admonition} Mini-Übung
 :class: tip
@@ -161,7 +162,7 @@ ohne `y[0]` zu schreiben.
 2. Was erwartet man für den Temperaturverlauf, wenn die Anfangstemperatur
    unter der Umgebungstemperatur liegt? Probieren Sie `y0=[5.0]` aus.
    Sagen Sie das Ergebnis zuerst voraus, bevor Sie den Code ausführen.
-3. Warum gibt `f_kuehl` eine Liste `[dTdt]` zurück und keinen Skalar `dTdt`,
+3. Warum gibt `f_abkuehlung` eine Liste `[dTdt]` zurück und keinen Skalar `dTdt`,
    obwohl die DGL nur eine Zustandsgröße hat?
 ```
 
@@ -187,19 +188,25 @@ from scipy.integrate import solve_ivp
 import numpy as np
 
 T_inf = 20.0; k = 0.1
-def f_kuehl(t, y):
+def f_abkuehlung(t, y):
     return [-k * (y[0] - T_inf)]
 
-sol_kalt = solve_ivp(f_kuehl, t_span=(0, 50), y0=[5.0],
+sol_kalt = solve_ivp(f_abkuehlung, t_span=(0, 50), y0=[5.0],
                      t_eval=np.linspace(0, 50, 501))
 print(f"T(0) = {sol_kalt.y[0, 0]:.1f} °C")
 print(f"T(30) = {sol_kalt.y[0, 300]:.2f} °C")
 ```
 
-Zu Frage 3: `solve_ivp` ist für Systeme von DGLen ausgelegt. Es erwartet
-immer eine Liste oder ein Array als Rückgabe, auch wenn nur eine Zustandsgröße
-vorliegt. Das ermöglicht dieselbe Schnittstelle für skalare DGLen und
-für Systeme wie in Kapitel 11.
+Ausgabe:
+```code
+T(0) = 5.0 °C
+T(30) = 19.25 °C
+```
+
+Zu Frage 3: `solve_ivp` ist für Systeme von Differentialgleichungen ausgelegt.
+Es erwartet immer eine Liste oder ein Array als Rückgabe, auch wenn nur eine
+Zustandsgröße vorliegt. Das ermöglicht dieselbe Schnittstelle für skalare
+Differentialgleichungen und für Systeme wie in Kapitel 11.
 ````
 
 +++
@@ -213,26 +220,15 @@ Lösung sich schnell ändert, werden kleine Schritte gewählt; wo sie fast
 konstant ist, können große Schritte genügen.
 
 ```{code-cell} python
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.style as style
-from scipy.integrate import solve_ivp
-style.use('seaborn-v0_8')
-
-T0_wert = 80.0; T_inf = 20.0; k = 0.1
-
-def f_kuehl(t, y):
-    return [-k * (y[0] - T_inf)]
-
 # --- solve_ivp OHNE t_eval: zeigt die tatsächlich verwendeten internen Schritte ---
-sol_intern = solve_ivp(f_kuehl, t_span=(0, 50), y0=[T0_wert])
+sol_intern = solve_ivp(f_abkuehlung, t_span=(0, 50), y0=[T0_wert])
 
-print(f"Anzahl interner Schritte (RK45):  {len(sol_intern.t)}")
+print(f"Anzahl interner Zeitpunkte (RK45):  {len(sol_intern.t)}")
 print()
 print("Schrittweiten (Differenz benachbarter interner Zeitpunkte):")
 dt_intern = np.diff(sol_intern.t)
 for i, (ti, dti) in enumerate(zip(sol_intern.t[:-1], dt_intern)):
-    print(f"  Schritt {i+1:2d}: t = {ti:5.2f} → {sol_intern.t[i+1]:5.2f} min  "
+    print(f"  Schritt {i+1:2d}: t = {ti:5.2f} --> {sol_intern.t[i+1]:5.2f} min  "
           f"(Δt = {dti:.4f} min)")
 
 print()
@@ -240,85 +236,70 @@ print(f"Kleinste Schrittweite:  {dt_intern.min():.4f} min")
 print(f"Größte Schrittweite:    {dt_intern.max():.4f} min")
 ```
 
+Zusätzlich visualisieren wir die Schrittweiten.
+
 ```{code-cell} python
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.style as style
-from scipy.integrate import solve_ivp
-style.use('seaborn-v0_8')
-
-T0_wert = 80.0; T_inf = 20.0; k = 0.1
-
-def f_kuehl(t, y):
-    return [-k * (y[0] - T_inf)]
-
-sol_intern = solve_ivp(f_kuehl, t_span=(0, 50), y0=[T0_wert])
-dt_intern  = np.diff(sol_intern.t)
-
 # --- Visualisierung der internen Schrittweiten ---
 t_fein  = np.linspace(0, 50, 500)
 T_fein  = T_inf + (T0_wert - T_inf) * np.exp(-k * t_fein)
 
-fig, axes = plt.subplots(1, 2, figsize=(12, 4))
-
-# Linkes Bild: Lösung mit markierten internen Schritten
-axes[0].plot(t_fein, T_fein, color='#005A94', linewidth=2, label='Analytisch')
-axes[0].scatter(sol_intern.t, sol_intern.y[0],
-                color='#E60000', s=80, zorder=5,
+fig, ax = plt.subplots()
+ax.plot(t_fein, T_fein, label='analytisch')
+ax.scatter(sol_intern.t, sol_intern.y[0], color='red',
                 label=f'Interne RK45-Schritte ({len(sol_intern.t)} Punkte)')
-axes[0].set_xlabel('Zeit in min')
-axes[0].set_ylabel('Temperatur in °C')
-axes[0].set_title('RK45: interne Auswertungspunkte')
-axes[0].legend()
-axes[0].grid(True)
-
-# Rechtes Bild: Schrittweite über die Zeit
-axes[1].bar(sol_intern.t[:-1], dt_intern, width=dt_intern * 0.8,
-            align='edge', color='#CCDEE9', edgecolor='#005A94', linewidth=1.2)
-axes[1].set_xlabel('Zeit in min')
-axes[1].set_ylabel('Schrittweite $\\Delta t$ in min')
-axes[1].set_title('Adaptive Schrittweite von RK45')
-axes[1].grid(True, axis='y')
-
+ax.set_xlabel('Zeit in min')
+ax.set_ylabel('Temperatur in °C')
+ax.set_title('RK45: interne Auswertungspunkte')
+ax.legend()
+ax.grid(True)
 plt.tight_layout()
 plt.show()
+```
 
+Die intern benötigten Schritte vergleichen wir mit der Anzahl an Schritten, die
+das Euler-Verfahren für eine festgelegte Schrittweit braucht.
+
+```{code-cell} python
 # --- Effizienzvergleich: Anzahl Schritte vs. Fehler bei t = 10 min ---
 T_exakt_10 = T_inf + (T0_wert - T_inf) * np.exp(-k * 10.0)
 
-# Euler: verschiedene dt
-print(f"{'Methode':<25}  {'Schritte':>8}  {'Fehler bei t=10 [°C]':>22}")
+# Euler: verschiedene dt, jeweils Schritte bis t = 10 min
+print(f"{'Methode                  ':}  {'Schritte   ':}  {'Fehler bei t=10 [°C]'}")
 print("-" * 62)
 for dt in [5.0, 2.0, 0.5, 0.1]:
-    n  = int(50.0 / dt)
+    n_10 = int(10.0 / dt)   # Anzahl Schritte bis t = 10 min
     T  = T0_wert
-    for _ in range(int(10.0 / dt)):
+    for _ in range(n_10):
         T = T + dt * (-k * (T - T_inf))
-    print(f"Euler (dt = {dt:.1f} min)       {int(50.0/dt):>8}  {abs(T - T_exakt_10):>22.4f}")
+    print(f"Euler (dt = {dt:.1f} min)       {n_10:4d} \t\t {abs(T - T_exakt_10):.4f}")
 
-# solve_ivp
-sol_10 = solve_ivp(f_kuehl, t_span=(0, 10), y0=[T0_wert])
-print(f"{'solve_ivp (RK45)':<25}  {len(sol_10.t):>8}  "
-      f"{abs(sol_10.y[0, -1] - T_exakt_10):>22.2e}")
+# solve_ivp (ebenfalls bis t = 10 min)
+sol_10 = solve_ivp(f_abkuehlung, t_span=(0, 10), y0=[T0_wert])
+print()
+print(f"{'solve_ivp (RK45)'}           {len(sol_10.t)}            "
+      f"{abs(sol_10.y[0, -1] - T_exakt_10):.4f}")
 ```
 
-Schon mit 8 internen Schritten liegt `solve_ivp` näher an der analytischen
-Lösung als Euler mit 500 Schritten. Der Unterschied liegt im Algorithmus:
-Euler approximiert die Ableitung durch einen einzigen Wert am linken
-Intervallrand. RK45 wertet die rechte Seite $f(t, y)$ innerhalb jedes
-Schrittes an mehreren Zwischenpunkten aus, kombiniert diese gewichtet und
-erzeugt so eine Näherung der Ordnung 4 (Fehler $O(\Delta t^4)$ statt
-$O(\Delta t)$).
+Schon mit 4 internen Schritten liegt `solve_ivp` deutlich näher an der
+analytischen Lösung als Euler selbst mit $\Delta t = 0{,}1$ min (100 Schritte
+bis $t = 10$ min). Der Unterschied liegt im Algorithmus: Euler
+approximiert die Ableitung durch einen einzigen Wert am linken Intervallrand.
+RK45 wertet die rechte Seite $f(t, y)$ innerhalb jedes Schrittes an mehreren
+Zwischenpunkten aus, kombiniert diese gewichtet und erzeugt so eine Näherung
+höherer Ordnung (hier 4./5. Ordnung), mit deutlich kleinerem globalen Fehler
+als beim Euler-Verfahren $O(\Delta t)$.
 
 ```{admonition} Methodenvergleich
 :class: note
-| Methode | Konvergenzordnung | Schrittwahl | Typischer Anwendungsfall |
-|---|---|---|---|
-| Euler | $O(\Delta t)$ | fest, manuell | Einsteiger, Konzeptverständnis |
-| RK45 in `solve_ivp` | $O(\Delta t^4)$ | adaptiv, automatisch | Standardfall in der Praxis |
+| Methode | Konvergenzordnung | Schrittwahl |
+|---|---|---|
+| Euler | $O(\Delta t)$ | fest, manuell |
+| RK45 in `solve_ivp` | $O(\Delta t^5)$ (Lösung) | adaptiv, automatisch |
 
-Halbiert man die Schrittweite, sinkt der Fehler bei Euler auf die Hälfte,
-bei RK45 auf ein Sechzehntel.
+Halbiert man die Schrittweite, sinkt der Fehler bei Euler ungefähr auf die
+Hälfte, bei einem Verfahren 5. Ordnung etwa um den Faktor $2^5 =32$. RK45 liegt
+in dieser Größenordnung; die adaptive Schrittweitensteuerung beeinflusst die
+tatsächliche Schrittweite zusätzlich.
 ```
 
 ```{admonition} Mini-Übung
@@ -327,9 +308,11 @@ bei RK45 auf ein Sechzehntel.
    Begründen Sie in einem Satz, ohne Code auszuführen.
 2. Würden Sie für $k = 1.0\,\text{min}^{-1}$ (zehnfach schnellere Abkühlung)
    mehr oder weniger interne RK45-Schritte erwarten? Testen Sie Ihre Vermutung.
-3. Euler benötigt $\Delta t = 0.1\,\text{min}$ für einen Fehler unter
-   $0.1\,°C$ bei $t = 10\,\text{min}$ (500 Schritte bis $t = 50$). `solve_ivp`
-   erreicht denselben Bereich mit 8 Schritten. Um welchen Faktor ist das
+3. Euler benötigt $\Delta t = 0.1\,\text{min}$ für einen Fehler von rund
+   $0.1\,°C$ bei $t = 10\,\text{min}$ (vgl. Tabelle oben). Bei dieser
+   Schrittweite braucht Euler für das gesamte Intervall $[0, 50]$
+   500 Schritte. `solve_ivp` löst dasselbe Intervall mit 8 Schritten
+   (vgl. `len(sol_intern.t)` weiter oben). Um welchen Faktor ist das
    effizienter?
 ```
 
@@ -364,20 +347,21 @@ Für $k = 1.0$ sind mehr interne Schritte nötig, weil die Lösung am Anfang
 wesentlich steiler abfällt. Der Solver muss die anfangs hohe Änderungsrate
 mit kleinen Schritten auflösen, bevor er auf größere Schritte umstellen kann.
 
-Zu Frage 3: 500 Euler-Schritte gegenüber 8 RK45-Schritten ergibt einen
-Faktor von $500 / 8 = 62.5$. Da RK45 pro Schritt etwa sechs
+Zu Frage 3: 500 Euler-Schritte gegenüber 8 RK45-Schritten (für dasselbe
+Intervall $t \in [0, 50]$, vgl. `len(sol_intern.t)` weiter oben) ergibt einen
+Faktor von $500 / 8 = 62{,}5$. Da RK45 pro Schritt etwa sechs
 Funktionsauswertungen benötigt, ist der Faktor bei den tatsächlichen
 Funktionsauswertungen etwa $500 / 48 \approx 10$. Dennoch: für dieselbe
-Genauigkeit braucht RK45 einen Bruchteil des Rechenaufwands von Euler.
+Genauigkeit braucht RK45 nur einen Bruchteil des Rechenaufwands von Euler.
 ````
 
 +++
 
 ## Nicht-autonome Differentialgleichungen
 
-Bisher hing die rechte Seite $f(T)$ nur vom aktuellen Zustand ab, nicht
-explizit von der Zeit. Solche DGLen nennt man **autonom**. Wenn die rechte
-Seite $f(t, T)$ auch die Zeit explizit enthält, spricht man von einer
+Bisher hing die rechte Seite $f(T)$ nur vom aktuellen Zustand ab, nicht explizit
+von der Zeit. Solche Differentialgleichungen nennt man **autonom**. Wenn die
+rechte Seite $f(t, T)$ auch die Zeit explizit enthält, spricht man von einer
 **nicht-autonomen** DGL.
 
 Ein konkretes Beispiel: Ein Metallstab liegt morgens draußen. Die
@@ -391,12 +375,6 @@ Die rechte Seite hängt nun explizit von $t$ ab: dasselbe $T$ führt bei
 verschiedenen Zeiten zu verschiedenen Ableitungen.
 
 ```{code-cell} python
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.style as style
-from scipy.integrate import solve_ivp
-style.use('seaborn-v0_8')
-
 # --- Parameter ---
 T0_wert  = 80.0   # Anfangstemperatur Metallstab in °C
 T_inf0   = 10.0   # Außentemperatur bei t = 0 in °C
@@ -422,26 +400,17 @@ sol_rampe = solve_ivp(fun=f_kuehl_rampe, t_span=(0, t_end),
 T_ana = T_inf0 + r_rampe*t_eval - r_rampe/k + (T0_wert - T_inf0 + r_rampe/k) * np.exp(-k*t_eval)
 T_aussen_verlauf = T_inf0 + r_rampe * t_eval   # zeitlicher Verlauf der Außentemperatur
 
-print(f"Außentemperatur: {T_inf0:.1f} °C → {T_aussen_verlauf[-1]:.1f} °C über {t_end:.0f} min")
-print(f"Stabtemperatur bei t = {t_end:.0f} min:   {sol_rampe.y[0, -1]:.2f} °C")
+print(f"Außentemperatur: {T_inf0:.1f} °C --> {T_aussen_verlauf[-1]:.1f} °C über {t_end:.0f} min")
+print(f"Stabtemperatur bei t = {t_end:.0f} min: {sol_rampe.y[0, -1]:.2f} °C")
 print(f"Analytisch:                    {T_ana[-1]:.2f} °C")
-print(f"Rückstand (r/k = {r_rampe}/{k}):  "
+print(f"Rückstand (r/k = {r_rampe}/{k}):     "
       f"{T_aussen_verlauf[-1] - sol_rampe.y[0, -1]:.2f} °C  "
       f"(theoretisch: {r_rampe/k:.1f} °C)")
 
 fig, ax = plt.subplots(figsize=(8, 4))
-ax.plot(t_eval, T_aussen_verlauf, color='#E87846', linewidth=2, linestyle='--',
-        label='Außentemperatur $T_\\infty(t)$')
-ax.plot(t_eval, T_ana,            color='#005A94', linewidth=2,
-        label='Analytisch (Probe)')
-ax.plot(t_eval, sol_rampe.y[0],   color='#E60000', linewidth=1.5, linestyle=':',
-        label='solve\\_ivp (RK45)')
-ax.annotate('', xy=(50, T_aussen_verlauf[-1]),
-            xytext=(50, sol_rampe.y[0, -1]),
-            arrowprops=dict(arrowstyle='<->', color='#484949', lw=1.5))
-ax.text(51, 0.5*(T_aussen_verlauf[-1] + sol_rampe.y[0,-1]),
-        f'Rückstand\n≈ {r_rampe/k:.0f} °C',
-        color='#484949', fontsize=9, va='center')
+ax.plot(t_eval, T_aussen_verlauf, linestyle='--', label='Außentemperatur')
+ax.plot(t_eval, T_ana,            label='analytisch (Probe)')
+ax.plot(t_eval, sol_rampe.y[0],   linestyle=':', label='solve_ivp (RK45)')
 ax.set_xlabel('Zeit in min')
 ax.set_ylabel('Temperatur in °C')
 ax.set_title('Nicht-autonome DGL: Stab folgt steigender Außentemperatur')
@@ -521,17 +490,15 @@ weit hinterherhinkt.
 
 ## Zusammenfassung und Ausblick
 
-`scipy.integrate.solve_ivp` löst gewöhnliche Differentialgleichungen
-numerisch mit dem adaptiven RK45-Verfahren. Es braucht nur die Signatur
-`f(t, y)`, das Integrationsintervall `t_span` und die Anfangsbedingung
-`y0` als Liste. Mit 8 internen Schritten erreicht RK45 für das
-Kühlproblem eine Genauigkeit, die Euler mit 500 Schritten nicht schafft.
-Nicht-autonome DGLen, bei denen die rechte Seite explizit von $t$ abhängt,
-werden ohne Anpassung des Solvers gelöst, weil `f(t, y)` den Zeitpunkt
-immer als Argument erhält.
+`scipy.integrate.solve_ivp` löst gewöhnliche Differentialgleichungen numerisch
+mit dem adaptiven RK45-Verfahren. Es braucht nur die Signatur `f(t, y)`, das
+Integrationsintervall `t_span` und die Anfangsbedingung `y0` als Liste. Mit
+wenigen internen Schritten erreicht RK45 für das Kühlproblem eine Genauigkeit,
+die Euler mit 500 Schritten nicht schafft. Nicht-autonome DGLen, bei denen die
+rechte Seite explizit von $t$ abhängt, werden ohne Anpassung des Solvers gelöst,
+weil `f(t, y)` den Zeitpunkt immer als Argument erhält.
 
-In Abschnitt 10.4 vertiefen wir `solve_ivp` durch Präsenzübungen. In
-Kapitel 11 werden wir DGLen zweiter Ordnung (zum Beispiel Schwingungsgleichungen)
-auf Systeme erster Ordnung zurückführen und mit `solve_ivp` lösen. Dafür
-wird der Zustandsvektor `y` dann zwei Einträge haben: Position und
-Geschwindigkeit.
+In Kapitel 11 werden wir Differentialgleichungen zweiter Ordnung (zum Beispiel
+Schwingungsgleichungen) auf Systeme erster Ordnung zurückführen und mit
+`solve_ivp` lösen. Dafür wird der Zustandsvektor `y` dann zwei Einträge haben:
+Position und Geschwindigkeit.
