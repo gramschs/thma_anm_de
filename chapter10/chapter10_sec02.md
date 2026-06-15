@@ -273,8 +273,7 @@ $N_1 = 0$ gilt genau wenn $\Delta t \cdot \lambda = 1$, also $\Delta t =
 1/\lambda = 5\,\text{min}$. Das ist die **kritische Schrittweite**: Beim
 Grenzfall $\Delta t = 5\,\text{min}$ fällt $N_1 = 0$ und alle weiteren Werte
 bleiben null, weil das Euler-Update $N_{i+1} = N_i + \Delta t \cdot (-\lambda
-N_i) = N_i (1 - \lambda \Delta t)$ dann $N_i \cdot 0 = 0$ ergibt. Für $\Delta t
-> 5\,\text{min}$ wird der Verstärkungsfaktor $(1 - \lambda \Delta t)$ negativ.
+N_i) = N_i (1 - \lambda \Delta t)$ dann $N_i \cdot 0 = 0$ ergibt. Für $\Delta t > 5\,\text{min}$ wird der Verstärkungsfaktor $(1 - \lambda \Delta t)$ negativ.
 Die Werte wechseln dann das Vorzeichen und liefern damit unphysikalische
 (negative) Atomzahlen.
 ````
