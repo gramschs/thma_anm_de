@@ -6,41 +6,78 @@ kernelspec:
 
 # 11.3 Gedämpfte und erzwungene Schwingung
 
-<!-- TODO: Motivationsabsatz (~100 Wörter)
-     Brücke zu 11.1: Der ungedämpfte Schwinger schwingt ewig (Ellipse im Phasenporträt).
-     Eine reale Fahrzeugfederung hat aber einen Stoßdämpfer: die Energie wird
-     dissipiert. Zu wenig Dämpfung → Passagier schaukelt lange nach;
-     zu viel Dämpfung → Feder wirkt kaum. Zusätzlich: Fahrbahnunebenheiten als
-     periodische externe Kraft. Welche Kombination aus k und c ist optimal?
-     Zentrales Modell: m*x_ddot + c*x_dot + k*x = F0*sin(Omega*t). -->
+In Abschnitt 11.1 hat der ungedämpfte Federschwinger endlos weiter
+geschwungen. Das Phasenporträt zeigte eine geschlossene Ellipse, weil
+die mechanische Energie konstant bleibt. Ein reales Fahrzeug verhält
+sich anders: Der Stoßdämpfer entzieht der Schwingung Energie. Zu wenig
+Dämpfung, und die Karosserie wippt nach einer Bodenwelle lange weiter.
+Zu viel, und die Feder kann Unebenheiten kaum noch ausgleichen.
+
+Dazu kommt die Straße selbst: Fahrbahnrillen regen das Fahrzeug nahezu
+periodisch an. Stimmt die Anregungsfrequenz mit der Eigenkreisfrequenz des
+Fahrwerks überein, wächst die Amplitude stark an. Aus dem einfachen Modell
+
+\begin{equation*}
+m\,\ddot{x} + k\,x = 0
+\end{equation*}
+
+wird dann
+
+\begin{equation*}
+m\,\ddot{x} + c\,\dot{x} + k\,x = F_0\sin(\Omega t).
+\end{equation*}
 
 ## Lernziele
 
 ```{admonition} Lernziele
 :class: attention
-* [ ] Sie kennen die **Dämpfungszahl** $D = c\,/\,(2\sqrt{km})$ und können
+* [ ] Sie kennen den **Dämpfungsgrad** $D = c\,/\,(2\sqrt{km})$ und können
   die drei Fälle $D < 1$ (schwingend), $D = 1$ (aperiodischer Grenzfall)
   und $D > 1$ (Kriechfall) im Zeitsignal $x(t)$ unterscheiden.
 * [ ] Sie können erklären, warum $D = 1$ die kürzeste Einschwingzeit ohne
   Überschwingen liefert.
 * [ ] Sie können eine erzwungene Schwingung mit `solve_ivp` lösen und die
-  **stationäre Amplitude** aus dem eingeschwungenen Zustand als `max(|x|)`
-  im letzten Zeitdrittel ablesen.
-* [ ] Sie erkennen **Resonanz** als das Amplitudenmaximum bei $\Omega \approx \omega_0$
-  und können die Resonanzfrequenz numerisch bestimmen.
+  **stationäre Amplitude** aus dem eingeschwungenen Zustand als
+  `max(|x|)` im letzten Zeitdrittel ablesen.
+* [ ] Sie erkennen **Resonanz** als das Amplitudenmaximum bei
+  $\Omega \approx \omega_0$ und können die Resonanzfrequenz erläutern.
 ```
 
 +++
 
 ## Gedämpfter Schwinger: die drei Fälle
 
-<!-- TODO: Unterabschnitt 1 (~10 min)
-     - Gedämpfte DGL: m*x_ddot + c*x_dot + k*x = 0
-     - Substitution wie in 11.1, aber f gibt jetzt [x_dot, (-k*x - c*x_dot)/m] zurück
-     - Dämpfungszahl D = c/(2*sqrt(k*m)) einführen, kritische Dämpfung c_krit = 2*sqrt(k*m)
-     - Kurvenschar x(t) für D in [0.2, 0.5, 1.0, 2.0], gleiche Anfangsbedingung x0=0.05 m
-     - Phasenporträt: Spiralen statt Ellipsen
-     - Rhetorische Frage kursiv: Welches D würden Sie für Ihren Pkw wählen? -->
+*Welchen Unterschied macht die Dämpfung im Code?* Die Differentialgleichung wird
+um den Term $c\,\dot{x}$ ergänzt. In `f(t, y)` ändert sich nur der zweite
+Rückgabewert: statt `-(k/m)*y[0]` steht jetzt `(-k*y[0] - c*y[1]) / m`. Alles
+andere bleibt identisch.
+
+Für die Analyse der unterschiedlichen Dämpfungen definieren wir zunächst die
+**kritische Dämpfung**
+
+\begin{equation*}
+c_{\text{krit}} = 2 \sqrt{k \, m} \,.
+\end{equation*}
+
+Sie ist der Grenzwert, bei dem der Übergang vom schwingenden zum nicht
+schwingenden Verhalten stattfindet. Teilt man die tatsächliche Dämpfung $c$
+durch $c_{\text{krit}}$, erhält man den dimensionslosen **Dämpfungsgrad**
+
+\begin{equation*}
+D = \frac{c}{c_{\text{krit}}}
+  = \frac{c}{2 \sqrt{k \, m}} \,.
+\end{equation*}
+
+* Für $D < 1$ schwingt das System,
+* für $D = 1$ liegt der sogenannte **aperiodische Grenzfall** vor (schnellste
+  Rückkehr ohne Überschwingen) und
+* für $D > 1$ nähert sich die Bewegung ohne Schwingung langsam der Ruhelage
+  (Kriechfall).
+
+Im Code wählen wir $D$ vor und berechnen daraus $c$ über $c = D \cdot
+c_{\text{krit}}$. Wir betrachten nun die Schwingung, die sich bei verschiedenen
+Dämpfungsgraden ergibt, und definieren dazu die rechte Seite der
+Differentialgleichung in Vektornotation.
 
 ```{code-cell} python
 import numpy as np
@@ -52,39 +89,95 @@ style.use('seaborn-v0_8')
 # --- Parameter ---
 m       = 250.0
 k_feder = 16000.0
-omega_0 = np.sqrt(k_feder / m)    # = 8.0 rad/s
-c_krit  = 2 * np.sqrt(k_feder * m)   # kritische Dämpfung in N*s/m
+omega_0 = np.sqrt(k_feder / m)     # = 8.0 rad/s
+c_krit  = 2 * np.sqrt(k_feder * m) # kritische Dämpfung in N*s/m
+
+x0 = 0.05   # Anfangsauslenkung in m
+v0 = 0.0    # Anfangsgeschwindigkeit in m/s
+
 print(f"omega_0 = {omega_0:.2f} rad/s")
 print(f"c_krit  = {c_krit:.1f} N*s/m")
 
 # --- Rechte Seite: gedämpfter Schwinger ---
+# m * x_ddot + c * x_dot + k * x = 0
+# y[0] = x (Position), y[1] = x_dot (Geschwindigkeit)
+# x_ddot = (-k*x - c*x_dot) / m = (-k*y[0] - c*y[1]) / m
 def f_gedaempft(t, y, c):
-    # y[0] = x (Position), y[1] = x_dot (Geschwindigkeit)
-    # m*x_ddot + c*x_dot + k*x = 0
-    # TODO: x_ddot = (-k*y[0] - c*y[1]) / m
     x_dot  = y[1]
-    x_ddot = None   # TODO
+    x_ddot = (-k_feder * y[0] - c * y[1]) / m
     return [x_dot, x_ddot]
-
-# TODO: Kurvenschar für D in [0.2, 0.5, 1.0, 2.0] plotten
-# Hinweis: c = D * c_krit, dann solve_ivp mit lambda t, y: f_gedaempft(t, y, c)
-# TODO: Phasenporträt (sol.y[0] vs. sol.y[1]) für alle vier D-Werte
 ```
 
-<!-- TODO: Prosatext (~80 Wörter):
-     Erklärung der drei Fälle anhand der Plot-Ausgabe.
-     Formel für gedämpfte Eigenfrequenz: omega_d = omega_0 * sqrt(1 - D^2)
-     (nur für D < 1 reell). Warum D=1 die kürzeste Einschwingzeit hat.
-     Hinweis auf das Phasenporträt: einwärts spiralisierend statt Ellipse. -->
+Wir wählen nacheinander die Dämpfungsgrade $D = 0.2$, $D = 0.5$, $D = 1.0$ und
+$D = 2.0$ und lösen mit `solve_ivp` die Differentialgleichung. Danach
+visualisieren wir die vier Schwingungen in einem gemeinsamen Diagramm.
+
+```{code-cell} python
+# --- Kurvenschar für vier Dämpfungsgrade ---
+t_eval = np.linspace(0, 5, 1001)
+D_werte = [0.2, 0.5, 1.0, 2.0]
+farben  = ['#005A94', '#E87846', '#E60000', '#484949']
+
+fig, ax = plt.subplots()
+
+for D, farbe in zip(D_werte, farben):
+    # c = D * c_krit (Definition des Dämpfungsgrades)
+    c   = D * c_krit
+    sol = solve_ivp(lambda t, y, c=c: f_gedaempft(t, y, c),
+                    (0, 5), [x0, v0], t_eval=t_eval)
+    label = f'D = {D}'
+    ax.plot(t_eval, sol.y[0] * 100, color=farbe, label=label)
+
+ax.axhline(0, color='black', linewidth=0.8, linestyle='--')
+ax.set_xlabel('Zeit in s')
+ax.set_ylabel('Auslenkung in cm')
+ax.set_title('Gedämpfter Schwinger: Zeitsignal')
+ax.legend()
+plt.tight_layout()
+plt.show()
+```
+
+Wie sehen die Phasendiagramme für die gedämpften Schwingungen aus?
+
+```{code-cell} python
+# --- Kurvenschar für vier Dämpfungsgrade ---
+fig, ax = plt.subplots()
+
+for D, farbe in zip(D_werte, farben):
+    # c = D * c_krit (Definition des Dämpfungsgrades)
+    c   = D * c_krit
+    sol = solve_ivp(lambda t, y, c=c: f_gedaempft(t, y, c),
+                    (0, 5), [x0, v0], t_eval=t_eval)
+    label = f'D = {D}'
+    ax.plot(sol.y[0] * 100, sol.y[1], color=farbe, label=label)
+
+ax.set_xlabel('Auslenkung x in cm')
+ax.set_ylabel('Geschwindigkeit ẋ in m/s')
+ax.set_title('Phasenporträt')
+ax.legend()
+plt.tight_layout()
+plt.show()
+```
+
+Für $D < 1$ sieht man im Phasenporträt eine Phasenkurve, die spiralförmig auf
+den Ursprung zuläuft. Das System schwingt, verliert aber jede Runde Energie an
+den Dämpfer. Für $D = 1$ und $D = 2$ schwingt das System nicht mehr: Die
+Auslenkung ändert ihr Vorzeichen nicht, der Zustand nähert sich monoton der
+Ruhelage.
+
+Die gedämpfte **Eigenkreisfrequenz** beträgt $\omega_d = \omega_0\sqrt{1-D^2}$,
+was für $D < 1$ eine reelle Zahl ergibt. Bei $D \geq 1$ gibt es keine
+periodische Eigenschwingung mehr.
 
 ```{admonition} Mini-Übung
 :class: tip
-<!-- TODO: Mini-Übung (5 min):
-     1. Berechnen Sie c für D = 0.3 von Hand (c = D * c_krit).
-     2. Verständnisfrage: Für D = 1.5 schwingt das System nicht. Wie erkennen
-        Sie das im Phasenporträt?
-     3. Nach wie vielen Sekunden ist |x| < 0.001 m für D = 0.2 vs. D = 1.0?
-        Schätzen Sie aus dem Plot ab. -->
+1. Berechnen Sie $c$ für $D = 0.3$ von Hand. Gegeben: $c_\text{krit}
+   = 2\sqrt{km} = 2\sqrt{16000 \cdot 250}\,\text{N\,s/m}$.
+2. Für $D = 2.0$ schwingt das System nicht. Woran erkennen Sie das im
+   Phasenporträt (eine Eigenschaft der Kurvenform)?
+3. Welches $D$ würden Sie für eine Fahrzeugfederung wählen, wenn nach
+   einer einzelnen Bodenwelle möglichst schnell Ruhe eintreten soll?
+   Antwort ohne Code.
 ```
 
 ```{code-cell} python
@@ -94,68 +187,146 @@ def f_gedaempft(t, y, c):
 ````{admonition} Lösung
 :class: tip
 :class: dropdown
-<!-- TODO: Lösung zur Mini-Übung.
-     c_krit = 2*sqrt(16000*250) = 4000 N*s/m
-     D=0.3: c = 0.3 * 4000 = 1200 N*s/m
-     Phasenporträt D>1: monoton in Ursprung, keine Spirale (kein Vorzeichen-
-     wechsel von x_dot). -->
+Zu Frage 1: $c_\text{krit} = 2\sqrt{16000 \cdot 250} = 2\sqrt{4\,000\,000}
+= 4000\,\text{N\,s/m}$. Für $D = 0.3$: $c = 0.3 \cdot 4000 =
+1200\,\text{N\,s/m}$.
+
+Zu Frage 2: Für die hier gewählten Anfangsbedingungen ($x_0 > 0$,
+$v_0 = 0$) zeigt die Kurve im Phasenporträt keinen Vorzeichenwechsel auf
+der $x$-Achse. Das robustere Merkmal ist das Fehlen spiralartiger
+Trajektorien: Die Kurve umkreist den Ursprung nicht, sondern läuft direkt
+auf ihn zu.
+
+Zu Frage 3: $D = 1$ (aperiodischer Grenzfall) liefert die schnellste
+Rückkehr in die Ruhelage ohne Überschwingen. In der Praxis wählt man
+$D \approx 0.3 \ldots 0.5$ als Kompromiss zwischen schnellem
+Einschwingen und Fahrkomfort.
 ````
 
 +++
 
 ## Erzwungene Schwingung und Resonanz
 
-<!-- TODO: Unterabschnitt 2 (~10 min)
-     - Erzwungene DGL: m*x_ddot + c*x_dot + k*x = F0*sin(Omega*t)
-     - f gibt jetzt [x_dot, (-k*x - c*x_dot + F0*sin(Omega*t))/m] zurück
-     - Nichtautonom (Omega*t in f → t wird gebraucht)
-     - Zwei Phasen: Einschwingvorgang (Transient) + stationärer Zustand
-     - Stationäre Amplitude: A = max(|x|) im letzten Drittel der Simulation
-     - Resonanz bei Omega ≈ omega_0: Amplitudenmaximum zeigen
-     - Parameter: F0 = 500 N, D = 0.2, Omega variabel -->
+Bisher war die rechte Seite der DGL gleich null: keine äußere Kraft. Jetzt fügen
+wir eine periodische Anregung hinzu: $F(t) = F_0\sin(\Omega t)$. Im realen
+Fahrzeugbau werden Straßenunebenheiten meist als Weganregung am Rad modelliert
+(vorgegebene Bewegung des Radaufstandspunktes). Hier verwenden wir der
+Einfachheit halber eine Kraftanregung. Sie bildet die wesentlichen Phänomene wie
+Resonanz und Einschwingvorgang dennoch korrekt ab.
+
+Die DGL $m\ddot{x} + c\dot{x} + kx = F_0\sin(\Omega t)$ ist
+**nicht-autonom**: die rechte Seite hängt explizit von $t$ ab. `solve_ivp`
+kann das ohne Anpassung lösen, weil `f(t, y)` den Zeitpunkt `t` immer als
+erstes Argument erhält. Wir implementieren die neue rechte Seite.
 
 ```{code-cell} python
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.style as style
-from scipy.integrate import solve_ivp
-style.use('seaborn-v0_8')
-
+# --- Parameter ---
 m       = 250.0
 k_feder = 16000.0
 omega_0 = np.sqrt(k_feder / m)
 c_krit  = 2 * np.sqrt(k_feder * m)
 D       = 0.2
-c       = D * c_krit
-F0      = 500.0    # Kraftamplitude in N
+c       = D * c_krit    # = 800 N*s/m
+F0      = 500.0         # Kraftamplitude in N
 
-# --- Erzwungener Schwinger (nichtautonom) ---
+# --- Erzwungener Schwinger (nicht-autonom: t taucht in f auf) ---
+# m * x_ddot + c * x_dot + k * x = F0 * sin(Omega * t)
+# x_ddot = (-k*x - c*x_dot + F0*sin(Omega*t)) / m
 def f_erzwungen(t, y, Omega):
-    # m*x_ddot + c*x_dot + k*x = F0*sin(Omega*t)
     x_dot  = y[1]
-    x_ddot = None   # TODO: (-k*y[0] - c*y[1] + F0*np.sin(Omega*t)) / m
+    x_ddot = (-k_feder * y[0] - c * y[1] + F0 * np.sin(Omega * t)) / m
     return [x_dot, x_ddot]
-
-# TODO: Simulation für Omega = omega_0 (Resonanz), t_end = 30 s
-# TODO: stationäre Amplitude A = np.max(np.abs(sol.y[0, -n:])) für letztes Drittel
-# TODO: Plot x(t) mit markiertem Transient-Bereich und stationärem Bereich
 ```
 
-<!-- TODO: Prosatext (~80 Wörter):
-     Erklärung Transient vs. stationärer Zustand.
-     Bei Resonanz Omega = omega_0: maximale stationäre Amplitude, Energie-
-     übertrag optimal. Formel für stationäre Amplitude (zur Verifikation):
-     A_stat = F0 / (k * sqrt((1-r^2)^2 + (2*D*r)^2)) mit r = Omega/omega_0.
-     Verweis auf Aufgabe 11.4 (Resonanzkurve als Schleife). -->
+Mit dieser Funktion `f_erzwungen` können wir nun die erzwungene Schwingung untersuchen.
+
+Im ersten Schritt wählen wir eine Anregungsfrequenz $\Omega$ nahe der
+Eigenkreisfrequenz $\omega_0$ und starten aus der Ruhelage $x(0)=0$,
+$\dot{x}(0)=0$. Anschließend integrieren wir die DGL über eine ausreichend lange
+Zeit, damit der Einschwingvorgang weitgehend abgeklungen ist.
+
+```{code-cell} python
+# --- Simulation nahe Resonanz: Omega = omega_0 ---
+# Für kleine D liegt die tatsächliche Resonanzfrequenz
+# Omega_R = omega_0 * sqrt(1 - 2*D^2) nahe bei omega_0.
+# Bei D = 0.2 gilt Omega_R ≈ 0.96 * omega_0, d.h. Abweichung < 4 %.
+Omega_res = omega_0
+t_end     = 30.0
+t_eval    = np.linspace(0, t_end, 3001)
+
+sol = solve_ivp(lambda t, y: f_erzwungen(t, y, Omega_res),
+                (0, t_end), [0.0, 0.0], t_eval=t_eval)
+
+# --- Stationäre Amplitude aus dem letzten Drittel ablesen ---
+# Im letzten Drittel ist der Einschwingvorgang praktisch abgeklungen
+n_last  = len(t_eval) // 3
+A_stat  = np.max(np.abs(sol.y[0, -n_last:]))
+```
+
+Im zweiten Schritt haben wir aus dem letzten Drittel der Zeitreihe die
+stationäre Amplitude $A_\text{stat}$ numerisch bestimmt.
+
+Nun möchten wir diese numerische Amplitude mit der analytischen Lösung
+vergleichen. Für die Resonanzanregung mit $\Omega = \omega_0$ lautet die
+stationäre Amplitude
+
+\begin{equation*}
+A = \frac{F_0}{2 D k} \,.
+\end{equation*}
+
+Im dritten Schritt berechnen wir diese analytische Amplitude, vergleichen sie
+mit dem numerischen Wert und stellen den Einschwingvorgang im Zeitbereich dar.
+
+```{code-cell} python
+# Analytische Formel für Omega = omega_0: A = F0 / (2*D*k)
+# Herleitung: bei Omega = omega_0 gilt k - m*omega_0^2 = 0,
+# sodass A = F0 / sqrt((c*omega_0)^2) = F0 / (c*omega_0) = F0 / (2*D*k)
+A_stat_ana = F0 / (2 * D * k_feder)
+
+print(f"Stationäre Amplitude (numerisch):  {A_stat * 100:.2f} cm")
+print(f"Stationäre Amplitude (analytisch): {A_stat_ana * 100:.2f} cm")
+
+# --- Plot: Einschwingvorgang und stationärer Zustand ---
+fig, ax = plt.subplots(figsize=(9, 3.5))
+ax.plot(t_eval, sol.y[0] * 100, color='#005A94', linewidth=0.8)
+
+# Markierung Einschwingvorgang / stationär
+t_grenze = t_eval[-n_last]
+ax.axvline(t_grenze, color='#E60000', linestyle='--', linewidth=1.5,
+           label=f'Grenze Einschwingvorgang / stationär')
+ax.axhline( A_stat * 100, color='#E87846', linestyle=':', linewidth=1.5,
+           label=f'A_stat = {A_stat*100:.1f} cm')
+ax.axhline(-A_stat * 100, color='#E87846', linestyle=':', linewidth=1.5)
+
+ax.set_xlabel('Zeit in s')
+ax.set_ylabel('Auslenkung in cm')
+ax.set_title(f'Erzwungene Schwingung nahe Resonanz (Omega0 = {omega_0:.1f} rad/s, D = {D})')
+ax.legend(fontsize=9)
+plt.tight_layout()
+plt.show()
+```
+
+Vor der roten Linie überlagern sich Einschwingvorgang und stationäre Schwingung.
+Im letzten Drittel ist der Einschwingvorgang praktisch abgeklungen, und die
+Amplitude ist konstant. Die numerische und die analytische stationäre Amplitude
+stimmen sehr gut überein.
+
+Für kleine Dämpfung $D$ ist die Energieübertragung von der Anregung auf den
+Schwinger bei $\Omega \approx \omega_0$ am größten. Das nennt man
+**Resonanz**. Das genaue Amplitudenmaximum liegt bei der Resonanzfrequenz
+$\Omega_R = \omega_0\sqrt{1-2D^2}$, die für kleine $D$ nahezu mit $\omega_0$
+übereinstimmt (bei $D = 0.2$ beträgt die Abweichung weniger als 4 %). Für
+kleine Dämpfung ($D \ll 1$) kann die Resonanzamplitude ein Vielfaches der
+statischen Auslenkung $F_0/k$ betragen.
 
 ```{admonition} Mini-Übung
 :class: tip
-<!-- TODO: Mini-Übung (5 min):
-     1. Ist f_erzwungen autonom oder nichtautonom? Woran erkennen Sie das?
-     2. Warum muss t_end für die erzwungene Schwingung länger gewählt werden
-        als für die freie Schwingung?
-     3. Verständnisfrage: Was passiert bei D → 0 und Omega = omega_0 mit der
-        stationären Amplitude? -->
+1. Ist `f_erzwungen` autonom oder nicht-autonom? Woran erkennen Sie das im
+   Code?
+2. Warum muss `t_end` für die erzwungene Schwingung länger gewählt werden
+   als für die freie Schwingung in Abschnitt 11.1?
+3. Was passiert mit der stationären Amplitude, wenn $D \to 0$ und
+   $\Omega = \omega_0$? Antwort ohne Code.
 ```
 
 ```{code-cell} python
@@ -165,45 +336,110 @@ def f_erzwungen(t, y, Omega):
 ````{admonition} Lösung
 :class: tip
 :class: dropdown
-<!-- TODO: Lösung zur Mini-Übung -->
+Zu Frage 1: `f_erzwungen` ist nicht-autonom: `F0 * np.sin(Omega * t)`
+enthält `t` explizit. Eine autonome DGL würde nur von `y` abhängen, nicht
+von `t`.
+
+Zu Frage 2: Wir müssen warten, bis der Einschwingvorgang abgeklungen ist und nur
+noch die stationäre Schwingung übrig bleibt. Für kleine $D$ dauert das viele
+Schwingungsperioden, weil die Dämpfung langsam ist. Konkret: Die Einhüllende der
+Einschwingung klingt wie $e^{-D\omega_0 t}$ ab.
+
+Zu Frage 3: Für $D \to 0$ strebt der Nenner $2D \to 0$, die
+stationäre Amplitude $A = F_0/(2Dk) \to \infty$.
+Ohne Dämpfung gibt es keine stationäre Amplitude, die Schwingung wächst
+unbegrenzt.
 ````
 
 +++
 
-## Methodenübersicht Kapitel 10–11
+## Methodenübersicht: DGL in Kapitel 10 und 11
 
-<!-- TODO: Unterabschnitt 3 (~8 min)
-     Zusammenfassungstabelle: Wann Euler / solve_ivp, 1 Zustand / 2 Zustände / nichtautonom.
-     Tabelle mit Spalten: Problem | DGL-Typ | Zustandsvektor | f-Signatur | Empfehlung
+Alle Differentialgleichungen, die wir in Kapitel 10 und 11 gelöst haben, folgen
+demselben Muster: `f(t, y)` zurückgeben, `y0` angeben, `solve_ivp` aufrufen. Der
+einzige Unterschied ist die Länge von `y0` und die Anzahl der Rückgabewerte.
 
-     Zeilen:
-     - Abkühlung/RC/Zerfall: 1. Ordnung, y=[T], f(t,y)=[...], solve_ivp
-     - Federschwinger: 2. Ordnung autonom, y=[x,v], f(t,y)=[v,...], solve_ivp
-     - Erzwungene Schwingung: 2. Ordnung nichtautonom, y=[x,v], f(t,y) nutzt t, solve_ivp
-     - Einfache Schätzaufgaben: Euler als Lehrbeispiel (sec01/02 Kap. 10)
-
-     Kurzer Ausblick: Was kommt nach DGL? Systeme höherer Ordnung (z.B. 2 gekoppelte
-     Massen), partielle DGLen (FEM). -->
-
-```{admonition} Methodenübersicht: DGLen in Kapitel 10 und 11
+```{admonition} Methodenübersicht
 :class: note
-<!-- TODO: Tabelle einfügen:
 | Problem | Zustandsvektor | `y0` | `sol.y` |
 |---|---|---|---|
-| Abkühlung, RC-Laden, Zerfall | $y = [T]$ | `[T0]` | `sol.y[0]`: Zustand |
-| Federschwinger (frei) | $y = [x, \dot{x}]$ | `[x0, v0]` | `sol.y[0]`: Pos., `sol.y[1]`: Geschw. |
-| Gedämpfter Schwinger | $y = [x, \dot{x}]$ | `[x0, v0]` | wie oben |
-| Erzwungene Schwingung | $y = [x, \dot{x}]$ | `[x0, v0]` | wie oben, `f` nutzt `t` |
--->
+| Abkühlung, Zerfall (Kap. 10) | $y = [T]$ | `[T0]` | `sol.y[0]`: Zustand |
+| Federschwinger (Abschn. 11.1) | $y = [x,\,\dot{x}]$ | `[x0, v0]` | `sol.y[0]`: Pos., `sol.y[1]`: Geschw. |
+| Gedämpfter Schwinger | $y = [x,\,\dot{x}]$ | `[x0, v0]` | wie oben |
+| Erzwungene Schwingung | $y = [x,\,\dot{x}]$ | `[x0, v0]` | wie oben; `f` nutzt `t` |
 ```
+
+Der Code für `solve_ivp` ist in allen vier Fällen identisch. Wächst ein
+System auf drei oder mehr Zustände (zum Beispiel zwei gekoppelte Massen),
+verlängert sich nur `y0` und die Rückgabeliste von `f`.
+
+```{code-cell} python
+import numpy as np
+from scipy.integrate import solve_ivp
+
+# --- Demonstrationsvergleich: 1 Zustand (Kap. 10) vs. 2 Zustände (Kap. 11) ---
+m = 250.0; k_feder = 16000.0; c = 800.0
+
+# Kap. 10: Abkühlung (1 Zustand)
+def f_abkuehlung(t, y):
+    return [-0.1 * (y[0] - 20.0)]        # Rückgabe: Liste mit EINEM Eintrag
+
+# Kap. 11: Gedämpfter Schwinger (2 Zustände)
+def f_schwinger(t, y):
+    return [y[1],                          # Rückgabe: Liste mit ZWEI Einträgen
+            (-k_feder * y[0] - c * y[1]) / m]
+
+sol_abk = solve_ivp(f_abkuehlung, (0, 50), [80.0])
+sol_sch = solve_ivp(f_schwinger,  (0,  5), [0.05, 0.0])
+
+print(f"Abkühlung:  sol.y.shape = {sol_abk.y.shape}  (1 Zustand)")
+print(f"Schwinger:  sol.y.shape = {sol_sch.y.shape}  (2 Zustände)")
+```
+
+```{admonition} Mini-Übung
+:class: tip
+1. Was würde `sol.y.shape` für ein System mit drei gekoppelten Massen
+   ausgeben (drei Positionen und drei Geschwindigkeiten)?
+2. Nennen Sie einen konkreten Grund, warum `f` für die erzwungene
+   Schwingung nicht-autonom ist, während `f` für den gedämpften
+   Schwinger autonom ist.
+3. In welchem Abschnitt der Tabelle ist die Ähnlichkeit zur
+   Kirchhoff-Gleichung eines RC-Kreises ($\dot{U}_C = -U_C/(RC)$) am
+   größten? Begründen Sie.
+```
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+Zu Frage 1: Sechs Zustände ($x_1, \dot{x}_1, x_2, \dot{x}_2, x_3,
+\dot{x}_3$), also `sol.y.shape = (6, n_zeitpunkte)`.
+
+Zu Frage 2: Beim erzwungenen Schwinger taucht $F_0\sin(\Omega t)$ in
+`f` auf; dieser Term hängt explizit von `t` ab. Beim gedämpften Schwinger
+ohne Anregung steht auf der rechten Seite nur $(-kx - c\dot{x})/m$, das
+ist eine Funktion nur von `y`, nicht von `t`.
+
+Zu Frage 3: Die Abkühlungs-Zeile in der Tabelle (Kap. 10): Beide DGL
+haben einen einzigen Zustand und die rechte Seite ist linear in diesem
+Zustand, also $\dot{y} = -\lambda y$.
+````
 
 +++
 
-## Zusammenfassung und Ausblick
+## Zusammenfassung
 
-<!-- TODO: Zusammenfassung (~80 Wörter):
-     - Dämpfungszahl D steuert qualitatives Verhalten: schwingend / Grenzfall / kriechend
-     - Erzwungene Schwingung: nichtautonom, stationäre Amplitude aus letztem Zeitdrittel
-     - Resonanz: maximale Amplitude bei Omega ≈ omega_0
-     - Methodenübersicht: solve_ivp mit y0=[x0, v0] funktioniert für alle Fälle
-     - Ausblick auf sec04 (Resonanzkurve numerisch), sec05 (Parameterstudie Fahrzeugfederung) -->
+Der Dämpfungsgrad $D = c/(2\sqrt{km})$ bestimmt das qualitative Verhalten:
+Für $D < 1$ schwingt das System aus, für $D = 1$ kehrt es am schnellsten
+ohne Überschwingen zurück, für $D > 1$ kriecht es monoton in das
+Gleichgewicht. Die erzwungene Schwingung ist nicht-autonom, weil
+$F_0\sin(\Omega t)$ explizit von $t$ abhängt. `solve_ivp` löst sie ohne
+Anpassung. Die stationäre Amplitude lässt sich aus dem letzten Zeitdrittel
+als `max(|x|)` ablesen. Bei $\Omega = \omega_0$ gilt für die stationäre
+Amplitude die einfache Formel $A = F_0/(2Dk)$. Resonanz tritt auf, wenn
+$\Omega \approx \omega_0$: Das genaue Maximum liegt bei
+$\Omega_R = \omega_0\sqrt{1-2D^2}$, das für kleine $D$ nahe bei $\omega_0$
+liegt.
