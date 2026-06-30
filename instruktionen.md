@@ -19,13 +19,11 @@ Jedes Kapitel folgt dieser Aufteilung:
 
 | Sektion | Dauer | Beschreibung |
 | ------- | ------- | ----------- |
-| sec01 | 45 min | Vorlesung, interaktiv als Jupyter Notebook präsentiert |
-| sec02 | 45 min | Übung in Einzelarbeit oder in Kleingruppen |
-| sec03 | 45 min | Vorlesung, interaktiv als Jupyter Notebook präsentiert |
-| sec04 | 45 min | Übung in Einzelarbeit oder in Kleingruppen |
-| sec05 | 180 min | Übungsaufgaben ✩/✩✩/✩✩✩  für das vertiefende Selbststudium zuhause |
+| sec01 | 90 min | 45 min Vorlesung, interaktiv als Jupyter Notebook präsentiert; 45 min Übung |
+| sec02 | 90 min | 45 min Vorlesung, interaktiv als Jupyter Notebook präsentiert; 45 min Übung |
+| sec03 | 180 min | Übungsaufgaben ✩/✩✩/✩✩✩  für das vertiefende Selbststudium zuhause |
 
-Sections, die als Vorlesung dienen, folgen folgendem Schema:
+Sections,folgen folgendem Schema:
 
 - Kurze **Motivation** am Anfang, die an Bekanntes anknüpft ("Bisher haben wir…
   In diesem Kapitel…")
@@ -33,6 +31,7 @@ Sections, die als Vorlesung dienen, folgen folgendem Schema:
 - Roter Faden: Code-Beispiel → Erklärung & Verallgemeinerung → Mini-Übung →
   Lösung
 - nach Möglichkeit **drei Unterabschnitte** (mit H2-Überschriften), deren Präsentation ca. 10 min dauert und die mit einer Mini-Übung von 5 min abschließt
+- Übungsaufgaben (alphabetisch nummeriert)
 - Kurze **Zusammenfassung** am Ende mit explizitem Ausblick auf das nächste
   Kapitel
 
@@ -52,21 +51,7 @@ Sections, die als Vorlesung dienen, folgen folgendem Schema:
   nennt man…")
 - Niemals erst die Theorie, dann den Code
 
-## Leseverhalten und Mini-Übungen
-
-### Beobachtung zum Leseverhalten
-
-Studierende im Maschinenbau überspringen erfahrungsgemäß den Fließtext
-zwischen Code-Zellen und springen direkt zum Code und zu den Übungen.
-Konzeptuelle Erklärungen im Fließtext werden daher häufig nicht gelesen.
-
-### Konsequenzen für die Gestaltung
-
-**Code-Kommentare als primärer Erklärungskanal:** Wichtige Konzepte, die
-Studierende verstehen müssen, gehören als Kommentare direkt in die
-Code-Zelle, nicht nur in den Fließtext davor. Der Fließtext dient als
-vertiefende Erklärung für Studierende, die ihn lesen, aber das Wesentliche
-muss auch ohne ihn verständlich sein.
+## Mini-Übungen
 
 **Viele kleine Mini-Übungen statt einer großen:** Pro Unterabschnitt eine
 kurze Mini-Übung einbauen, unmittelbar nach dem zugehörigen Code-Beispiel.
@@ -86,29 +71,11 @@ Ausführen von Code beantworten lässt. Geeignete Formate sind:
 - Eine Konsequenz ohne Code begründen ("Was würde eine Determinante von
   null in diesem Kontext bedeuten?")
 
-### Selbstgesteuertes Lernen (Flipped-Classroom-Modus)
+## Selbstgesteuertes Lernen (Flipped-Classroom-Modus)
 
 Wird das Material ohne Präsenzbegleitung eingesetzt (Studierende arbeiten
 eigenständig, Lehrperson steht nur für Rückfragen bereit), gelten folgende
 zusätzliche Anforderungen:
-
-**Code-Zellen zusammenhalten:** Viele kleine Code-Zellen, die nur einen
-Teilschritt zeigen, zerhacken den Lesefluss für Studierende, die direkt zum
-Code springen. Zusammengehörige Schritte (Aufstellen, Lösbarkeitsprüfung,
-Lösen, Probe) gehören in eine einzige Code-Zelle, sofern sie inhaltlich eine
-Einheit bilden. Jeder Block innerhalb der Zelle wird mit einem
-`# --- Abschnittskommentar ---` eingeleitet.
-
-**Herleitung im Code, nicht nur im Fließtext:** Wenn Studierende eine
-Matrixstruktur oder eine Formel nicht aus dem Fließtext kennen (weil sie ihn
-überspringen), müssen sie sie aus den Code-Kommentaren rekonstruieren können.
-Jede Zeile von `A` und jeder Eintrag von `b` erhält einen Kommentar, der die
-zugrundeliegende umgeformte Gleichung explizit zeigt.
-
-**Fließtext bleibt erhalten:** Er dient als vertiefende Schicht für
-Studierende, die lesen. Er darf konzeptuelle Erklärungen und physikalische
-Zusammenhänge enthalten, die im Code nur angedeutet sind. Das Wesentliche
-muss aber auch ohne ihn verständlich sein.
 
 **Stolperstellen explizit ansprechen:** Physikalisch oder mathematisch
 überraschende Ergebnisse (z.B. negatives Vorzeichen eines Wärmestroms,
@@ -210,7 +177,7 @@ Code + kurze Erklärung des Ergebnisses
 ## Admonition-Blöcke
 
 - `attention` für Lernziele (als Checkliste mit `* [ ]`)
-- `note` für Definitionen und Erläuterungen von Faachbegriffen
+- `note` für Definitionen und Erläuterungen von Fachbegriffen
 - `tip` für Mini-Übungen und deren Lösungen
 - `warning` für Hinweise
 - Lösungen immer als `dropdown`, mit Code **und** kurzer Erklärung des
