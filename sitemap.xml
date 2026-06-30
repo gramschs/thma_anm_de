@@ -8,6 +8,15 @@
     <loc>http://localhost:3000/toc</loc>
   </url>
   <url>
+    <loc>http://localhost:3000/chapter01-sec01</loc>
+  </url>
+  <url>
+    <loc>http://localhost:3000/chapter01-sec02</loc>
+  </url>
+  <url>
+    <loc>http://localhost:3000/chapter01-sec03</loc>
+  </url>
+  <url>
     <loc>http://localhost:3000/chapter02-sec01</loc>
   </url>
   <url>
