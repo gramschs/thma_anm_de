@@ -87,7 +87,7 @@ geschwindigkeiten_kmh.append(75)
 print(geschwindigkeiten_kmh)
 ```
 
-````{admonition} Tupel: die unveränderliche Liste
+````{admonition} Was ist ... ein Tupel?
 :class: note
 Neben der Liste kennt Python das **Tupel**, erkennbar an runden statt
 eckigen Klammern. Ein Tupel verhält sich wie eine Liste, lässt sich nach der
