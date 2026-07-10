@@ -6,6 +6,11 @@ kernelspec:
 
 # 6.1 Trajektorien: ein Objekt entlang einer Kurve bewegen
 
+```{admonition} Warning
+:class: warning
+Under construction
+```
+
 ```{admonition} Lernziele
 :class: attention
 * [ ] Sie können die Tangentenrichtung einer parametrischen Kurve numerisch berechnen.
