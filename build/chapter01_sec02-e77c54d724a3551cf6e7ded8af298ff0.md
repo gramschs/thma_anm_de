@@ -1,0 +1,200 @@
+---
+jupytext:
+  formats: ipynb,md:myst
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.15.2
+kernelspec:
+  display_name: Python 3
+  language: python
+  name: python3
+---
+
+# Aufgabe
+
+Die folgenden Aufgaben bearbeiten wir in der restlichen Zeit dieses
+Blocks. Aufgaben mit einem Stern (✩) und zwei Sternen (✩✩) sind
+Pflichtaufgaben. Die Aufgabe mit drei Sternen (✩✩✩) ist eine Zusatzaufgabe
+für alle, die schneller fertig sind. Arbeiten Sie nach Möglichkeit zu
+zweit, das hilft besonders, wenn Python für Sie noch neu ist.
+
+```{admonition} Übung A (✩)
+:class: tip
+Welcher Datentyp liegt vor? Schreiben Sie Ihre Vermutung zunächst auf, bevor
+Sie den Code ausführen.
+
+* `120` -->
+* `120.0` -->
+* `'Sensor_B'` -->
+* `120 / 4` -->
+* `2**8` -->
+* `geschwindigkeit_ms > tempolimit_ms` -->
+
+Überprüfen Sie anschließend jede Zeile mit `type()` in einer Code-Zelle.
+```
+
+```{code-cell} ipython3
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+print(type(120))
+print(type(120.0))
+print(type('Sensor_B'))
+print(type(120 / 4))
+print(type(2**8))
+print(type(True))
+```
+`120` ist ein Integer, `120.0` ein Float und `'Sensor_B'` ein String.
+`120 / 4` ergibt mit dem `/`-Operator immer einen Float, auch wenn das
+Ergebnis ganzzahlig ist. `2**8` bleibt ein Integer, da beide Operanden
+Integer sind. Der Vergleich `geschwindigkeit_ms > tempolimit_ms` liefert den
+Datentyp `bool`, da Vergleiche immer einen Wahrheitswert zurückgeben.
+````
+
+```{admonition} Übung B (✩✩)
+:class: tip
+Ein Prüfstand misst die Kraft `kraft` in Newton und den Weg `weg` in
+Metern, über den die Kraft wirkt. Berechnen Sie die verrichtete Arbeit nach
+der Formel `arbeit = kraft * weg` für `kraft = 850` und `weg = 2.4`. Geben
+Sie das Ergebnis mit einem f-String und der Einheit Joule aus, gerundet auf
+eine Nachkommastelle.
+```
+
+```{code-cell} ipython3
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+kraft = 850       # N
+weg = 2.4         # m
+arbeit = kraft * weg
+print(f'Verrichtete Arbeit: {arbeit:.1f} Joule')
+```
+Die verrichtete Arbeit beträgt 2040.0 Joule. Da `kraft` ein Integer und
+`weg` ein Float ist, wandelt Python das Ergebnis automatisch in einen Float
+um.
+````
+
+```{admonition} Übung C (✩✩)
+:class: tip
+Ein Fahrzeug fährt mit `geschwindigkeit_kmh = 95`. Rechnen Sie die
+Geschwindigkeit in m/s um und prüfen Sie mit einer `if`/`elif`/`else`-
+Verzweigung, ob das Tempolimit von `tempolimit_ms = 33.3` eingehalten, genau
+erreicht oder überschritten wird. Geben Sie eine passende Meldung aus.
+```
+
+```{code-cell} ipython3
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+geschwindigkeit_kmh = 95
+tempolimit_ms = 33.3
+
+geschwindigkeit_ms = geschwindigkeit_kmh / 3.6
+
+if geschwindigkeit_ms > tempolimit_ms:
+    print('Geschwindigkeit zu hoch!')
+elif geschwindigkeit_ms == tempolimit_ms:
+    print('Geschwindigkeit genau am Limit.')
+else:
+    print('Geschwindigkeit im erlaubten Bereich.')
+```
+95 km/h entsprechen rund 26.4 m/s und liegen damit unter dem Tempolimit von
+33.3 m/s. Die Ausgabe lautet daher "Geschwindigkeit im erlaubten Bereich."
+````
+
+```{admonition} Übung D (✩✩)
+:class: tip
+Ein Sensor überwacht die Temperatur eines Bauteils während eines
+Erwärmungsversuchs. Schreiben Sie eine for-Schleife mit `range(6)`, die
+ausgehend von 20 Grad Celsius die Temperatur in jedem Schritt um 15 Grad
+erhöht und ausgibt. Brechen Sie die Schleife mit `break` ab, sobald die
+Temperatur über 90 Grad Celsius liegt.
+```
+
+```{code-cell} ipython3
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+for zeitschritt in range(6):
+    temperatur = 20 + zeitschritt * 15
+    if temperatur > 90:
+        print(f'Abbruch bei Zeitschritt {zeitschritt}: {temperatur} Grad Celsius.')
+        break
+    print(f'Zeitschritt {zeitschritt}: {temperatur} Grad Celsius')
+```
+Die Temperatur erreicht bei `zeitschritt = 5` den Wert 95 Grad Celsius und
+überschreitet damit die 90-Grad-Grenze, sodass `break` in diesem Durchgang
+ausgelöst wird.
+````
+
+```{admonition} Übung E (✩✩✩, Mini-Projekt)
+:class: tip
+Ein Prüfstand überwacht die Geschwindigkeit eines Fahrzeugs während eines
+Beschleunigungstests. Setzen Sie folgende Schritte um.
+
+**Teil 1:** Legen Sie die Variablen `geschwindigkeit_ms = 0.0`, `zeit = 0`
+und `tempolimit_ms = 33.3` an. Schreiben Sie eine while-Schleife, die
+`geschwindigkeit_ms` in jedem Durchlauf um 3.5 m/s erhöht, `zeit` um 1
+Sekunde erhöht und beide Werte mit einem f-String ausgibt.
+
+**Teil 2:** Erweitern Sie die Schleife so, dass sie mit `break` abbricht,
+sobald `geschwindigkeit_ms` das Tempolimit überschreitet. Geben Sie beim
+Abbruch eine zusätzliche Meldung mit der finalen Geschwindigkeit und Zeit
+aus.
+
+**Teil 3:** Beantworten Sie abschließend: Was würde passieren, wenn die
+Abbruchbedingung in der while-Kopfzeile niemals erfüllt wird? Erklären Sie
+das Konzept der Endlosschleife in eigenen Worten.
+```
+
+```{code-cell} ipython3
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+geschwindigkeit_ms = 0.0
+zeit = 0
+tempolimit_ms = 33.3
+
+while geschwindigkeit_ms <= tempolimit_ms:
+    geschwindigkeit_ms = geschwindigkeit_ms + 3.5
+    zeit = zeit + 1
+    print(f'Nach {zeit} s: {geschwindigkeit_ms:.1f} m/s')
+
+    if geschwindigkeit_ms > tempolimit_ms:
+        print(f'Tempolimit überschritten nach {zeit} s bei {geschwindigkeit_ms:.1f} m/s.')
+        break
+```
+Nach 10 Sekunden überschreitet das Fahrzeug mit 35.0 m/s erstmals das
+Tempolimit von 33.3 m/s.
+
+Würde die Abbruchbedingung niemals erfüllt, würde die while-Schleife
+unendlich oft weiterlaufen. Dieses Verhalten nennen wir **Endlosschleife**.
+Da `geschwindigkeit_ms` in jedem Durchlauf tatsächlich erhöht wird, wird die
+Bedingung `geschwindigkeit_ms <= tempolimit_ms` in unserem Beispiel
+garantiert irgendwann falsch. Eine Endlosschleife entsteht erst dann, wenn
+sich die Variable in der Abbruchbedingung gar nicht oder nicht in die
+richtige Richtung verändert, beispielsweise wenn wir vergessen,
+`geschwindigkeit_ms` innerhalb der Schleife zu erhöhen.
+````
