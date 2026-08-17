@@ -4,22 +4,17 @@ kernelspec:
   display_name: 'Python 3'
 ---
 
-# 2.1 NumPy-Arrays und Vektoroperationen
+# 2.1 NumPy-Grundlagen
 
 In der Messtechnik fallen schnell tausende von Messwerten an. Ein
 Beschleunigungssensor, der eine vibrierende Maschine überwacht, liefert
 beispielsweise 10.000 Messwerte pro Sekunde. Wollen wir diese Daten mit
-Python-Listen verarbeiten, brauchen wir Schleifen über tausende von Elementen.
-Das ist nicht nur mühsam zu schreiben, sondern auch langsam. In diesem Kapitel
-lernen wir NumPy kennen, eine Bibliothek, die genau für solche Aufgaben gebaut
-wurde. Ihr zentraler Datentyp, das **Array**, erlaubt es, mathematische
-Operationen direkt auf ganze Zahlenreihen anzuwenden, ohne eine einzige
-Schleife zu schreiben.
-
-Als roten Faden verwenden wir in diesem und den nächsten beiden Kapiteln das
-Schwingungssignal einer Maschine. Wir starten damit, das Signal zu erzeugen,
-und werden es in Kapitel 2.2 mit Matrizenrechnung analysieren und in Kapitel
-2.3 statistisch auswerten.
+Python-Listen verarbeiten, brauchen wir Schleifen über tausende von Elementen:
+mühsam zu schreiben und langsam in der Ausführung. In diesem Kapitel lernen wir
+NumPy kennen, eine Bibliothek, die genau für solche Aufgaben gebaut wurde. Ihr
+zentraler Datentyp, das **Array**, erlaubt es, mathematische Operationen und
+statistische Kenngrößen direkt auf ganze Zahlenreihen anzuwenden, ohne eine
+einzige Schleife zu schreiben.
 
 ## Lernziele
 
@@ -33,97 +28,234 @@ und werden es in Kapitel 2.2 mit Matrizenrechnung analysieren und in Kapitel
   Skalierung) auf Arrays anwenden.
 * [ ] Sie können mathematische Funktionen wie `np.sin()` und `np.exp()` auf
   Arrays anwenden.
+* [ ] Sie können mit `np.mean()`, `np.std()`, `np.min()` und `np.max()`
+  statistische Kenngrößen eines Arrays berechnen.
 ```
 
 ## Was ist ein NumPy-Array?
 
-NumPy (kurz für *Numerical Python*) ist die Standardbibliothek für numerische
-Berechnungen in Python. Wir importieren sie mit dem üblichen Kürzel:
+NumPy (kurz für *Numerical Python*) ist eine Bibliothek, also eine Sammlung
+fertiger Funktionen, die wir in eigenem Code nutzen können, ohne sie selbst
+zu schreiben. Bevor wir eine Bibliothek verwenden können, müssen wir sie mit
+`import` laden. Für NumPy hat sich eine feste Abkürzung etabliert, unter der
+wir die Bibliothek im restlichen Code ansprechen:
 
 ```{code-cell} python
 import numpy as np
 ```
 
-Den Unterschied zwischen einer Liste und einem Array sehen wir am schnellsten
-an einem Beispiel. Angenommen, ein Sensor liefert fünf Beschleunigungswerte
-in m/s²:
+Diese Zeile lädt die Bibliothek `numpy` und macht sie im Code über den Namen
+`np` verfügbar. Ab jetzt rufen wir alle Funktionen aus NumPy mit diesem
+Kürzel auf, zum Beispiel `np.array()`. Die Abkürzung `np` ist reine
+Konvention, ein anderer Name würde technisch genauso funktionieren, aber
+`np` ist in der Python-Welt so verbreitet, dass praktisch jeder NumPy-Code
+sie verwendet.
+
+Der zentrale Datentyp von NumPy ist das **Array**. Es erlaubt uns,
+mathematische Operationen direkt auf ganze Zahlenreihen anzuwenden, ohne
+eine einzige Schleife zu schreiben, wie wir im Folgenden sehen.
+
+Den Unterschied zwischen Liste und Array sehen wir am schnellsten an einem
+Beispiel. Ein Sensor liefert fünf Beschleunigungswerte in m/s^2:
 
 ```{code-cell} python
-# Als Python-Liste
+# Beschleunigungen in m/s^2 als Python-Liste
 messwerte_liste = [0.3, 1.2, 2.5, 1.8, 0.7]
 
-# Als NumPy-Array
+# Beschleunigungen in m/s^2 als NumPy-Array
 messwerte_array = np.array([0.3, 1.2, 2.5, 1.8, 0.7])
 
 print(messwerte_liste)
 print(messwerte_array)
 ```
 
-Die Ausgabe sieht ähnlich aus, aber das Verhalten bei Rechenoperationen ist
-grundlegend verschieden. Wollen wir alle Messwerte mit der Masse 1 kg multiplizieren,
-um die wirkende Kraft $F = m \cdot a$ zu berechnen, zeigt sich
-der Unterschied:
+Auf den ersten Blick sehen Liste und Array ähnlich aus. Ein NumPy-Array ist
+jedoch speziell für numerische Daten und mathematische Berechnungen ausgelegt.
+Dadurch können wir Rechenoperationen direkt auf ganze Messreihen anwenden.
+Zunächst sehen wir uns jedoch weitere Möglichkeiten an, ein NumPy-Array zu
+erzeugen.
+
+Neben `np.array()`, das eine bestehende Liste in ein Array umwandelt, stellt
+NumPy zwei weitere Funktionen bereit, mit denen wir Arrays direkt erzeugen, ohne
+die Werte einzeln aufzuschreiben.
+
+`np.linspace(start, stop, anzahl)` erzeugt `anzahl` gleichmäßig verteilte Werte
+zwischen `start` und `stop`. Der Endwert `stop` ist dabei standardmäßig
+enthalten. Das eignet sich beispielsweise für Zeitachsen:
+
+```{code-cell} python
+t = np.linspace(0, 2, 5)    # 5 Werte zwischen 0 und 2 Sekunden
+print(t)
+```
+
+`np.zeros(anzahl)` erzeugt ein Array aus lauter Nullen. Das ist nützlich, um
+ein Array als Platzhalter anzulegen, das später mit Werten gefüllt wird:
+
+```{code-cell} python
+platzhalter = np.zeros(5)   # Platzhalter mit 5 Nullen 
+print(platzhalter)
+```
+
+Mit diesen drei Funktionen, `np.array()`, `np.linspace()` und `np.zeros()`,
+decken wir bereits die meisten Fälle ab, in denen wir ein Array neu anlegen
+müssen: aus vorhandenen Werten, als gleichmäßig verteilte Achse oder als
+Platzhalter.
+
+Bevor wir mit den erzeugten Arrays weiterrechnen, prüfen wir ihre grundlegenden
+Eigenschaften: Größe und Datentyp.
+
+```{code-cell} python
+print(messwerte_array.shape)   # Anzahl der Elemente je Dimension
+print(messwerte_array.dtype)   # Datentyp der gespeicherten Werte
+```
+
+`.shape` gibt die Abmessungen des Arrays als Tupel zurück. `(5,)` bedeutet: eine
+Dimension mit fünf Elementen. `.dtype` gibt den gemeinsamen Datentyp aller
+Elemente zurück, hier typischerweise `float64` für Fließkommazahlen. Diese
+beiden Attribute sind der schnellste Weg, ein unbekanntes Array zu prüfen.
+
+````{admonition} Mini-Übung
+:class: tip
+Ein Temperatursensor liefert vier Messwerte in °C: `18.5`, `19.2`, `18.9`,
+`20.1`.
+
+1. Legen Sie die Werte in einem Array namens `temperaturen` ab.
+2. Geben Sie Form und Datentyp von `temperaturen` aus.
+3. Legen Sie eine Zeitachse `zeit` mit vier gleichmäßig verteilten Werten
+   zwischen 0 und 3 Sekunden an, ohne die Werte einzeln aufzuschreiben.
+4. Legen Sie ein Array `kalibrierwerte` mit vier Nullen an, das später als
+   Platzhalter für Kalibrierfaktoren dienen soll.
+````
+
+````{code-cell} python
+# Code-Zelle
+````
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+import numpy as np
+
+temperaturen = np.array([18.5, 19.2, 18.9, 20.1])
+print(temperaturen.shape)   # (4,)
+print(temperaturen.dtype)   # float64
+
+zeit = np.linspace(0, 3, 4)
+print(zeit)                 # [0. 1. 2. 3.]
+
+kalibrierwerte = np.zeros(4)
+print(kalibrierwerte)       # [0. 0. 0. 0.]
+```
+````
+
+## Vektoroperationen und mathematische Funktionen
+
+Im letzten Abschnitt haben wir Arrays erzeugt und uns ihre Struktur mit
+`.shape` und `.dtype` angesehen. Jetzt sehen wir, was Arrays wirklich
+nützlich macht: Rechenoperationen, die auf ganze Zahlenreihen wirken, ohne
+eine einzige Schleife zu schreiben.
+
+Angenommen, wir wollen aus den Beschleunigungswerten die wirkende Kraft
+berechnen. Es gilt $F = m \cdot a$, wobei die Masse $m = 5\,\mathrm{kg}$
+beträgt. Mit einer Python-Liste brauchen wir dafür eine Schleife:
 
 ```{code-cell} python
 # Mit der Liste: manuelle Schleife notwendig
 kraefte_liste = []
 for a in messwerte_liste:
-    kraefte_liste.append(1.0 * a)
+    kraefte_liste.append(5.0 * a)
 
-# Mit dem Array: eine Zeile
-kraefte_array = 1.0 * messwerte_array
+print(kraefte_liste)
+```
 
+Mit dem NumPy-Array genügt eine einzige Zeile:
+
+```{code-cell} python
+kraefte_array = 5.0 * messwerte_array
 print(kraefte_array)
 ```
 
-Die Multiplikation wird auf **jedes Element einzeln** angewendet, ohne
-Schleife. Das nennt man eine **Vektoroperation**.
+Die Multiplikation mit dem Skalar `5.0` wird automatisch auf **jedes Element**
+von `messwerte_array` angewendet. Solche Operationen auf ganzen Zahlenreihen
+nennen wir **Vektoroperationen**. Sie vermeiden explizite Schleifen und sind
+daher bei großen Messreihen in der Regel deutlich effizienter.
 
-Mit den Attributen `.shape` und `.dtype` können wir jederzeit nachsehen,
-wie ein Array aufgebaut ist:
+Dasselbe Prinzip gilt für die Grundrechenarten `+`, `-`, `*`, `/` und `**`.
+Addieren wir zwei eindimensionale Arrays gleicher Länge, werden ihre Elemente
+paarweise addiert:
 
 ```{code-cell} python
-print(messwerte_array.shape)   # (5,) - fünf Elemente, eindimensional
-print(messwerte_array.dtype)   # float64 - Fließkommazahlen
+sensor_a = np.array([0.3, 1.2, 2.5, 1.8, 0.7])
+sensor_b = np.array([0.1, 0.2, 0.3, 0.1, 0.2])
+
+summe = sensor_a + sensor_b
+print(summe)
 ```
 
-`.shape` gibt die Abmessungen des Arrays als Tupel zurück. Bei einem
-eindimensionalen Array enthält das Tupel genau einen Wert: die Anzahl der
-Elemente. `.dtype` zeigt den Datentyp aller Elemente an. NumPy wählt automatisch
-den passenden Typ: Enthält das Array mindestens eine Fließkommazahl, wird
-`float64` verwendet.
+Das erste Element von `sensor_a` wird dabei mit dem ersten Element von
+`sensor_b` addiert, das zweite mit dem zweiten und so weiter. Da beide Arrays
+fünf Elemente enthalten, ist diese Zuordnung von Partnern eindeutig.
 
-```{admonition} Array vs. Liste
-:class: note
-Eine Python-Liste kann beliebig gemischte Typen enthalten:
-`[1, "Sensor", True]` ist eine gültige Liste. Ein NumPy-Array hingegen
-enthält **immer nur einen Datentyp**. Beim Erzeugen wandelt NumPy alle Werte
-in den allgemeinsten gemeinsamen Typ um: Aus `np.array([1, 2.5, 3])` wird
-ein Array aus `float64`, weil Ganzzahlen verlustfrei als Fließkommazahlen
-dargestellt werden können. Außerdem bedeutet `+` bei Listen eine
-Verkettung, bei Arrays eine elementweise Addition. Das ist eine häufige
-Fehlerquelle beim Wechsel zwischen beiden Datentypen.
+Für eindimensionale Arrays ist eine paarweise Operation normalerweise nur
+möglich, wenn beide Arrays dieselbe Länge besitzen. Bei mehrdimensionalen
+Arrays müssen die Formen (`.shape`) der Arrays zueinander passen. NumPy kann
+unter bestimmten Bedingungen auch unterschiedlich geformte Arrays kombinieren;
+diese Regeln heißen **Broadcasting** und werden später behandelt.
+
+Neben den Grundrechenarten stellt NumPy auch mathematische Funktionen
+bereit, die elementweise auf Arrays wirken. Zwei davon brauchen wir häufig:
+`np.sin()` für trigonometrische Berechnungen und `np.exp()` für
+Exponentialfunktionen.
+
+```{code-cell} python
+winkel = np.linspace(0, 2 * np.pi, 5)
+print(np.sin(winkel))
 ```
+
+`np.sin()` wendet den Sinus auf jedes Element von `winkel` einzeln an und
+gibt ein neues Array derselben Länge zurück. `np.exp()` funktioniert nach
+demselben Prinzip:
+
+```{code-cell} python
+werte = np.array([0.0, 1.0, 2.0, 3.0])
+print(np.exp(werte))
+```
+
+Python bringt mit dem Modul `math` bereits `math.sin()` und `math.exp()` mit,
+diese akzeptieren aber nur einzelne Zahlen, keine Arrays. Um sie auf mehrere
+Werte anzuwenden, bräuchten wir wieder eine Schleife. Die NumPy-Varianten
+`np.sin()` und `np.exp()` sind für Arrays gebaut und damit in dieser Vorlesung
+die richtige Wahl.
 
 ````{admonition} Mini-Übung
 :class: tip
-Gegeben sind folgende Schwingungsfrequenzen in Hz:
+An einem Kran ziehen zwei Seile mit folgenden Kräften in kN, gemessen an
+vier Zeitpunkten:
 
-```code
-10.0, 25.0, 50.0, 100.0, 200.0
+```python
+seil_1 = np.array([120.0, 135.0, 128.0, 140.0])
+seil_2 = np.array([80.0, 75.0, 82.0, 78.0])
 ```
 
-1. Erzeugen Sie ein Array mit diesen Frequenzen und geben Sie die Abmessungen
-   und den Datentyp des arrays aus.
-2. Berechnen Sie die zugehörigen Kreisfrequenzen $\omega = 2 \pi f$ und
-   speichern Sie sie in einem neuen Array `omega`. Tipp: Die Kreiszahl $\pi$ ist
-   in NumPy als Konstante schon vordefiniert: `np.pi`.
-3. Geben Sie `omega` aus.
+1. Berechnen Sie die Summe der Beträge beider Seilzugkräfte an jedem Zeitpunkt
+   und speichern Sie sie in `summe_seilkraefte_kn`.
+2. Rechnen Sie `summe_seilkraefte_kn` in Newton um und speichern Sie das Ergebnis
+   in `summe_seilkraefte_newton` (1 kN = 1000 N).
+3. Seil 1 ist gegenüber der Horizontalen geneigt. Der Winkel beträgt an den
+   vier Zeitpunkten in rad:
+
+```python
+   winkel = np.array([0.50, 0.55, 0.52, 0.58])
+```
+
+   Berechnen Sie die vertikale Komponente der Kraft in Seil 1 und speichern
+   Sie sie in `seil_1_vertikal`.
 ````
 
-```{code-cell} python
+````{code-cell} python
 # Code-Zelle
-```
+````
 
 ````{admonition} Lösung
 :class: tip
@@ -131,77 +263,98 @@ Gegeben sind folgende Schwingungsfrequenzen in Hz:
 ```python
 import numpy as np
 
-# Schwingungsfrequenz
-frequenzen = np.array([10.0, 25.0, 50.0, 100.0, 200.0])
-print(frequenzen.shape)   # (5,)
-print(frequenzen.dtype)   # float64
+seil_1 = np.array([120.0, 135.0, 128.0, 140.0])
+seil_2 = np.array([80.0, 75.0, 82.0, 78.0])
 
-# Kreisfrequenz
-omega = 2 * np.pi * frequenzen
-print(omega)
-```
+summe_seilkraefte_kn = seil_1 + seil_2
+print(summe_seilkraefte_kn)
 
-Ausgabe:
-```
-(5,)
-float64
-[ 62.83  157.08  314.16  628.32 1256.64]
-```
+summe_seilkraefte_newton = summe_seilkraefte_kn * 1000.0
+print(summe_seilkraefte_newton)
 
-Die Kreisfrequenzen sind das Ergebnis einer einzigen Vektoroperation. NumPy
-multipliziert `2 * np.pi` mit jedem Element von `frequenzen` gleichzeitig.
+winkel = np.array([0.50, 0.55, 0.52, 0.58])
+seil_1_vertikal = seil_1 * np.sin(winkel)
+print(seil_1_vertikal)
+```
 ````
 
-## Arrays erzeugen mit `np.linspace()` und `np.zeros()`
+## Statistische Kenngrößen
 
-In der Praxis erzeugt man Arrays selten von Hand, sondern nutzt
-NumPy-Funktionen dafür. Für unser Schwingungssignal brauchen wir zunächst
-eine Zeitachse. Die wichtigste Funktion dafür ist `np.linspace()`:
+Bisher haben wir einzelne Werte eines Arrays betrachtet oder das ganze Array
+auf einmal transformiert. Oft interessiert uns aber nicht jeder einzelne
+Wert, sondern eine zusammenfassende Kennzahl: Wie groß ist ein Messwert im
+Mittel? Wie stark schwanken die Werte? NumPy stellt dafür Funktionen
+bereit, die aus einem Array eine einzelne Zahl berechnen.
 
-```python
-np.linspace(start, stop, num)
-```
-
-`start` und `stop` definieren den Bereich, `num` legt die Anzahl der
-gleichmäßig verteilten Punkte fest. Anders als `range()` schließt
-`np.linspace()` den Endwert immer ein.
-
-Wir erzeugen eine Zeitachse für eine Messung über 1 Sekunde mit 1000
-Abtastpunkten:
+Als Datengrundlage nehmen wir eine Messreihe: die Spitzenbeschleunigung, die
+ein Sensor bei zwölf aufeinanderfolgenden Testläufen derselben Maschine
+aufgezeichnet hat.
 
 ```{code-cell} python
-t = np.linspace(0, 1, 1000)
-
-print(f"Anzahl der Punkte: {t.shape[0]}")
-print(f"Erster Wert: {t[0]} s")
-print(f"Letzter Wert: {t[-1]} s")
-print(f"Zeitschritt: {t[1] - t[0]:.6f} s")
+spitzenwerte = np.array([4.8, 5.1, 4.6, 5.3, 4.9, 5.0,
+                         4.7, 5.2, 4.9, 5.4, 4.8, 5.0])
+print(spitzenwerte)
 ```
 
-Der Zeitschritt beträgt genau 1/999 Sekunden. In der Messtechnik entspricht
-das einer Abtastrate von knapp 1000 Hz, also 1000 Messungen pro Sekunde.
-
-Eine zweite nützliche Funktion ist `np.zeros()`. Sie erzeugt ein Array der
-gewünschten Länge, das vollständig mit Nullen gefüllt ist. Das verwenden wir
-oft als Platzhalter für Ergebnisse, die wir noch berechnen wollen:
+Mit den NumPy-Funktionen `np.mean()`, `np.min()` und `np.max()` berechnen wir
+Mittelwert, Minimum und Maximum. `np.mean()` addiert alle Werte und teilt durch
+die Anzahl der Elemente, genau wie eine Mittelwertberechnung von Hand, nur ohne
+Schleife. `np.min()` und `np.max()` liefern den kleinsten beziehungsweise
+größten Wert im Array.
 
 ```{code-cell} python
-signal = np.zeros(1000)
-print(signal[:5])        # die ersten fünf Werte
+print(f"Mittelwert: {np.mean(spitzenwerte):.2f} m/s^2")
+print(f"Minimum:    {np.min(spitzenwerte):.2f} m/s^2")
+print(f"Maximum:    {np.max(spitzenwerte):.2f} m/s^2")
 ```
+
+Die Standardabweichung beschreibt, wie stark die einzelnen Werte im Mittel vom
+Mittelwert abweichen. Eine kleine Standardabweichung bedeutet, dass die
+Testläufe sehr ähnliche Spitzenwerte lieferten. Eine große Standardabweichung
+zeigt, dass die Maschine von Lauf zu Lauf deutlich unterschiedlich reagiert.
+Berechnet wird die Standardabweichung mit `np.std()`.
+
+```{code-cell} python
+print(f"Standardabweichung: {np.std(spitzenwerte):.3f} m/s^2")
+```
+
+`np.mean()`, `np.std()`, `np.min()` und `np.max()` lassen sich auch direkt
+als Methode des Arrays aufrufen: `spitzenwerte.mean()` liefert dasselbe
+Ergebnis wie `np.mean(spitzenwerte)`. Beide Schreibweisen sind gebräuchlich.
+In diesem Skript verwenden wir durchgehend die Funktionsschreibweise
+`np.funktion(array)`, weil sie unabhängig davon funktioniert, ob wir mit
+einem Array oder einer gewöhnlichen Liste arbeiten.
+
+Mit diesen vier Funktionen lässt sich jede Messreihe auf einen Blick
+charakterisieren: ein typischer Wert durch den Mittelwert, die Streuung durch
+die Standardabweichung und die Extremwerte durch Minimum und Maximum. Das sind
+die ersten Werkzeuge, um aus reinen Zahlenreihen belastbare Aussagen über ein
+gemessenes System abzuleiten.
 
 ````{admonition} Mini-Übung
 :class: tip
-Erzeugen Sie eine Zeitachse `t` von 0 bis 2 Sekunden mit 500 Punkten.
+Bei einer Qualitätsprüfung wird das Anzugsmoment von zehn Schrauben
+gemessen, in Nm:
 
-1. Wie groß ist der Zeitschritt in Millisekunden?
-2. Welcher Wert steht an Position `t[250]`? Versuchen Sie, das Ergebnis
-   zuerst im Kopf zu berechnen, bevor Sie es ausgeben.
+```python
+momente = np.array([45.2, 44.8, 46.1, 45.5, 44.9,
+                     45.8, 46.3, 44.6, 45.1, 45.9])
+```
+
+1. Bestimmen Sie das mittlere Anzugsmoment und speichern Sie es in
+   `mittleres_moment`.
+2. Bestimmen Sie, wie stark die Werte im Mittel um diesen Mittelwert
+   streuen, und speichern Sie das Ergebnis in `streuung`.
+3. Bestimmen Sie das kleinste und das größte gemessene Moment und speichern
+   Sie sie in `min_moment` und `max_moment`.
+4. Berechnen Sie aus `min_moment` und `max_moment` die Spannweite der
+   Messung (Differenz zwischen größtem und kleinstem Wert) und speichern
+   Sie sie in `spannweite`.
 ````
 
-```{code-cell} python
+````{code-cell} python
 # Code-Zelle
-```
+````
 
 ````{admonition} Lösung
 :class: tip
@@ -209,128 +362,33 @@ Erzeugen Sie eine Zeitachse `t` von 0 bis 2 Sekunden mit 500 Punkten.
 ```python
 import numpy as np
 
-# Zeitachse in s
-t = np.linspace(0, 2, 500)
+momente = np.array([45.2, 44.8, 46.1, 45.5, 44.9,
+                     45.8, 46.3, 44.6, 45.1, 45.9])
 
-# Berechnung Zeitschritt in ms
-dt_ms = (t[1] - t[0]) * 1000
+mittleres_moment = np.mean(momente)
+print(f"Mittelwert: {mittleres_moment:.2f} Nm")
 
-# Ausgabe
-print(f"Zeitschritt: {dt_ms:.4f} ms")
-print(f"t[250] = {t[250]:.4f} s")
+streuung = np.std(momente)
+print(f"Streuung:   {streuung:.3f} Nm")
+
+min_moment = np.min(momente)
+max_moment = np.max(momente)
+print(f"Minimum:    {min_moment:.2f} Nm")
+print(f"Maximum:    {max_moment:.2f} Nm")
+
+spannweite = max_moment - min_moment
+print(f"Spannweite: {spannweite:.2f} Nm")
 ```
-
-Ausgabe:
-```
-Zeitschritt: 4.0080 ms
-t[250] = 1.0020 s
-```
-
-Da `np.linspace(0, 2, 500)` den Endpunkt einschließt, sind es 499 Abstände
-auf 2 Sekunden. Der mittlere Index 250 liegt daher knapp über 1.0 s, nicht
-exakt bei 1.0 s. Das ist ein häufig übersehenes Detail von `np.linspace()`.
-````
-
-## Mathematische Funktionen: `np.sin()` und `np.exp()`
-
-NumPy stellt alle gängigen mathematischen Funktionen bereit, die direkt auf
-Arrays angewendet werden können. Wir nutzen das jetzt, um unser
-Maschinensignal zu modellieren.
-
-Ein reales Schwingungssignal einer gedämpften Maschine lässt sich als
-gedämpfte Sinusschwingung beschreiben:
-
-$$a(t) = A \cdot e^{-\delta t} \cdot \sin(2\pi f t)$$
-
-Dabei ist $A$ die Anfangsamplitude in m/s², $\delta$ der Dämpfungskoeffizient
-in 1/s und $f$ die Schwingungsfrequenz in Hz. Wir setzen ein:
-
-```{code-cell} python
-# Parameter der Schwingung
-A     = 5.0    # Anfangsamplitude in m/s²
-delta = 1.5    # Dämpfungskoeffizient in 1/s
-f     = 10.0   # Frequenz in Hz
-
-# Zeitachse und Signal
-t = np.linspace(0, 2, 1000)
-a = A * np.exp(-delta * t) * np.sin(2 * np.pi * f * t)
-
-print(f"Maximale Beschleunigung: {a.max():.2f} m/s^2")
-print(f"Minimale Beschleunigung: {a.min():.2f} m/s^2")
-```
-
-`np.exp()` und `np.sin()` werden dabei auf alle 1000 Zeitpunkte gleichzeitig
-angewendet. Das Ergebnis ist wiederum ein Array mit 1000 Beschleunigungswerten.
-Die Methoden `.max()` und `.min()` sind direkt auf Arrays verfügbar und
-liefern das größte bzw. kleinste Element.
-
-```{admonition} Bogenmaß
-:class: note
-`np.sin()` und `np.cos()` erwarten Winkel im **Bogenmaß (Radiant)**, nicht
-in Grad. Wollen wir einen Winkel von 90° verwenden, schreiben wir
-`np.pi / 2`. Die Umrechnung von Grad in Bogenmaß lautet:
-$\phi_\text{rad} = \phi_\text{deg} \cdot \pi / 180$.
-NumPy stellt dafür auch die Funktion `np.deg2rad()` bereit.
-```
-
-````{admonition} Mini-Übung
-:class: tip
-Wir erweitern unser Maschinensignal um eine zweite Schwingungskomponente mit
-doppelter Frequenz und halber Amplitude (eine typische Oberschwingung):
-
-$$a_2(t) = \frac{A}{2} \cdot e^{-\delta t} \cdot \sin(2\pi \cdot 2f \cdot t)$$
-
-1. Berechnen Sie `a2` für dieselbe Zeitachse `t` und dieselben Parameter
-   wie oben.
-2. Addieren Sie beide Signale: `a_gesamt = a + a2`.
-3. Geben Sie die maximale Beschleunigung des Gesamtsignals aus.
-````
-
-```{code-cell} python
-# Code-Zelle
-```
-
-````{admonition} Lösung
-:class: tip
-:class: dropdown
-```python
-import numpy as np
-
-# Parameter der Schwingung
-A     = 5.0    # Anfangsamplitude in m/s²
-delta = 1.5    # Dämpfungskoeffizient in 1/s
-f     = 10.0   # Frequenz in Hz
-
-# Zeitachse und Signale
-t  = np.linspace(0, 2, 1000)
-a  = A * np.exp(-delta * t) * np.sin(2 * np.pi * f * t)
-a2 = (A / 2) * np.exp(-delta * t) * np.sin(2 * np.pi * 2 * f * t)
-
-a_gesamt = a + a2
-print(f"Maximale Beschleunigung (Gesamtsignal): {a_gesamt.max():.2f} m/s²")
-```
-
-Ausgabe:
-```
-Maximale Beschleunigung (Gesamtsignal): 6.33 m/s²
-```
-
-Die elementweise Addition der beiden Arrays ergibt in einer einzigen Zeile
-das überlagerte Signal. Der Maximalwert ist größer als die Amplitude der
-Einzelsignale, weil sich beide Komponenten an bestimmten Zeitpunkten
-konstruktiv überlagern.
 ````
 
 ## Zusammenfassung und Ausblick
 
-Wir haben NumPy-Arrays als leistungsfähige Alternative zu Python-Listen
-kennengelernt. Arrays speichern stets Werte desselben Datentyps und erlauben
-es, Rechenoperationen und mathematische Funktionen direkt auf ganze
-Zahlenreihen anzuwenden, ohne Schleifen zu schreiben. Mit `np.linspace()`
-erzeugen wir gleichmäßig verteilte Zeitachsen, mit `np.zeros()` legen wir
-Platzhalter-Arrays an. Funktionen wie `np.sin()` und `np.exp()` arbeiten
-direkt auf Arrays und berechnen alle Werte in einem Schritt.
+Wir haben NumPy-Arrays als Alternative zu Python-Listen kennengelernt, mit
+`np.array()`, `np.linspace()` und `np.zeros()` erzeugt und mit `.shape` und
+`.dtype` untersucht. Vektoroperationen und Funktionen wie `np.sin()` und
+`np.exp()` wenden wir direkt auf ganze Arrays an, ohne Schleifen zu
+schreiben. Mit `np.mean()`, `np.std()`, `np.min()` und `np.max()` fassen wir
+eine Messreihe in wenigen Kennzahlen zusammen.
 
-Unser Schwingungssignal der Maschine haben wir damit vollständig modelliert.
-Im nächsten Kapitel erweitern wir unseren Blick auf zweidimensionale Arrays,
-also Matrizen, und lösen damit lineare Gleichungssysteme.
+Im nächsten Kapitel visualisieren wir Daten mit Plotly Express. Zweidimensionale
+Arrays und lineare Gleichungssysteme folgen in Kapitel 3.

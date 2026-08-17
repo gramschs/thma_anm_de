@@ -12,60 +12,113 @@ kernelspec:
   name: python3
 ---
 
-# Übungen
+# 1.2 Listen, Dictionaries und Funktionen
 
-```{admonition} Übung 1.1 (✩)
-:class: tip
-Welcher Datentyp liegt vor? Schreiben Sie Ihre Vermutung hinter den Pfeil,
-bevor Sie den Code ausführen.
+In Kapitel 1.1 haben wir einzelne Messwerte in Variablen gespeichert und mit
+einer Verzweigung geprüft, ob ein Tempolimit eingehalten wird. Ein Prüffahrzeug
+liefert während eines Beschleunigungstests aber nicht nur einen einzelnen
+Messwert, sondern eine ganze Messreihe. Eine einzelne Variable reicht dafür
+nicht mehr aus. In diesem Abschnitt lernen wir daher die Datenstrukturen
+**Liste** und **Dictionary** kennen, mit denen wir mehrere Werte gemeinsam
+verwalten. Anschließend kapseln wir wiederkehrende Berechnungen wie die
+Umrechnung von km/h in m/s in eigenen **Funktionen**.
 
-* `7` -->
-* `-7` -->
-* `'Stahl'` -->
-* `7.0` -->
-* `7,0` -->
-* `7**2` -->
-* `7**(1/2)` -->
-* `7 == 7.0` -->
+## Lernziele
 
-Überprüfen Sie anschließend jede Zeile mit `type()` in einer Code-Zelle.
+```{admonition} Lernziele
+:class: attention
+* [ ] Sie können **Listen** erzeugen, mit `append()` erweitern und über den
+  **Index** sowie mit **Slicing** auf Elemente zugreifen.
+* [ ] Sie wissen, dass ein **Tupel** wie eine Liste ist, sich aber nicht
+  verändern lässt.
+* [ ] Sie können **Dictionaries** mit Schlüssel-Wert-Paaren erstellen,
+  lesen und verändern.
+* [ ] Sie können eigene **Funktionen** mit `def` schreiben, Parameter und
+  **Default-Werte** verwenden und mit `return` einen Wert zurückgeben.
+* [ ] Sie wissen, was der **Scope** einer Variable ist und was ein
+  **Docstring** ist.
 ```
 
-```{code-cell} ipython3
-# Code-Zelle
+## Wie sammeln wir mehrere Messwerte in einer Liste?
+
+Stellen wir uns einen Beschleunigungstest vor, bei dem ein Sensor die
+Geschwindigkeit zu mehreren Zeitpunkten erfasst. Wir sammeln diese Werte in
+einer **Liste**, erkennbar an den eckigen Klammern.
+
+```{code-cell}
+geschwindigkeiten_kmh = [80, 95, 120, 60, 110]
+print(geschwindigkeiten_kmh)
 ```
 
-````{admonition} Lösung
-:class: tip
-:class: dropdown
+Eine Liste kann beliebig viele Elemente enthalten. Mit `len()` lassen wir
+uns die Anzahl der Elemente anzeigen.
+
+```{code-cell}
+anzahl_messungen = len(geschwindigkeiten_kmh)
+print(f'Anzahl Messungen: {anzahl_messungen}')
+```
+
+Auf einzelne Elemente greifen wir über den **Index** zu. Python beginnt die
+Zählung bei 0. Mit dem Index `-1` greifen wir bequem auf das letzte Element
+zu.
+
+```{code-cell}
+erste_messung = geschwindigkeiten_kmh[0]
+letzte_messung = geschwindigkeiten_kmh[-1]
+print(f'Erste Messung: {erste_messung} km/h')
+print(f'Letzte Messung: {letzte_messung} km/h')
+```
+
+Mit dem sogenannten **Slicing** greifen wir auf einen ganzen Ausschnitt der
+Liste zu. Dazu schreiben wir Start- und Endindex, getrennt durch einen
+Doppelpunkt, in die eckigen Klammern. Der Endindex selbst gehört nicht mehr
+zum Ausschnitt.
+
+```{code-cell}
+mittlere_messungen = geschwindigkeiten_kmh[1:3]
+print(mittlere_messungen)
+```
+
+Um eine neue Messung am Ende der Liste zu ergänzen, verwenden wir die
+Methode `append()`.
+
+```{code-cell}
+geschwindigkeiten_kmh.append(75)
+print(geschwindigkeiten_kmh)
+```
+
+````{admonition} Was ist ... ein Tupel?
+:class: note
+Neben der Liste kennt Python das **Tupel**, erkennbar an runden statt
+eckigen Klammern. Ein Tupel verhält sich wie eine Liste, lässt sich nach der
+Erzeugung aber nicht mehr verändern. Tupel eignen sich daher für Werte, die
+fest zusammengehören, zum Beispiel ein Mindest- und ein Höchstwert.
+
 ```python
-print(type(7))
-print(type(-7))
-print(type('Stahl'))
-print(type(7.0))
-print(type(7,0))
-print(type(7**2))
-print(type(7**(1/2)))
-print(type(7 == 7.0))
+geschwindigkeit_grenzwerte = (30.0, 130.0)
+print(geschwindigkeit_grenzwerte)
+# geschwindigkeit_grenzwerte[0] = 0   # würde einen Fehler auslösen
 ```
-`7` und `-7` sind Integer, `'Stahl'` ist ein String, `7.0` ist ein Float.
-`7**2` bleibt ein Integer (`49`), `7**(1/2)` ist ein Float
-(`2.6457513110645907`). `7 == 7.0` ist ein `bool` mit dem Wert `True`, da
-Python beim Vergleich den Zahlenwert betrachtet, nicht den Datentyp.
-
-Der interessanteste Fall ist `7,0`: Das Komma ohne Klammern erzeugt in
-Python kein Float, sondern ein **Tupel** `(7, 0)` mit zwei Elementen, denn
-das Komma ist das Zeichen zum Erzeugen von Tupeln. Es kommt dabei zu keiner
-Fehlermeldung, was diesen Tippfehler besonders tückisch macht. Verwenden Sie
-für Dezimalzahlen daher immer einen Punkt statt eines Kommas.
 ````
 
-```{admonition} Übung 1.2 (✩✩)
+Wenn wir jeden Messwert einer Liste verarbeiten wollen, durchlaufen wir die
+Liste direkt mit einer for-Schleife, ohne den Umweg über `range()` und den
+Index zu gehen.
+
+```{code-cell}
+for geschwindigkeit in geschwindigkeiten_kmh:
+    print(f'Messwert: {geschwindigkeit} km/h')
+```
+
+```{admonition} Mini-Übung
 :class: tip
-Eine Feder gehorcht dem Federgesetz `kraft = federkonstante * auslenkung`.
-Berechnen Sie die Federkraft für eine Federkonstante von 250 N/m und eine
-Auslenkung von 0.12 m. Geben Sie das Ergebnis mit einem f-String und der
-Einheit Newton aus, gerundet auf zwei Nachkommastellen.
+Erstellen Sie eine Liste `temperaturen` mit fünf Temperaturmesswerten Ihrer
+Wahl. Hängen Sie einen weiteren Messwert mit `append()` an und geben Sie
+anschließend die Anzahl der Elemente mit `len()` aus.
+
+Beantworten Sie zusätzlich, ohne den Code auszuführen: Was gibt
+`temperaturen[-2]` zurück, nachdem Sie den sechsten Wert angehängt haben?
+Begründen Sie Ihre Antwort.
 ```
 
 ```{code-cell} ipython3
@@ -76,268 +129,80 @@ Einheit Newton aus, gerundet auf zwei Nachkommastellen.
 :class: tip
 :class: dropdown
 ```python
-federkonstante = 250    # N/m
-auslenkung = 0.12       # m
-
-kraft = federkonstante * auslenkung
-print(f'Federkraft: {kraft:.2f} N')
+temperaturen = [18.5, 19.2, 21.0, 22.4, 20.1]
+temperaturen.append(23.7)
+anzahl = len(temperaturen)
+print(f'Anzahl Messwerte: {anzahl}')
 ```
-Die Federkraft beträgt 30.00 N. Da `federkonstante` ein Integer und
-`auslenkung` ein Float ist, wandelt Python das Ergebnis der Multiplikation
-automatisch in einen Float um.
+`temperaturen[-2]` gibt das vorletzte Element der Liste zurück, also den
+Wert `22.4`. Der Index `-1` zeigt auf das letzte Element (`23.7`, der gerade
+angehängte Wert), `-2` zeigt auf das Element direkt davor.
 ````
 
-```{admonition} Übung 1.3 (✩)
-:class: tip
-Was geben die folgenden Ausdrücke zurück? Notieren Sie `True` oder `False`,
-bevor Sie den Code ausführen.
-
-* `5 > 3` -->
-* `5 >= 5` -->
-* `'Stahl' == 'stahl'` -->
-* `not (5 > 3)` -->
-* `(5 > 3) and (2 > 4)` -->
-* `(5 > 3) or (2 > 4)` -->
+```{dropdown} Video "Listen in Python - Einführung" von Programmieren Starten
+<iframe width="560" height="315" src="https://www.youtube.com/embed/ihF8bZoauBs" 
+title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; 
+clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
+</iframe>
 ```
 
-```{code-cell} ipython3
-# Code-Zelle
+```{dropdown} Video "Zugriff auf Listen" von Programmieren Starten
+<iframe width="560" height="315"
+src="https://www.youtube.com/embed/_XzWPXvya2w?si=50tgXK-UUqOpQS8E"
+title="YouTube video player" frameborder="0" allow="accelerometer; autoplay;
+clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 ```
 
-````{admonition} Lösung
-:class: tip
-:class: dropdown
-```python
-print(5 > 3)
-print(5 >= 5)
-print('Stahl' == 'stahl')
-print(not (5 > 3))
-print((5 > 3) and (2 > 4))
-print((5 > 3) or (2 > 4))
-```
-`5 > 3` und `5 >= 5` sind `True`. `'Stahl' == 'stahl'` ist `False`, da
-Python beim Vergleich von Strings Groß- und Kleinschreibung unterscheidet.
-`not (5 > 3)` kehrt `True` zu `False` um. Bei `and` müssen beide Seiten
-wahr sein, daher ist das Ergebnis `False`. Bei `or` reicht eine wahre Seite,
-daher ist das Ergebnis `True`.
-````
-
-```{admonition} Übung 1.4 (✩✩)
-:class: tip
-Ein Werkstoff hat eine gemessene Zugfestigkeit von
-`zugfestigkeit_mpa = 420`. Schreiben Sie eine `if`/`elif`/`else`-
-Verzweigung, die folgende Kategorien ausgibt:
-
-* unter 300 MPa: `'niedrigfest'`
-* von 300 bis 600 MPa (jeweils einschließlich): `'mittelfest'`
-* über 600 MPa: `'hochfest'`
+```{dropdown} Video "for-Schleife mit Listen" von Programmieren Starten
+<iframe width="560" height="315"
+src="https://www.youtube.com/embed/_XzWPXvya2w?si=50tgXK-UUqOpQS8E"
+title="YouTube video player" frameborder="0" allow="accelerometer; autoplay;
+clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 ```
 
-```{code-cell} ipython3
-# Code-Zelle
-```
+## Wie strukturieren wir Daten mit Schlüsseln?
 
-````{admonition} Lösung
-:class: tip
-:class: dropdown
-```python
-zugfestigkeit_mpa = 420
+Eine Liste wie `[200.0, 'Pruefstand_1', 'Sensor_A']` speichert mehrere Werte,
+aber *wie behalten wir bei einer längeren Liste den Überblick, welcher Wert
+wofür steht?* Bei Index 0 müssten wir uns merken, dass dort der Messbereich
+steht, bei Index 1 der Standort und bei Index 2 der Name. Für solche Fälle
+eignet sich das **Dictionary** besser, da wir über aussagekräftige Schlüssel
+statt über einen numerischen Index zugreifen.
 
-if zugfestigkeit_mpa < 300:
-    kategorie = 'niedrigfest'
-elif zugfestigkeit_mpa <= 600:
-    kategorie = 'mittelfest'
-else:
-    kategorie = 'hochfest'
-
-print(f'Kategorie: {kategorie}')
-```
-Bei 420 MPa liegt der Werkstoff im Bereich von 300 bis 600 MPa und wird
-daher als `'mittelfest'` eingestuft.
-````
-
-```{admonition} Übung 1.5 (✩✩)
-:class: tip
-Schreiben Sie eine for-Schleife, die für die Temperaturen 0, 20, 40, 60, 80
-und 100 Grad Celsius jeweils den Wert in Fahrenheit ausgibt. Verwenden Sie
-dafür die Formel `fahrenheit = celsius * 9/5 + 32`.
-
-Hinweis: `range(start, stop, step)` erzeugt Zahlen mit einer Schrittweite
-ungleich 1. Der Wert `stop` selbst gehört nicht mehr zum Bereich, wählen Sie
-ihn daher passend größer.
-```
-
-```{code-cell} ipython3
-# Code-Zelle
-```
-
-````{admonition} Lösung
-:class: tip
-:class: dropdown
-```python
-for celsius in range(0, 101, 20):
-    fahrenheit = celsius * 9/5 + 32
-    print(f'{celsius} Grad Celsius entsprechen {fahrenheit:.1f} Grad Fahrenheit')
-```
-`range(0, 101, 20)` erzeugt die Werte 0, 20, 40, 60, 80 und 100. Da der Wert
-101 selbst nicht mehr im Bereich enthalten ist, deckt diese Wahl alle sechs
-gewünschten Temperaturen ab.
-````
-
-```{admonition} Übung 1.6 (✩✩)
-:class: tip
-Ein Bauteil kühlt sich ausgehend von `temperatur = 180.0` Grad Celsius in
-jedem Zeitschritt um 12 Grad ab. Schreiben Sie eine while-Schleife, die
-Zeitschritt und Temperatur ausgibt, bis die Temperatur unter 20 Grad fällt.
-Bauen Sie zusätzlich einen Sicherheitsabbruch mit `break` ein, der die
-Schleife nach spätestens 20 Zeitschritten beendet, falls die Abkühlung
-unerwartet langsamer verlaufen sollte.
-```
-
-```{code-cell} ipython3
-# Code-Zelle
-```
-
-````{admonition} Lösung
-:class: tip
-:class: dropdown
-```python
-temperatur = 180.0
-zeitschritt = 0
-
-while temperatur >= 20.0:
-    temperatur = temperatur - 12.0
-    zeitschritt = zeitschritt + 1
-    print(f'Zeitschritt {zeitschritt}: {temperatur:.1f} Grad Celsius')
-
-    if zeitschritt >= 20:
-        print('Sicherheitsabbruch: maximale Anzahl Zeitschritte erreicht.')
-        break
-
-print('Abkühlung beendet.')
-```
-Die Temperatur unterschreitet 20 Grad Celsius nach 14 Zeitschritten bei
-12.0 Grad Celsius. Der Sicherheitsabbruch greift in diesem Fall nicht, da
-die Schleife deutlich vor dem 20. Durchgang regulär endet. Ein solcher
-Sicherheitsabbruch ist trotzdem sinnvoll, da er verhindert, dass sich das
-Programm bei einer fehlerhaften Abbruchbedingung in einer Endlosschleife
-verfängt.
-````
-
-```{admonition} Übung 1.7 (✩)
-:class: tip
-Gegeben ist die Liste `liste = [15, 8, 23, 4, 16, 42]`. Notieren Sie zunächst
-Ihre Vermutung, bevor Sie den Code ausführen.
-
-* `liste[1]` -->
-* `liste[-3]` -->
-* `liste[:3]` -->
-* `liste[3:]` -->
-* `len(liste)` -->
-```
-
-```{code-cell} ipython3
-# Code-Zelle
-```
-
-````{admonition} Lösung
-:class: tip
-:class: dropdown
-```python
-liste = [15, 8, 23, 4, 16, 42]
-print(liste[1])
-print(liste[-3])
-print(liste[:3])
-print(liste[3:])
-print(len(liste))
-```
-`liste[1]` ist `8`, das Element an Index 1. `liste[-3]` ist `4`, denn von
-hinten gezählt liegen `42` bei -1, `16` bei -2 und `4` bei -3. `liste[:3]`
-liefert die ersten drei Elemente `[15, 8, 23]`, `liste[3:]` liefert alle
-Elemente ab Index 3, also `[4, 16, 42]`. `len(liste)` ergibt `6`.
-````
-
-```{admonition} Übung 1.8 (✩✩)
-:class: tip
-Gegeben ist die Liste `messreihe = [15.2, 8.7, 23.1, 4.4, 16.9, 42.0]` mit
-Kraftmesswerten in Newton. Bestimmen Sie mit einer for-Schleife den
-kleinsten und größten Wert der Liste, ohne die eingebauten Funktionen
-`min()` und `max()` zu verwenden.
-```
-
-```{code-cell} ipython3
-# Code-Zelle
-```
-
-````{admonition} Lösung
-:class: tip
-:class: dropdown
-```python
-messreihe = [15.2, 8.7, 23.1, 4.4, 16.9, 42.0]
-
-minimum = messreihe[0]
-maximum = messreihe[0]
-
-for wert in messreihe:
-    if wert < minimum:
-        minimum = wert
-    if wert > maximum:
-        maximum = wert
-
-print(f'Minimum: {minimum} N, Maximum: {maximum} N')
-```
-Wir starten `minimum` und `maximum` mit dem ersten Listenelement und
-vergleichen anschließend jedes weitere Element. Das Minimum der Messreihe
-ist 4.4 N, das Maximum ist 42.0 N.
-````
-
-```{admonition} Übung 1.9 (✩✩)
-:class: tip
-Erstellen Sie ein Dictionary `bauteil` für eine Welle mit folgenden
-Informationen:
-
-* bezeichnung: `'Welle_A1'`
-* durchmesser_mm: 25.0
-* werkstoff: `'42CrMo4'`
-* max_drehmoment_nm: 180
-
-Geben Sie dann aus: "Welle_A1 aus 42CrMo4 (Durchmesser 25.0 mm) hält
-maximal 180 Nm."
-```
-
-```{code-cell} ipython3
-# Code-Zelle
-```
-
-````{admonition} Lösung
-:class: tip
-:class: dropdown
-```python
-bauteil = {
-    'bezeichnung': 'Welle_A1',
-    'durchmesser_mm': 25.0,
-    'werkstoff': '42CrMo4',
-    'max_drehmoment_nm': 180
+```{code-cell}
+sensor = {
+    'name': 'Sensor_A',
+    'standort': 'Pruefstand_1',
+    'messbereich_max': 200.0
 }
-
-print(f'{bauteil["bezeichnung"]} aus {bauteil["werkstoff"]} '
-      f'(Durchmesser {bauteil["durchmesser_mm"]} mm) hält maximal '
-      f'{bauteil["max_drehmoment_nm"]} Nm.')
+print(sensor)
 ```
-Der Zugriff auf jeden Wert erfolgt über den passenden Schlüssel. Ein
-Dictionary macht hier sofort sichtbar, welcher Wert wofür steht, im
-Gegensatz zu einer Liste mit denselben vier Werten.
-````
 
-```{admonition} Übung 1.10 (✩✩)
+Der Zugriff auf einen Wert erfolgt über den zugehörigen Schlüssel in eckigen
+Klammern.
+
+```{code-cell}
+print(f'Sensor: {sensor["name"]}')
+print(f'Standort: {sensor["standort"]}')
+```
+
+Wir können bestehende Werte ändern oder neue Schlüssel-Wert-Paare ergänzen.
+
+```{code-cell}
+sensor['messbereich_max'] = 250.0
+sensor['kalibrierdatum'] = '2026-01-15'
+print(sensor)
+```
+
+```{admonition} Mini-Übung
 :class: tip
-Schreiben Sie eine Funktion `spannung(kraft_n, querschnitt_mm2=100)`, die
-die mechanische Spannung `sigma = kraft_n / querschnitt_mm2` in N/mm² (MPa)
-berechnet und zurückgibt. Versehen Sie die Funktion mit einem Docstring.
-Rufen Sie die Funktion einmal mit `kraft_n = 5000` und dem Default-
-Querschnitt sowie einmal mit `kraft_n = 5000` und
-`querschnitt_mm2 = 50` auf. Vergleichen Sie die beiden Ergebnisse in einem
-Satz.
+Erstellen Sie ein Dictionary `messung` für einen Temperaturmesswert mit den
+Schlüsseln `temperatur` (23.5), `ort` (`'Pruefstand_2'`) und `zeitstempel`
+(`'14:32'`). Geben Sie Temperatur und Ort mit passenden Beschriftungen aus.
+
+Beantworten Sie zusätzlich: Warum wäre eine Liste `[23.5, 'Pruefstand_2',
+'14:32']` für diese Daten weniger geeignet als ein Dictionary? Formulieren
+Sie Ihre Antwort in eigenen Worten.
 ```
 
 ```{code-cell} ipython3
@@ -348,99 +213,153 @@ Satz.
 :class: tip
 :class: dropdown
 ```python
-def spannung(kraft_n, querschnitt_mm2=100):
-    """Berechnet die mechanische Spannung in MPa (N/mm²)."""
-    return kraft_n / querschnitt_mm2
-
-print(f'{spannung(5000):.1f} MPa')
-print(f'{spannung(5000, querschnitt_mm2=50):.1f} MPa')
-```
-Mit dem Default-Querschnitt von 100 mm² ergibt sich eine Spannung von 50.0
-MPa, mit dem kleineren Querschnitt von 50 mm² verdoppelt sich die Spannung
-auf 100.0 MPa. Dieselbe Kraft verteilt sich bei kleinerem Querschnitt auf
-weniger Fläche, wodurch die Spannung steigt.
-````
-
-```{admonition} Übung 1.11 (✩✩✩, Mini-Projekt)
-:class: tip
-Bei einem Zugversuch wird eine Probe mit dem konstanten Querschnitt
-`querschnitt_mm2 = 19.6` schrittweise belastet. Die gemessenen Kräfte sind
-`kraefte_n = [1200, 3400, 5800, 7200, 8100, 6500]`. Setzen Sie folgende
-Schritte um.
-
-**Teil 1:** Schreiben Sie eine Funktion `spannung(kraft_n, querschnitt_mm2)`,
-die die Spannung in MPa zurückgibt.
-
-**Teil 2:** Erstellen Sie ein Dictionary `versuch` mit den Schlüsseln
-`werkstoff` (`'S235JR'`), `querschnitt_mm2` (19.6) und `streckgrenze_mpa`
-(235.0).
-
-**Teil 3:** Durchlaufen Sie `kraefte_n` mit einer for-Schleife. Berechnen
-Sie für jeden Wert die Spannung mit Ihrer Funktion und geben Sie pro
-Messwert aus, ob die Streckgrenze aus dem Dictionary überschritten wird
-(`'Im elastischen Bereich'` oder `'Streckgrenze überschritten'`). Merken
-Sie sich zusätzlich, bei welcher Kraft die Streckgrenze zum ersten Mal
-überschritten wird.
-
-**Teil 4:** Bestimmen Sie die maximale Spannung der gesamten Messreihe ohne
-`max()` und geben Sie diese am Ende aus.
-
-**Abschlussfrage:** Bei welcher Kraft aus der Liste wird die Streckgrenze
-erstmals überschritten, und was bedeutet das physikalisch für die
-Werkstoffprobe?
-```
-
-```{code-cell} ipython3
-# Code-Zelle
-```
-
-````{admonition} Lösung
-:class: tip
-:class: dropdown
-```python
-def spannung(kraft_n, querschnitt_mm2):
-    """Berechnet die mechanische Spannung in MPa (N/mm²)."""
-    return kraft_n / querschnitt_mm2
-
-versuch = {
-    'werkstoff': 'S235JR',
-    'querschnitt_mm2': 19.6,
-    'streckgrenze_mpa': 235.0
+messung = {
+    'temperatur': 23.5,
+    'ort': 'Pruefstand_2',
+    'zeitstempel': '14:32'
 }
-
-kraefte_n = [1200, 3400, 5800, 7200, 8100, 6500]
-
-maximale_spannung = 0
-erste_ueberschreitung_kraft = 0
-ueberschreitung_gefunden = False
-
-for kraft in kraefte_n:
-    sigma = spannung(kraft, versuch['querschnitt_mm2'])
-
-    if sigma > versuch['streckgrenze_mpa']:
-        status = 'Streckgrenze überschritten'
-        if not ueberschreitung_gefunden:
-            erste_ueberschreitung_kraft = kraft
-            ueberschreitung_gefunden = True
-    else:
-        status = 'Im elastischen Bereich'
-
-    print(f'{kraft} N -> {sigma:.1f} MPa: {status}')
-
-    if sigma > maximale_spannung:
-        maximale_spannung = sigma
-
-print(f'Maximale Spannung: {maximale_spannung:.1f} MPa')
-print(f'Erste Überschreitung bei {erste_ueberschreitung_kraft} N')
+print(f'Temperatur: {messung["temperatur"]} Grad Celsius')
+print(f'Ort: {messung["ort"]}')
 ```
-Die Streckgrenze von 235.0 MPa wird erstmals bei 5800 N überschritten, dort
-beträgt die Spannung rund 295.9 MPa. Die maximale Spannung der gesamten
-Messreihe tritt bei der größten Kraft von 8100 N auf und beträgt rund
-413.3 MPa, denn die Spannung wächst bei konstantem Querschnitt proportional
-zur Kraft.
-
-Physikalisch bedeutet das Überschreiten der Streckgrenze, dass sich die
-Werkstoffprobe ab diesem Belastungspunkt nicht mehr rein elastisch, sondern
-plastisch verformt. Die Probe nimmt also eine bleibende Verformung an, die
-auch nach einer vollständigen Entlastung nicht mehr verschwindet.
+Bei der Liste müssten wir uns merken, dass Index 0 die Temperatur, Index 1
+den Ort und Index 2 den Zeitstempel enthält. Diese Zuordnung ist für
+Außenstehende nicht erkennbar und fehleranfällig, sobald sich die
+Reihenfolge ändert. Das Dictionary macht die Bedeutung jedes Werts über den
+Schlüssel sofort sichtbar.
 ````
+
+```{dropdown} Video "Dictionaries" von Pitrium
+<iframe width="560" height="315"
+src="https://www.youtube.com/embed/fQGQ4MIBKBY?si=w4hfWIM4n_PyuF5i"
+title="YouTube video player" frameborder="0" allow="accelerometer; autoplay;
+clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+```
+
+## Wie kapseln wir Berechnungen in Funktionen?
+
+In Abschnitt 1.1 haben wir die Formel `geschwindigkeit_kmh / 3.6` zur
+Umrechnung in m/s mehrfach von Hand hingeschrieben. Mit einer eigenen
+**Funktion** kapseln wir diese Berechnung, sodass wir sie nur einmal
+definieren und beliebig oft wiederverwenden können.
+
+```{code-cell}
+def kmh_zu_ms(geschwindigkeit_kmh):
+    geschwindigkeit_ms = geschwindigkeit_kmh / 3.6
+    return geschwindigkeit_ms
+
+geschwindigkeit_ms = kmh_zu_ms(95)
+print(geschwindigkeit_ms)
+```
+
+Eine Funktion beginnt mit dem Schlüsselwort `def`, gefolgt vom Funktionsnamen
+und den **Parametern** in runden Klammern. Auch hier schließt die Kopfzeile
+mit einem Doppelpunkt `:` ab und der Funktionskörper ist eingerückt. Das
+Schlüsselwort `return` legt fest, welcher Wert an die aufrufende Stelle
+zurückgegeben wird. Sobald die Funktion definiert ist, rufen wir sie beliebig
+oft mit unterschiedlichen Argumenten auf, zum Beispiel für jeden Messwert
+unserer Liste.
+
+```{code-cell}
+for geschwindigkeit in geschwindigkeiten_kmh:
+    print(f'{geschwindigkeit} km/h entsprechen {kmh_zu_ms(geschwindigkeit):.1f} m/s')
+```
+
+Funktionen können mehrere Parameter besitzen und für einzelne Parameter
+einen **Default-Wert** festlegen. Rufen wir die Funktion ohne diesen
+Parameter auf, verwendet Python automatisch den Default-Wert.
+
+```{code-cell}
+def kinetische_energie(geschwindigkeit_ms, masse=1200):
+    return 0.5 * masse * geschwindigkeit_ms**2
+
+print(f'{kinetische_energie(27.8):.1f} Joule')
+print(f'{kinetische_energie(27.8, masse=1500):.1f} Joule')
+```
+
+Im ersten Aufruf verwendet Python den Default-Wert `masse=1200`, im zweiten
+Aufruf überschreiben wir ihn mit `masse=1500`.
+
+Direkt unter der Kopfzeile einer Funktion können wir in dreifachen
+Anführungszeichen einen **Docstring** notieren, der kurz beschreibt, was die
+Funktion tut.
+
+```{code-cell}
+def kmh_zu_ms(geschwindigkeit_kmh):
+    """Rechnet eine Geschwindigkeit von km/h in m/s um."""
+    return geschwindigkeit_kmh / 3.6
+```
+
+Variablen, die wir innerhalb einer Funktion anlegen, zum Beispiel
+`geschwindigkeit_ms` im ersten Beispiel dieses Abschnitts, existieren nur
+innerhalb dieser Funktion. Diesen Gültigkeitsbereich nennen wir **Scope**.
+Außerhalb der Funktion ist diese Variable nicht bekannt, selbst wenn außerhalb
+zufällig eine Variable mit demselben Namen existiert. Nur der Rückgabewert über
+`return` verlässt die Funktion.
+
+```{dropdown} Video "Funktionen selbst definieren" von Programmieren Starten
+<iframe width="560" height="315" src="https://www.youtube.com/embed/LQCfN5HS9xI" 
+title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; 
+clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+```
+
+```{dropdown} Video "Funktionen mit Parametern" von Programmieren Starten
+<iframe width="560" height="315" src="https://www.youtube.com/embed/af9ORp1Pty0" 
+title="YouTube video player" frameborder="0" allow="accelerometer; autoplay;
+clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
+</iframe>
+```
+
+```{dropdown} Video "Funktionen mit Rückgabewert" von Programmieren Starten
+<iframe width="560" height="315" src="https://www.youtube.com/embed/ehSP-sYoKCY" 
+title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; 
+clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
+</iframe>
+```
+
+```{admonition} Mini-Übung
+:class: tip
+Schreiben Sie eine Funktion `bremsweg(geschwindigkeit_kmh)`, die den
+Bremsweg nach der Faustformel `(geschwindigkeit_kmh / 10) ** 2 / 2`
+zurückgibt. Rufen Sie die Funktion für `geschwindigkeit_kmh = 100` auf und
+geben Sie das Ergebnis aus.
+
+Beantworten Sie zusätzlich, ohne den Code auszuführen: Was gibt der
+Funktionsaufruf zurück, wenn Sie in der Funktion das Schlüsselwort `return`
+vergessen? Begründen Sie Ihre Antwort.
+```
+
+```{code-cell} ipython3
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+def bremsweg(geschwindigkeit_kmh):
+    return (geschwindigkeit_kmh / 10) ** 2 / 2
+
+print(f'Bremsweg: {bremsweg(100):.1f} m')
+```
+Ohne `return` gibt die Funktion automatisch den Wert `None` zurück. Die
+Berechnung innerhalb der Funktion würde zwar durchgeführt, das Ergebnis
+ginge aber verloren, da es nicht an die aufrufende Stelle zurückgegeben
+wird.
+````
+
+## Zusammenfassung und Ausblick
+
+In diesem Abschnitt haben wir gelernt, wie wir mehrere Messwerte in einer
+**Liste** sammeln, mit aussagekräftigen Schlüsseln in einem **Dictionary**
+strukturieren und wiederkehrende Berechnungen in eigenen **Funktionen** mit
+Parametern, Default-Werten und Rückgabewerten kapseln. Damit besitzen wir
+nun das vollständige Handwerkszeug, um die Messreihen aus unseren
+Beschleunigungstests zu verarbeiten.
+
+Zwei Themen haben wir bewusst ausgespart: kompakte List Comprehensions als
+Kurzschreibweise für Schleifen sowie die Fehlerbehandlung mit `try` und
+`except`. Wir holen Letzteres nach, sobald wir in den numerischen Verfahren
+auf typische Fehlerquellen wie eine Division durch null oder ausbleibende
+Konvergenz stoßen. Ab Woche 2 verwenden wir **NumPy** und **Plotly**, um
+ganze Messreihen wie `geschwindigkeiten_kmh` ohne eigene Schleife auf einmal
+zu verarbeiten und grafisch darzustellen.
