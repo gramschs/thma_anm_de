@@ -6,6 +6,11 @@ kernelspec:
 
 # 3.6 Anwendung: Parametrische Analyse der Messbrücke
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 In Kapitel 3.5 haben wir die Funktion `solve_bridge(R4)` entwickelt, die
 den Querstrom $I$ für einen einzelnen Widerstandswert berechnet. Jetzt
 nutzen wir sie systematisch: Wir variieren $R_4$ über einen großen Bereich,

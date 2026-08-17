@@ -6,6 +6,11 @@ kernelspec:
 
 # 4.6 Übung: Warren-Fachwerkträger mit Loslager
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 In den bisherigen Übungen wurden alle Lagerknoten als **Festlager** behandelt:
 beide Freiheitsgrade $u_x$ und $u_y$ wurden gesperrt. In Kapitel 4.2 wurde
 bereits erwähnt, dass in der Praxis häufig ein **Loslager** (Rollenlager)

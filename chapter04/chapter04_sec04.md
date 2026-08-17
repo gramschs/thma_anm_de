@@ -6,6 +6,11 @@ kernelspec:
 
 # 4.4 Übung: Fachwerk mit fünf Knoten
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 In dieser Übung wenden Sie das in den Kapiteln 4.1-4.3 eingeführte FEM-Schema
 auf ein **größeres Fachwerk** mit fünf Knoten und sechs Stäben an. Ziel ist,
 dass Sie

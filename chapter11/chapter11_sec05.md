@@ -6,6 +6,11 @@ kernelspec:
 
 # 11.5 Übungen
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 ````{admonition} Übung 11.5 (✩)
 :class: tip
 Der folgende Code soll ein nichtlineares Pendel ($L = 1\,\text{m}$,

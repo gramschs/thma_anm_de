@@ -6,6 +6,11 @@ kernelspec:
 
 # 9.1 Rechteck- und Trapezregel
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 In Kapitel 7 haben wir aus diskreten Positionsmessungen eine Geschwindigkeit
 berechnet: Ableitung als Differenzenquotient. In Kapitel 8 haben wir eine
 Kostenfunktion minimiert, um Modellparameter aus Messdaten zu schätzen. Jetzt

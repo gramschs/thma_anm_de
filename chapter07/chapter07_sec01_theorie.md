@@ -6,6 +6,11 @@ kernelspec:
 
 # Wiederholung Differenzenquotient und Differentialquotient
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 Die Differentialrechnung ist ein zentrales Thema der Analysis. Mit Hilfe der
 Differentialrechnung wird untersucht, wie sich Funktionen verändern. In diesem
 Kapitel werden die dazu nötigen Begriffe eingeführt. Zunächst geht es um

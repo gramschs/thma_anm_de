@@ -6,6 +6,11 @@ kernelspec:
 
 # 4.5 Übung: Dachstuhl-Fachwerk (sechs Knoten)
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 In Kapitel 4.4 haben Sie das FEM-Schema an einem Fünfknoten-Fachwerk mit
 detaillierter Schritt-für-Schritt-Anleitung erprobt. In dieser Übung wenden
 Sie denselben Algorithmus auf ein neues Tragwerk an. Die Unterstützung ist

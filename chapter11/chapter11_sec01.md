@@ -6,6 +6,11 @@ kernelspec:
 
 # 11.1 Systeme 1. Ordnung und freie Schwingung
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 In Kapitel 10 haben wir `solve_ivp` eingesetzt, um die Temperatur eines
 abkühlenden Metallstabs zu berechnen. Der Zustandsvektor hatte genau einen
 Eintrag: die Temperatur $T$. Nun stellen wir die Frage anders: Ein Fahrzeug

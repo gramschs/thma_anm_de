@@ -6,6 +6,11 @@ kernelspec:
 
 # 3.5 Anwendung: Modellierung einer Messbrücke
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 Bisher haben wir LGS aus Energiebilanzen hergeleitet, zum Beispiel beim
 Wärmedurchgang durch eine Mehrschichtwand. Dasselbe Vorgehen funktioniert
 für elektrische Schaltungen: Statt Energiebilanzgleichungen nutzen wir die

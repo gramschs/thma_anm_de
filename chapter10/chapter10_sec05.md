@@ -6,6 +6,11 @@ kernelspec:
 
 # 10.5 Übungen
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 ````{admonition} Übung 10.5 (✩)
 :class: tip
 Ein Raum kühlt nachts gegen die kalte Außenluft ab. Um 06:00 Uhr (im

@@ -6,6 +6,11 @@ kernelspec:
 
 # 3.7 Optionaler Exkurs: Rechenzeit und Skalierung linearer Gleichungssysteme
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 In den vorigen Kapiteln haben wir `np.linalg.solve()` für kleine Systeme
 mit 3 oder 6 Unbekannten eingesetzt. In der Ingenieurpraxis entstehen bei
 der Finite-Elemente-Simulation eines Motorblocks oder der CFD-Analyse einer

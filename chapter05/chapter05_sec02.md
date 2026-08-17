@@ -6,6 +6,11 @@ kernelspec:
 
 # 5.2 Übung Drehmatrizen
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 In Abschnitt 5.1 haben wir die 2D-Drehmatrix $\mathbf{R}(\varphi)$ und die
 drei Grunddrehmatrizen für den 3D-Raum kennengelernt. In dieser Übung wenden
 wir sie auf konkrete Aufgaben an.

@@ -6,6 +6,11 @@ kernelspec:
 
 # 3.2 LGS lösen mit NumPy
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 Im letzten Kapitel haben wir das Obstmarkt-Problem als Matrixgleichung
 $\mathbf{A} \cdot \vec{x} = \vec{b}$ aufgeschrieben und mit der Determinante
 geprüft, ob eine eindeutige Lösung existiert. Jetzt berechnen wir sie.

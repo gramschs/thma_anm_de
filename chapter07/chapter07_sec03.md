@@ -6,6 +6,11 @@ kernelspec:
 
 # 7.3 Übungen
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 ````{admonition} Übung 7.1 (✩)
 :class: tip
 Gegeben ist die Funktion $f(x) = x^2$ mit der analytischen Ableitung

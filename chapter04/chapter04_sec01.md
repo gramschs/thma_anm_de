@@ -6,6 +6,11 @@ kernelspec:
 
 # 4.1 Fachwerke: Knoten, Stäbe und Kräfte
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 In Kapitel 3 haben wir lineare Gleichungssysteme gelöst, deren Koeffizienten
 aus der Physik stammten: Wärmewiderstände, Einkaufsmengen, Kalibrierungsfaktoren.
 In diesem Kapitel kommen die Koeffizienten aus der Strukturmechanik. *Wie stark

@@ -6,6 +6,11 @@ kernelspec:
 
 # 2.7 Scatter-Plots, Histogramme und Fehlerbalken
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 In den letzten beiden Kapiteln haben wir Zeitverläufe als Linienplots
 dargestellt. Nicht alle Daten lassen sich aber sinnvoll als Linie verbinden.
 Wenn wir zum Beispiel einzelne Messwerte aus verschiedenen Versuchen

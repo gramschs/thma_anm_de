@@ -6,6 +6,11 @@ kernelspec:
 
 # 5.3 Homogene Koordinaten
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 In Abschnitt 5.1 haben wir gelernt, wie wir ein Objekt mit einer einzigen
 Matrixmultiplikation drehen. In der Praxis wollen wir ein Bauteil aber nicht
 nur drehen, sondern auch verschieben: Ein Roboterarm dreht sein Greifwerkzeug

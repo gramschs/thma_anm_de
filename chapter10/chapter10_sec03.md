@@ -6,6 +6,11 @@ kernelspec:
 
 # 10.3 Das Runge-Kutta-Verfahren
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 In Abschnitt 10.1 haben wir das Euler-Verfahren als Schleife implementiert.
 In Abschnitt 10.2 haben wir gesehen, dass zu große Schrittweiten
 unphysikalische Ergebnisse erzeugen, und dass selbst bei kleinen Schrittweiten

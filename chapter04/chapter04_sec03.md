@@ -6,6 +6,11 @@ kernelspec:
 
 # 4.3 Stabkräfte und Visualisierung
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 In Kapitel 4.2 haben wir das LGS $\mathbf{K} \cdot \vec{u} = \vec{F}$
 gelöst und die Knotenverschiebungen sowie Lagerreaktionen berechnet. Jetzt
 werten wir diese Ergebnisse weiter aus. Wir berechnen die **Stabkräfte**

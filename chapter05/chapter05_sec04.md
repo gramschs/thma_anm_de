@@ -6,6 +6,11 @@ kernelspec:
 
 # 5.4 Übung Homogene Koordinaten
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 In Abschnitt 5.3 haben wir homogene Koordinaten und die Transformationsmatrix
 $\mathbf{T}$ kennengelernt. In dieser Übung wenden wir sie auf konkrete
 Aufgaben an.

@@ -6,6 +6,11 @@ kernelspec:
 
 # 11.4 Übungen zur gedämpften Schwingung
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 ````{admonition} Übung 11.3 (✩)
 :class: tip
 Der folgende Code simuliert den gedämpften Federschwinger

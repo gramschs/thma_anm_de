@@ -6,6 +6,11 @@ kernelspec:
 
 # 2.6 Subplots
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 Zuletzt haben wir einzelne Diagramme erstellt. In der Ingenieurpraxis
 wollen wir aber oft mehrere zusammenhängende Größen gleichzeitig darstellen.
 Bei der Analyse unserer Maschine interessiert uns zum Beispiel nicht nur die

@@ -6,6 +6,11 @@ kernelspec:
 
 # 8.1 Kostenfunktion und Gradient Descent
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 In Kapitel 7 haben wir Ableitungen numerisch aus diskreten Messwerten berechnet.
 In diesem Kapitel wenden wir genau dieses Werkzeug an, um Modellparameter aus
 Messdaten zu bestimmen. *Wie findet man den Parameterwert eines physikalischen

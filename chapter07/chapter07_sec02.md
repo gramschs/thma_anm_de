@@ -6,6 +6,11 @@ kernelspec:
 
 # 7.2 Fehleranalyse und optimale Schrittweite
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 In Abschnitt 7.1 haben wir den Fehler der drei Differenzenformeln im
 Log-Log-Plot dargestellt. Dabei haben wir Schrittweiten bis $10^{-10}$
 betrachtet. Was passiert, wenn wir $\Delta x$ noch viel kleiner machen?

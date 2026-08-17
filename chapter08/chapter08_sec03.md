@@ -6,6 +6,11 @@ kernelspec:
 
 # 8.3 Gradient Descent in 2D und Kurvenanpassung
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 In Abschnitt 8.1 haben wir $\lambda$ aus den Sensordaten bestimmt, während
 $T_\infty$ als bekannt vorausgesetzt wurde. In der Praxis ist $T_\infty$ oft
 genauso unbekannt wie $\lambda$: Die Umgebungstemperatur in einer

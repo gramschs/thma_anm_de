@@ -6,6 +6,11 @@ kernelspec:
 
 # 10.2 Übungen zum Euler-Verfahren
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 ````{admonition} Übung 10.1 (✩)
 :class: tip
 Gegeben ist der folgende Code, der das Newtonsche Abkühlungsgesetz mit dem

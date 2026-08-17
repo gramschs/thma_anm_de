@@ -6,6 +6,11 @@ kernelspec:
 
 # 3.1 Matrizen und lineare Gleichungssysteme
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 An einem Obststand kostet ein Apfel 0,30 €, eine Banane 0,20 € und eine
 Clementine 0,50 €. Wir kaufen an drei Tagen verschiedene Mengen und bezahlen
 2,10 €, 1,70 € und 2,80 €. Morgen soll jemand anderes einkaufen, aber wir kennen

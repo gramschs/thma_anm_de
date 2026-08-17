@@ -6,6 +6,11 @@ kernelspec:
 
 # 2.5 Linienplots mit Matplotlib
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 Im letzten Kapitel haben wir das Schwingungssignal unserer Maschine als
 NumPy-Array berechnet und mit `print()` ausgegeben. Aber tausende von
 Zahlenwerten in der Konsole zu lesen ist wenig aussagekräftig. Wir brauchen eine

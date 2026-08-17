@@ -6,6 +6,11 @@ kernelspec:
 
 # 3.3 Anwendung: Wärmeübertragung in einer Mehrschichtwand
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 Bisher haben wir LGS an einem Obstmarkt-Beispiel geübt. Jetzt wenden wir
 dasselbe Werkzeug auf ein Problem aus dem Maschinenbau an: eine Außenwand
 aus drei Schichten mit unterschiedlichen Wärmedurchgangswiderständen. *Wie

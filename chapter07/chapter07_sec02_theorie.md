@@ -6,6 +6,11 @@ kernelspec:
 
 # Geometrische Interpretation: Sekante und Tangente
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 Im vorigen Abschnitt haben wir den Differenzenquotienten als mittlere Änderungsrate
 und den Differentialquotienten als momentane Änderungsrate kennengelernt. In diesem
 Kapitel interpretieren wir beide Begriffe geometrisch. Das liefert uns nicht nur ein

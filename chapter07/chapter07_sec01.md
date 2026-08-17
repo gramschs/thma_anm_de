@@ -6,6 +6,11 @@ kernelspec:
 
 # 7.1 Differenzenquotienten
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 Stellen wir uns vor, ein Sensor misst die Position eines Fahrzeugs alle
 100 Millisekunden. Gesucht ist die Geschwindigkeit zum jeweiligen Zeitpunkt.
 Die Position liegt als Zahlenfolge vor, nicht als Formel. Wir können also

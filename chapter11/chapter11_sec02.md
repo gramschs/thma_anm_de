@@ -6,6 +6,11 @@ kernelspec:
 
 # 11.2 Übungen zum Federschwinger
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 ````{admonition} Übung 11.1 (✩)
 :class: tip
 Der folgende Code simuliert einen Federschwinger ($m = 250\,\text{kg}$,

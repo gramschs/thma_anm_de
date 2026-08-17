@@ -6,6 +6,11 @@ kernelspec:
 
 # 10.1 Das Euler-Verfahren
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 In Kapitel 7 haben wir aus bekannten Positionswerten Ableitungen berechnet,
 in Kapitel 9 aus bekannten Funktionswerten Integrale. Jetzt stellen wir die
 Frage anders: Ein Metallstab mit Anfangstemperatur $T_0 = 80\,°C$ liegt in

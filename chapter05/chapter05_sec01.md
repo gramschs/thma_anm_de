@@ -6,6 +6,11 @@ kernelspec:
 
 # 5.1 Drehmatrizen
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 Bisher haben wir Matrizen eingesetzt, um lineare Gleichungssysteme zu lösen
 und Kräfte in Fachwerken zu berechnen. In diesem Kapitel entdecken wir eine
 weitere Anwendung: Mit einer einzigen Matrixmultiplikation können wir ein

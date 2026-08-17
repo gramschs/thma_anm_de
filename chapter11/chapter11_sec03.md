@@ -6,6 +6,11 @@ kernelspec:
 
 # 11.3 Gedämpfte und erzwungene Schwingung
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 In Abschnitt 11.1 hat der ungedämpfte Federschwinger endlos weiter
 geschwungen. Das Phasenporträt zeigte eine geschlossene Ellipse, weil
 die mechanische Energie konstant bleibt. Ein reales Fahrzeug verhält

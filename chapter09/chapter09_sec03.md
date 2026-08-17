@@ -6,6 +6,11 @@ kernelspec:
 
 # 9.3 Simpson-Regel und scipy.integrate.quad
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 In Abschnitt 9.1 haben wir die Trapezregel kennengelernt: lineare Interpolation
 zwischen Messpunkten. *Geht es noch genauer?* Ja, wenn wir statt einer Geraden
 eine Parabel durch je drei aufeinanderfolgende Punkte legen. Das ist die Idee

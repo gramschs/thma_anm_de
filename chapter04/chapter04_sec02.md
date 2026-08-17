@@ -6,6 +6,11 @@ kernelspec:
 
 # 4.2 Fachwerke: Steifigkeitsmatrix und Lösung
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 In Kapitel 4.1 haben wir das Fachwerk als Datensatz aufgebaut: Knotenkoordinaten,
 Konnektivitätsmatrix und Kraftvektor. Jetzt berechnen wir die **globale
 Steifigkeitsmatrix** und lösen das LGS

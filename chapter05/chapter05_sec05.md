@@ -6,6 +6,11 @@ kernelspec:
 
 # 5.5 Übungen zum Selbststudium
 
+```{admonition} Warnung
+:class: warning
+Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+```
+
 ````{admonition} Übung 5.1 (✩)
 :class: tip
 Gegeben ist folgender Code:
