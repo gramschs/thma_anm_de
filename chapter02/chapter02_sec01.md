@@ -88,6 +88,11 @@ t = np.linspace(0, 2, 5)    # 5 Werte zwischen 0 und 2 Sekunden
 print(t)
 ```
 
+In der Ausgabe steht hinter jeder ganzen Zahl ein Punkt, also `0.` statt `0`.
+`np.linspace()` erzeugt die Werte immer als Fließkommazahlen, auch wenn wir
+ganzzahlige Grenzen angeben. Das ist beabsichtigt, denn die gleichmäßig
+verteilten Zwischenwerte einer Achse sind im Allgemeinen keine ganzen Zahlen.
+
 `np.zeros(anzahl)` erzeugt ein Array aus lauter Nullen. Das ist nützlich, um
 ein Array als Platzhalter anzulegen, das später mit Werten gefüllt wird:
 
@@ -114,7 +119,7 @@ Dimension mit fünf Elementen. `.dtype` gibt den gemeinsamen Datentyp aller
 Elemente zurück, hier typischerweise `float64` für Fließkommazahlen. Diese
 beiden Attribute sind der schnellste Weg, ein unbekanntes Array zu prüfen.
 
-````{admonition} Mini-Übung
+```{admonition} Mini-Übung (✩)
 :class: tip
 Ein Temperatursensor liefert vier Messwerte in °C: `18.5`, `19.2`, `18.9`,
 `20.1`.
@@ -125,11 +130,14 @@ Ein Temperatursensor liefert vier Messwerte in °C: `18.5`, `19.2`, `18.9`,
    zwischen 0 und 3 Sekunden an, ohne die Werte einzeln aufzuschreiben.
 4. Legen Sie ein Array `kalibrierwerte` mit vier Nullen an, das später als
    Platzhalter für Kalibrierfaktoren dienen soll.
-````
+5. Beantworten Sie ohne Ausführen: Welchen Datentyp gibt `zeit.dtype` zurück,
+   obwohl Sie in `np.linspace()` nur die ganzen Zahlen 0 und 3 als Grenzen
+   angegeben haben? Begründen Sie Ihre Antwort.
+```
 
-````{code-cell} python
+```{code-cell} python
 # Code-Zelle
-````
+```
 
 ````{admonition} Lösung
 :class: tip
@@ -147,6 +155,11 @@ print(zeit)                 # [0. 1. 2. 3.]
 kalibrierwerte = np.zeros(4)
 print(kalibrierwerte)       # [0. 0. 0. 0.]
 ```
+`zeit.dtype` gibt `float64` zurück. `np.linspace()` erzeugt seine Werte
+grundsätzlich als Fließkommazahlen, weil die berechneten Zwischenwerte einer
+Achse im Allgemeinen nicht ganzzahlig sind. Deshalb speichert NumPy auch die
+zufällig ganzzahligen Werte 0, 1, 2 und 3 als Floats, erkennbar am Punkt in der
+Ausgabe `[0. 1. 2. 3.]`.
 ````
 
 ## Vektoroperationen und mathematische Funktionen
@@ -181,6 +194,11 @@ von `messwerte_array` angewendet. Solche Operationen auf ganzen Zahlenreihen
 nennen wir **Vektoroperationen**. Sie vermeiden explizite Schleifen und sind
 daher bei großen Messreihen in der Regel deutlich effizienter.
 
+*Ist dieser Unterschied bei fünf Messwerten überhaupt spürbar?* Bei fünf Werten
+nicht. Sobald ein Sensor aber mehrere tausend Werte pro Sekunde liefert,
+entscheidet die Vektoroperation darüber, ob eine Auswertung Sekundenbruchteile
+oder mehrere Minuten dauert.
+
 Dasselbe Prinzip gilt für die Grundrechenarten `+`, `-`, `*`, `/` und `**`.
 Addieren wir zwei eindimensionale Arrays gleicher Länge, werden ihre Elemente
 paarweise addiert:
@@ -214,8 +232,13 @@ print(np.sin(winkel))
 ```
 
 `np.sin()` wendet den Sinus auf jedes Element von `winkel` einzeln an und
-gibt ein neues Array derselben Länge zurück. `np.exp()` funktioniert nach
-demselben Prinzip:
+gibt ein neues Array derselben Länge zurück. In der Ausgabe fällt auf, dass bei
+den Winkeln $\pi$ und $2\pi$ nicht exakt `0` steht, sondern ein winziger Wert in
+der Größenordnung `1e-16`. Der exakte Sinus wäre an diesen Stellen null. Diese
+kleine Abweichung ist ein **Rundungsfehler** der Fließkomma-Arithmetik, mit dem
+wir bei numerischen Rechnungen grundsätzlich rechnen müssen.
+
+`np.exp()` funktioniert nach demselben Prinzip:
 
 ```{code-cell} python
 werte = np.array([0.0, 1.0, 2.0, 3.0])
@@ -228,7 +251,7 @@ Werte anzuwenden, bräuchten wir wieder eine Schleife. Die NumPy-Varianten
 `np.sin()` und `np.exp()` sind für Arrays gebaut und damit in dieser Vorlesung
 die richtige Wahl.
 
-````{admonition} Mini-Übung
+````{admonition} Mini-Übung (✩)
 :class: tip
 An einem Kran ziehen zwei Seile mit folgenden Kräften in kN, gemessen an
 vier Zeitpunkten:
@@ -251,11 +274,14 @@ seil_2 = np.array([80.0, 75.0, 82.0, 78.0])
 
    Berechnen Sie die vertikale Komponente der Kraft in Seil 1 und speichern
    Sie sie in `seil_1_vertikal`.
+4. Beantworten Sie ohne Ausführen: Wie viele Elemente hat `seil_1 * np.sin(winkel)`,
+   und welcher Winkel gehört zum dritten Element von `seil_1`? Ist die vertikale
+   Komponente an jedem Zeitpunkt größer oder kleiner als die Gesamtkraft im Seil?
 ````
 
-````{code-cell} python
+```{code-cell} python
 # Code-Zelle
-````
+```
 
 ````{admonition} Lösung
 :class: tip
@@ -276,6 +302,11 @@ winkel = np.array([0.50, 0.55, 0.52, 0.58])
 seil_1_vertikal = seil_1 * np.sin(winkel)
 print(seil_1_vertikal)
 ```
+`seil_1 * np.sin(winkel)` hat wieder vier Elemente, da NumPy die beiden Arrays
+elementweise multipliziert. Das dritte Element von `seil_1` (128.0 kN) gehört
+zum dritten Winkel (0.52 rad). Die vertikale Komponente ist an jedem Zeitpunkt
+kleiner als die Gesamtkraft im Seil, weil der Sinus für Winkel zwischen 0 und
+$\pi/2$ Werte zwischen 0 und 1 liefert.
 ````
 
 ## Statistische Kenngrößen
@@ -331,7 +362,7 @@ die Standardabweichung und die Extremwerte durch Minimum und Maximum. Das sind
 die ersten Werkzeuge, um aus reinen Zahlenreihen belastbare Aussagen über ein
 gemessenes System abzuleiten.
 
-````{admonition} Mini-Übung
+````{admonition} Mini-Übung (✩)
 :class: tip
 Bei einer Qualitätsprüfung wird das Anzugsmoment von zehn Schrauben
 gemessen, in Nm:
@@ -350,11 +381,13 @@ momente = np.array([45.2, 44.8, 46.1, 45.5, 44.9,
 4. Berechnen Sie aus `min_moment` und `max_moment` die Spannweite der
    Messung (Differenz zwischen größtem und kleinstem Wert) und speichern
    Sie sie in `spannweite`.
+5. Schätzen Sie vor dem Ausführen: Liegt `streuung` eher bei 0.6 Nm oder eher
+   bei 6 Nm? Begründen Sie mit einem Blick auf die zehn Messwerte.
 ````
 
-````{code-cell} python
+```{code-cell} python
 # Code-Zelle
-````
+```
 
 ````{admonition} Lösung
 :class: tip
@@ -379,6 +412,11 @@ print(f"Maximum:    {max_moment:.2f} Nm")
 spannweite = max_moment - min_moment
 print(f"Spannweite: {spannweite:.2f} Nm")
 ```
+Alle Messwerte liegen dicht zwischen 44.6 Nm und 46.3 Nm, also in einem Band von
+nur rund 1.7 Nm Breite. Die Standardabweichung misst die mittlere Abweichung vom
+Mittelwert und ist daher deutlich kleiner als diese Bandbreite, hier rund
+0.6 Nm. Ein Wert von 6 Nm wäre unmöglich, da keine einzelne Abweichung so groß
+ist.
 ````
 
 ## Zusammenfassung und Ausblick
@@ -390,5 +428,7 @@ Wir haben NumPy-Arrays als Alternative zu Python-Listen kennengelernt, mit
 schreiben. Mit `np.mean()`, `np.std()`, `np.min()` und `np.max()` fassen wir
 eine Messreihe in wenigen Kennzahlen zusammen.
 
-Im nächsten Kapitel visualisieren wir Daten mit Plotly Express. Zweidimensionale
-Arrays und lineare Gleichungssysteme folgen in Kapitel 3.
+Im nächsten Kapitel wenden wir diese Werkzeuge in einem zusammenhängenden
+Projekt an und werten den Prüfstandslauf einer Windkraftanlage aus. Danach
+lernen wir Matplotlib kennen, um ganze Messreihen grafisch darzustellen.
+Zweidimensionale Arrays und lineare Gleichungssysteme folgen in Kapitel 3.

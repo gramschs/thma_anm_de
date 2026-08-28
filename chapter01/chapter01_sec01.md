@@ -10,7 +10,7 @@ In der Fahrzeugentwicklung liefern Sensoren laufend Messwerte: die
 Geschwindigkeit eines Prüffahrzeugs, die Kraft an einem Prüfstand oder die
 Temperatur eines Bauteils. Bevor wir solche Messreihen in den folgenden
 Kapiteln mit numerischen Verfahren auswerten, brauchen wir das Handwerkszeug
-der Programmiersprache Python. In diesem Abschnitt lernen wir, wie wir
+der Programmiersprache Python. In diesem Kapitel lernen wir, wie wir
 einzelne Messwerte in Variablen speichern, mit ihnen rechnen und den Ablauf
 unseres Programms mit Verzweigungen und Schleifen steuern.
 
@@ -19,6 +19,10 @@ Code-Zellen, die wir nacheinander ausführen. Das Ergebnis einer Zelle
 erscheint direkt darunter, sodass wir unseren Code Schritt für Schritt
 aufbauen und testen können. Probieren wir das gleich anhand eines ersten
 Beispiels aus.
+
+Wer noch nie programmiert hat, kann sich zur Vorbereitung die kurzen Videos
+ansehen, die in diesem Kapitel jeweils am Ende eines Abschnitts eingebettet
+sind.
 
 ## Lernziele
 
@@ -31,8 +35,7 @@ Beispiels aus.
 * [ ] Sie kennen arithmetische, Vergleichs- und logische **Operatoren** und
   den Unterschied zwischen Zuweisung `=` und Vergleich `==`.
 * [ ] Sie können Programmabläufe mit **if/elif/else** verzweigen.
-* [ ] Sie können **for-Schleifen** mit `range()` und **while-Schleifen**
-  programmieren und kennen `break`.
+* [ ] Sie können eine **for-Schleife** mit `range()` schreiben.
 ```
 
 ## Wie speichern wir Messwerte in Variablen?
@@ -118,7 +121,7 @@ pi = 3.141592653589793
 print(f'Pi auf zwei Nachkommastellen: {pi:.2f}')
 ```
 
-```{admonition} Mini-Übung
+```{admonition} Mini-Übung (✩)
 :class: tip
 Legen Sie für eine Werkstoffprobe drei Variablen an: `masse` (Float, in kg),
 `anzahl_pruefungen` (Integer) und `werkstoff` (String, zum Beispiel
@@ -130,7 +133,7 @@ würde `type()` zurückgeben, wenn Sie stattdessen `masse = 5` ohne
 Dezimalpunkt schreiben? Begründen Sie Ihre Antwort.
 ```
 
-```{code-cell} python ipython3
+```{code-cell} python
 # Code-Zelle
 ```
 
@@ -226,17 +229,20 @@ vergleicht zwei Werte und gibt `True` oder `False` zurück. Diese
 Verwechslung gehört zu den häufigsten Anfängerfehlern in Python.
 ```
 
-Mehrere Bedingungen verknüpfen wir mit den **logischen Operatoren** `and`,
-`or` und `not`.
+Mehrere Bedingungen verknüpfen wir mit den **logischen Operatoren** `and` und
+`or`. Bei `and` müssen beide Bedingungen wahr sein, bei `or` genügt eine.
 
 ```{code-cell} python
 ist_schnell = geschwindigkeit_ms > 25
-ist_ueber_limit = geschwindigkeit_ms > tempolimit_ms
+ist_im_limit = geschwindigkeit_ms <= tempolimit_ms
 
-print(ist_schnell and not ist_ueber_limit)
+print(ist_schnell and ist_im_limit)
 ```
 
-```{admonition} Mini-Übung
+Mit dem Operator `not` kehren wir einen Wahrheitswert um, aus `True` wird
+`False` und umgekehrt.
+
+```{admonition} Mini-Übung (✩)
 :class: tip
 Berechnen Sie den Bremsweg eines Fahrzeugs nach der Faustformel
 `bremsweg = (geschwindigkeit_kmh / 10) ** 2 / 2`. Verwenden Sie
@@ -248,7 +254,7 @@ Beantworten Sie zusätzlich ohne Ausführen des Codes: Was gibt der Ausdruck
 Begründen Sie Ihre Antwort.
 ```
 
-```{code-cell} python ipython3
+```{code-cell} python
 # Code-Zelle
 ```
 
@@ -328,57 +334,36 @@ den nächsten Wert aus `range(5)` an, also nacheinander 0, 1, 2, 3 und 4, denn
 darunter bilden den **Schleifenkörper** und werden bei jedem Durchlauf
 ausgeführt.
 
-Manchmal kennen wir die Anzahl der Wiederholungen nicht im Voraus, sondern
-wollen so lange weiterrechnen, bis eine Bedingung erfüllt ist. Dafür
-verwenden wir die **while-Schleife**.
+Innerhalb des Schleifenkörpers dürfen wir auch eine Verzweigung verwenden,
+zum Beispiel um für jeden Zeitschritt zu prüfen, ob ein Grenzwert
+überschritten ist.
 
 ```{code-cell} python
-geschwindigkeit_ms = 0.0
-zeit = 0
-
-while geschwindigkeit_ms < tempolimit_ms:
-    geschwindigkeit_ms = geschwindigkeit_ms + 5.0
-    zeit = zeit + 1
-    print(f'Nach {zeit} s: {geschwindigkeit_ms:.1f} m/s')
-
-print('Tempolimit erreicht oder überschritten.')
-```
-
-Die while-Schleife prüft vor jedem Durchlauf, ob die Bedingung in der
-Kopfzeile noch erfüllt ist. Sobald die Bedingung falsch wird, bricht Python
-die Schleife ab und macht mit dem nachfolgenden Code weiter.
-
-Manchmal wollen wir eine Schleife schon vorzeitig verlassen, bevor die
-Abbruchbedingung von selbst erreicht ist. Dafür verwenden wir das
-Schlüsselwort `break`.
-
-```{code-cell} python
-for zeitschritt in range(10):
-    geschwindigkeit_ms = zeitschritt * 5.0
+for zeitschritt in range(5):
+    geschwindigkeit_ms = zeitschritt * 12.0
     if geschwindigkeit_ms > tempolimit_ms:
-        print(f'Abbruch bei Zeitschritt {zeitschritt}: Limit überschritten.')
-        break
-    print(f'Zeitschritt {zeitschritt}: {geschwindigkeit_ms:.1f} m/s, noch im Limit.')
+        print(f'Zeitschritt {zeitschritt}: {geschwindigkeit_ms:.1f} m/s, zu schnell!')
+    else:
+        print(f'Zeitschritt {zeitschritt}: {geschwindigkeit_ms:.1f} m/s, im Limit.')
 ```
 
-`break` beendet die Schleife sofort, sobald die zugehörige Bedingung
-erfüllt ist. Bei `zeitschritt = 7` beträgt die Geschwindigkeit 35.0 m/s und
-überschreitet damit das Tempolimit von 33.3 m/s. Die Schleife bricht an
-dieser Stelle ab, die Zeitschritte 8 und 9 werden nicht mehr ausgeführt.
+Die Schleife durchläuft alle fünf Zeitschritte. In jedem Durchlauf berechnen
+wir die aktuelle Geschwindigkeit und entscheiden mit der `if`-Abfrage, welche
+Meldung ausgegeben wird.
 
-```{admonition} Mini-Übung
+```{admonition} Mini-Übung (✩)
 :class: tip
 Schreiben Sie eine for-Schleife mit `range(5)`, die ausgehend von 0 km/h die
 Geschwindigkeit in jedem Schleifendurchgang um 30 km/h erhöht und den
 jeweiligen Wert ausgibt.
 
-Erweitern Sie die Schleife anschließend um eine `if`-Abfrage, die die
-Schleife mit `break` abbricht, sobald die Geschwindigkeit über 80 km/h
-liegt. Beantworten Sie vor dem Ausführen: Bei welchem Schleifendurchgang
-wird `break` ausgelöst? Begründen Sie Ihre Antwort.
+Ergänzen Sie im Schleifenkörper eine `if`-Abfrage, die zusätzlich
+`zu schnell` ausgibt, sobald die Geschwindigkeit über 80 km/h liegt.
+Beantworten Sie vor dem Ausführen: In welchen Durchgängen erscheint
+`zu schnell`? Begründen Sie Ihre Antwort.
 ```
 
-```{code-cell} python ipython3
+```{code-cell} python
 # Code-Zelle
 ```
 
@@ -388,16 +373,14 @@ wird `break` ausgelöst? Begründen Sie Ihre Antwort.
 ```python
 for zeitschritt in range(5):
     geschwindigkeit_kmh = zeitschritt * 30
-    if geschwindigkeit_kmh > 80:
-        print(f'Abbruch bei Zeitschritt {zeitschritt}: {geschwindigkeit_kmh} km/h.')
-        break
     print(f'Zeitschritt {zeitschritt}: {geschwindigkeit_kmh} km/h')
+    if geschwindigkeit_kmh > 80:
+        print('zu schnell')
 ```
-Die Schleifenvariable `zeitschritt` läuft durch die Werte 0 bis 4. `break`
-wird bei `zeitschritt = 3` ausgelöst, da die Geschwindigkeit dort
-`3 * 30 = 90` km/h beträgt und damit über 80 km/h liegt. Der letzte
-mögliche Durchgang `zeitschritt = 4` mit 120 km/h wird dadurch nicht mehr
-ausgeführt.
+Die Schleifenvariable `zeitschritt` läuft durch die Werte 0 bis 4, die
+Geschwindigkeit nimmt die Werte 0, 30, 60, 90 und 120 km/h an. `zu schnell`
+erscheint in den Durchgängen 3 und 4, denn dort liegt die Geschwindigkeit mit
+90 beziehungsweise 120 km/h über der Grenze von 80 km/h.
 ````
 
 ```{dropdown} Video "if-Anweisung" von Programmieren Starten
@@ -421,21 +404,19 @@ clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen
 </iframe>
 ```
 
-```{dropdown} Video "while-Schleife" von Programmieren Starten
-<iframe width="560" height="315" src="https://www.youtube.com/embed/sXLicTuJzB4?si=FTTgmvAYeqFM2HTQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-```
-
 ## Zusammenfassung und Ausblick
 
-In diesem Abschnitt haben wir die Grundbausteine von Python kennengelernt:
+In diesem Kapitel haben wir die Grundbausteine von Python kennengelernt:
 Variablen zum Speichern von Messwerten, die Datentypen Integer, Float und
-String, arithmetische und logische Operatoren sowie Verzweigungen und
-Schleifen zur Steuerung des Programmablaufs. Damit können wir bereits
-einzelne Werte verarbeiten und wiederkehrende Berechnungen automatisieren.
+String, arithmetische, Vergleichs- und logische Operatoren sowie die
+Verzweigung mit `if`/`elif`/`else` und die `for`-Schleife zur Wiederholung.
+Damit können wir bereits einzelne Werte verarbeiten und wiederkehrende
+Berechnungen automatisieren.
 
 Was uns aber noch fehlt, ist eine Möglichkeit, mehrere Messwerte gemeinsam
-zu verwalten. Im nächsten Abschnitt 1.2 lernen wir dazu die Datenstrukturen
+zu verwalten. Im nächsten Kapitel 1.2 vertiefen wir das Gelernte an
+Prüfstandsaufgaben. In Kapitel 1.3 lernen wir dann die Datenstrukturen
 **Liste** und **Dictionary** kennen und schreiben eigene **Funktionen**, um
-wiederkehrende Berechnungen wie die Umrechnung von km/h in m/s zu kapseln.
-Ab Woche 2 verwenden wir dann **NumPy** und **Matplotlib**, um ganze
+wiederkehrende Berechnungen wie die Umrechnung von km/h in m/s zu kapseln. In
+Kapitel 2 verwenden wir schließlich **NumPy** und **Matplotlib**, um ganze
 Messreihen ohne Schleifen zu verarbeiten und grafisch darzustellen.

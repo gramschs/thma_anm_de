@@ -6,23 +6,50 @@ kernelspec:
 
 # 1.2 Vertiefung (Teil 1)
 
-Die folgenden Aufgaben bearbeiten wir in der restlichen Zeit dieses
-Blocks. Aufgaben mit einem Stern (✩) und zwei Sternen (✩✩) sind
-Pflichtaufgaben. Die Aufgabe mit drei Sternen (✩✩✩) ist eine Zusatzaufgabe
-für alle, die schneller fertig sind. Arbeiten Sie nach Möglichkeit zu
-zweit, das hilft besonders, wenn Python für Sie noch neu ist.
+Die folgenden Aufgaben bauen auf dem Code-Along aus Kapitel 1.1 auf. Aufgaben
+mit einem Stern (✩) und zwei Sternen (✩✩) sind Pflichtaufgaben. Die Aufgabe mit
+drei Sternen (✩✩✩) ist eine Zusatzaufgabe für alle, die schneller fertig sind.
+Arbeiten Sie nach Möglichkeit zu zweit, das hilft besonders, wenn Python für
+Sie noch neu ist. Wenn Sie einen Begriff nachschlagen wollen, hilft der
+Spickzettel am Ende von Part 1.
+
+```{admonition} Aufwärmaufgabe (✩)
+:class: tip
+Ein Prüffahrzeug fährt mit 27.8 m/s. Legen Sie eine Variable
+`geschwindigkeit_ms` mit diesem Wert an und eine Variable `fahrzeug` mit dem
+Wert `'Testwagen_3'`. Geben Sie beide mit `print()` aus und lassen Sie sich
+mit `type()` den Datentyp von `geschwindigkeit_ms` anzeigen.
+```
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+geschwindigkeit_ms = 27.8
+fahrzeug = 'Testwagen_3'
+
+print(geschwindigkeit_ms)
+print(fahrzeug)
+print(type(geschwindigkeit_ms))
+```
+`geschwindigkeit_ms` ist ein Float, da `27.8` einen Dezimalpunkt enthält.
+````
 
 ```{admonition} Aufgabe A (✩)
 :class: tip
-Welcher Datentyp liegt vor? Schreiben Sie Ihre Vermutung zunächst auf, bevor
-Sie den Code ausführen.
+Ein Prüffahrzeug liefert verschiedene Messwerte. Welcher Datentyp liegt jeweils
+vor? Schreiben Sie Ihre Vermutung zunächst auf, bevor Sie den Code ausführen.
 
-* `120` -->
-* `120.0` -->
-* `'Sensor_B'` -->
+* `120` (Anzahl der Messungen) -->
+* `27.8` (Geschwindigkeit in m/s) -->
+* `'Testwagen_3'` (Fahrzeugname) -->
 * `120 / 4` -->
-* `2**8` -->
-* `geschwindigkeit_ms > tempolimit_ms` -->
+* `2 ** 8` -->
+* `27.8 > 33.3` -->
 
 Überprüfen Sie anschließend jede Zeile mit `type()` in einer Code-Zelle.
 ```
@@ -36,27 +63,39 @@ Sie den Code ausführen.
 :class: dropdown
 ```python
 print(type(120))
-print(type(120.0))
-print(type('Sensor_B'))
+print(type(27.8))
+print(type('Testwagen_3'))
 print(type(120 / 4))
-print(type(2**8))
-print(type(True))
+print(type(2 ** 8))
+print(type(27.8 > 33.3))
 ```
-`120` ist ein Integer, `120.0` ein Float und `'Sensor_B'` ein String.
-`120 / 4` ergibt mit dem `/`-Operator immer einen Float, auch wenn das
-Ergebnis ganzzahlig ist. `2**8` bleibt ein Integer, da beide Operanden
-Integer sind. Der Vergleich `geschwindigkeit_ms > tempolimit_ms` liefert den
-Datentyp `bool`, da Vergleiche immer einen Wahrheitswert zurückgeben.
+`120` ist ein Integer, `27.8` ein Float und `'Testwagen_3'` ein String.
+`120 / 4` ergibt mit dem `/`-Operator immer einen Float, auch wenn das Ergebnis
+ganzzahlig ist. `2 ** 8` bleibt ein Integer, da beide Operanden Integer sind.
+Der Vergleich `27.8 > 33.3` liefert den Datentyp `bool`, da Vergleiche immer
+einen Wahrheitswert zurückgeben.
 ````
 
-```{admonition} Aufgabe B (✩✩)
+````{admonition} Aufgabe B (✩)
 :class: tip
-Ein Prüfstand misst die Kraft `kraft` in Newton und den Weg `weg` in
-Metern, über den die Kraft wirkt. Berechnen Sie die verrichtete Arbeit nach
-der Formel `arbeit = kraft * weg` für `kraft = 850` und `weg = 2.4`. Geben
-Sie das Ergebnis mit einem f-String und der Einheit Joule aus, gerundet auf
-eine Nachkommastelle.
+Gegeben ist folgender Code. Notieren Sie, was er ausgibt, bevor Sie ihn
+ausführen.
+
+```python
+geschwindigkeit_ms = 30.0
+tempolimit_ms = 33.3
+
+if geschwindigkeit_ms > tempolimit_ms:
+    print('zu schnell')
+elif geschwindigkeit_ms == tempolimit_ms:
+    print('genau am Limit')
+else:
+    print('im Limit')
 ```
+
+Was ändert sich an der Ausgabe, wenn in der ersten Zeile
+`geschwindigkeit_ms = 33.3` steht?
+````
 
 ```{code-cell} python
 # Code-Zelle
@@ -66,23 +105,41 @@ eine Nachkommastelle.
 :class: tip
 :class: dropdown
 ```python
-kraft = 850       # N
-weg = 2.4         # m
-arbeit = kraft * weg
-print(f'Verrichtete Arbeit: {arbeit:.1f} Joule')
+geschwindigkeit_ms = 30.0
+tempolimit_ms = 33.3
+
+if geschwindigkeit_ms > tempolimit_ms:
+    print('zu schnell')
+elif geschwindigkeit_ms == tempolimit_ms:
+    print('genau am Limit')
+else:
+    print('im Limit')
 ```
-Die verrichtete Arbeit beträgt 2040.0 Joule. Da `kraft` ein Integer und
-`weg` ein Float ist, wandelt Python das Ergebnis automatisch in einen Float
-um.
+Mit `geschwindigkeit_ms = 30.0` ist die erste Bedingung falsch und die zweite
+ebenfalls, daher greift der `else`-Zweig und die Ausgabe lautet `im Limit`.
+Mit `geschwindigkeit_ms = 33.3` ist die erste Bedingung weiterhin falsch, die
+zweite (`==`) aber wahr, daher lautet die Ausgabe dann `genau am Limit`.
 ````
 
-```{admonition} Aufgabe C (✩✩)
+````{admonition} Aufgabe C (✩✩)
 :class: tip
-Ein Fahrzeug fährt mit `geschwindigkeit_kmh = 95`. Rechnen Sie die
-Geschwindigkeit in m/s um und prüfen Sie mit einer `if`/`elif`/`else`-
-Verzweigung, ob das Tempolimit von `tempolimit_ms = 33.3` eingehalten, genau
-erreicht oder überschritten wird. Geben Sie eine passende Meldung aus.
+Vervollständigen Sie den Code an den mit `___` markierten Stellen. Ein
+Prüffahrzeug fährt mit `geschwindigkeit_kmh = 95`. Der Code soll die
+Geschwindigkeit in m/s umrechnen und ausgeben, ob das Tempolimit von 33.3 m/s
+überschritten wird.
+
+```python
+geschwindigkeit_kmh = 95
+tempolimit_ms = 33.3
+
+geschwindigkeit_ms = geschwindigkeit_kmh / ___
+
+if geschwindigkeit_ms ___ tempolimit_ms:
+    print(f'{geschwindigkeit_ms:.1f} m/s: Tempolimit überschritten')
+else:
+    print(f'{geschwindigkeit_ms:.1f} m/s: im erlaubten Bereich')
 ```
+````
 
 ```{code-cell} python
 # Code-Zelle
@@ -98,24 +155,33 @@ tempolimit_ms = 33.3
 geschwindigkeit_ms = geschwindigkeit_kmh / 3.6
 
 if geschwindigkeit_ms > tempolimit_ms:
-    print('Geschwindigkeit zu hoch!')
-elif geschwindigkeit_ms == tempolimit_ms:
-    print('Geschwindigkeit genau am Limit.')
+    print(f'{geschwindigkeit_ms:.1f} m/s: Tempolimit überschritten')
 else:
-    print('Geschwindigkeit im erlaubten Bereich.')
+    print(f'{geschwindigkeit_ms:.1f} m/s: im erlaubten Bereich')
 ```
-95 km/h entsprechen rund 26.4 m/s und liegen damit unter dem Tempolimit von
-33.3 m/s. Die Ausgabe lautet daher "Geschwindigkeit im erlaubten Bereich."
+An der ersten Lücke steht `3.6`, denn 1 m/s entspricht 3.6 km/h. An der zweiten
+Lücke steht der Vergleichsoperator `>`. 95 km/h entsprechen rund 26.4 m/s und
+liegen unter dem Tempolimit, die Ausgabe lautet daher
+`26.4 m/s: im erlaubten Bereich`.
 ````
 
-```{admonition} Aufgabe D (✩✩)
+````{admonition} Aufgabe D (✩✩)
 :class: tip
-Ein Sensor überwacht die Temperatur eines Bauteils während eines
-Erwärmungsversuchs. Schreiben Sie eine for-Schleife mit `range(6)`, die
-ausgehend von 20 Grad Celsius die Temperatur in jedem Schritt um 15 Grad
-erhöht und ausgibt. Brechen Sie die Schleife mit `break` ab, sobald die
-Temperatur über 90 Grad Celsius liegt.
+Ergänzen Sie die for-Schleife an den `___`-Stellen. Ein Beschleunigungstest
+läuft über sieben Zeitschritte. In jedem Zeitschritt steigt die Geschwindigkeit
+um 7 m/s. Der Code soll für jeden Zeitschritt die Geschwindigkeit ausgeben und
+zusätzlich `zu schnell`, sobald sie über dem Tempolimit von 33.3 m/s liegt.
+
+```python
+tempolimit_ms = 33.3
+
+for zeitschritt in range(7):
+    geschwindigkeit_ms = zeitschritt * ___
+    print(f'Zeitschritt {zeitschritt}: {geschwindigkeit_ms:.1f} m/s')
+    if ___:
+        print('zu schnell')
 ```
+````
 
 ```{code-cell} python
 # Code-Zelle
@@ -125,36 +191,42 @@ Temperatur über 90 Grad Celsius liegt.
 :class: tip
 :class: dropdown
 ```python
-for zeitschritt in range(6):
-    temperatur = 20 + zeitschritt * 15
-    if temperatur > 90:
-        print(f'Abbruch bei Zeitschritt {zeitschritt}: {temperatur} Grad Celsius.')
-        break
-    print(f'Zeitschritt {zeitschritt}: {temperatur} Grad Celsius')
+tempolimit_ms = 33.3
+
+for zeitschritt in range(7):
+    geschwindigkeit_ms = zeitschritt * 7.0
+    print(f'Zeitschritt {zeitschritt}: {geschwindigkeit_ms:.1f} m/s')
+    if geschwindigkeit_ms > tempolimit_ms:
+        print('zu schnell')
 ```
-Die Temperatur erreicht bei `zeitschritt = 5` den Wert 95 Grad Celsius und
-überschreitet damit die 90-Grad-Grenze, sodass `break` in diesem Durchgang
-ausgelöst wird.
+An der ersten Lücke steht `7.0` (Zunahme pro Zeitschritt), an der zweiten die
+Bedingung `geschwindigkeit_ms > tempolimit_ms`. Die Geschwindigkeit nimmt die
+Werte 0, 7, 14, 21, 28, 35 und 42 m/s an. `zu schnell` erscheint in den
+Zeitschritten 5 und 6.
 ````
 
 ```{admonition} Aufgabe E (✩✩✩, Mini-Projekt)
 :class: tip
-Ein Prüfstand überwacht die Geschwindigkeit eines Fahrzeugs während eines
-Beschleunigungstests. Setzen Sie folgende Schritte um.
+Ein Prüfstand simuliert einen Beschleunigungstest über zehn Zeitschritte.
+Setzen Sie folgende Schritte um.
 
-**Teil 1:** Legen Sie die Variablen `geschwindigkeit_ms = 0.0`, `zeit = 0`
-und `tempolimit_ms = 33.3` an. Schreiben Sie eine while-Schleife, die
-`geschwindigkeit_ms` in jedem Durchlauf um 3.5 m/s erhöht, `zeit` um 1
-Sekunde erhöht und beide Werte mit einem f-String ausgibt.
+**Teil 1:** Schreiben Sie eine for-Schleife mit `range(10)` für die
+Zeitschritte 0 bis 9. In jedem Zeitschritt beträgt die Geschwindigkeit
+`geschwindigkeit_ms = zeitschritt * 5.0`. Geben Sie Zeitschritt und
+Geschwindigkeit mit einem f-String aus.
 
-**Teil 2:** Erweitern Sie die Schleife so, dass sie mit `break` abbricht,
-sobald `geschwindigkeit_ms` das Tempolimit überschreitet. Geben Sie beim
-Abbruch eine zusätzliche Meldung mit der finalen Geschwindigkeit und Zeit
-aus.
+**Teil 2:** Ergänzen Sie im Schleifenkörper eine `if`/`else`-Abfrage, die zu
+jedem Zeitschritt ausgibt, ob das Tempolimit `tempolimit_ms = 33.3`
+eingehalten oder überschritten wird.
 
-**Teil 3:** Beantworten Sie abschließend: Was würde passieren, wenn die
-Abbruchbedingung in der while-Kopfzeile niemals erfüllt wird? Erklären Sie
-das Konzept der Endlosschleife in eigenen Worten.
+**Teil 3:** Zählen Sie mit, in wie vielen Zeitschritten das Tempolimit
+überschritten wird. Legen Sie dazu vor der Schleife eine Variable
+`anzahl_zu_schnell = 0` an und erhöhen Sie sie im passenden Fall um 1. Geben
+Sie die Zahl nach der Schleife aus.
+
+**Abschlussfrage:** Ab welchem Zeitschritt wird das Tempolimit überschritten,
+und wie hängt das mit der gewählten Beschleunigung von 5.0 m/s pro Zeitschritt
+zusammen?
 ```
 
 ```{code-cell} python
@@ -165,28 +237,24 @@ das Konzept der Endlosschleife in eigenen Worten.
 :class: tip
 :class: dropdown
 ```python
-geschwindigkeit_ms = 0.0
-zeit = 0
 tempolimit_ms = 33.3
+anzahl_zu_schnell = 0
 
-while geschwindigkeit_ms <= tempolimit_ms:
-    geschwindigkeit_ms = geschwindigkeit_ms + 3.5
-    zeit = zeit + 1
-    print(f'Nach {zeit} s: {geschwindigkeit_ms:.1f} m/s')
-
+for zeitschritt in range(10):
+    geschwindigkeit_ms = zeitschritt * 5.0
     if geschwindigkeit_ms > tempolimit_ms:
-        print(f'Tempolimit überschritten nach {zeit} s bei {geschwindigkeit_ms:.1f} m/s.')
-        break
-```
-Nach 10 Sekunden überschreitet das Fahrzeug mit 35.0 m/s erstmals das
-Tempolimit von 33.3 m/s.
+        print(f'Zeitschritt {zeitschritt}: {geschwindigkeit_ms:.1f} m/s, zu schnell')
+        anzahl_zu_schnell = anzahl_zu_schnell + 1
+    else:
+        print(f'Zeitschritt {zeitschritt}: {geschwindigkeit_ms:.1f} m/s, im Limit')
 
-Würde die Abbruchbedingung niemals erfüllt, würde die while-Schleife
-unendlich oft weiterlaufen. Dieses Verhalten nennen wir **Endlosschleife**.
-Da `geschwindigkeit_ms` in jedem Durchlauf tatsächlich erhöht wird, wird die
-Bedingung `geschwindigkeit_ms <= tempolimit_ms` in unserem Beispiel
-garantiert irgendwann falsch. Eine Endlosschleife entsteht erst dann, wenn
-sich die Variable in der Abbruchbedingung gar nicht oder nicht in die
-richtige Richtung verändert, beispielsweise wenn wir vergessen,
-`geschwindigkeit_ms` innerhalb der Schleife zu erhöhen.
+print(f'Zu schnell in {anzahl_zu_schnell} Zeitschritten.')
+```
+Die Geschwindigkeit nimmt die Werte 0, 5, 10, ... bis 45 m/s an. Das Tempolimit
+wird ab `zeitschritt = 7` überschritten, denn dort beträgt die Geschwindigkeit
+`7 * 5.0 = 35.0` m/s und liegt erstmals über 33.3 m/s. Insgesamt ist das
+Fahrzeug in den Zeitschritten 7, 8 und 9 zu schnell, also in drei
+Zeitschritten. Die Variable `anzahl_zu_schnell` wirkt dabei als Zähler, den wir
+in jedem passenden Durchlauf um 1 erhöhen. Bei einer größeren Beschleunigung
+pro Zeitschritt wäre das Limit früher überschritten.
 ````

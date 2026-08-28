@@ -18,19 +18,20 @@ project:
     - file: toc.md
     - title: 1. Crashkurs Python
       children:
+      - file: chapter01/chapter01_sec00.md
       - file: chapter01/chapter01_sec01.md
       - file: chapter01/chapter01_sec02.md
       - file: chapter01/chapter01_sec03.md
       - file: chapter01/chapter01_sec04.md
       - file: chapter01/chapter01_sec05.md
-    - title: 2. NumPy & Plotly
+      - file: chapter01/chapter01_sec06.md
+    - title: 2. NumPy & Matplotlib
       children:
       - file: chapter02/chapter02_sec01.md
       - file: chapter02/chapter02_sec02.md
+      - file: chapter02/chapter02_sec03.md
+      - file: chapter02/chapter02_sec04.md
       - file: chapter02/chapter02_sec05.md
-      - file: chapter02/chapter02_sec06.md
-      - file: chapter02/chapter02_sec07.md
-      - file: chapter02/chapter02_sec08.md
     - title: 3. Lineare Gleichungssysteme I 
       children:
       - file: chapter03/chapter03_sec01.md

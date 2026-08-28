@@ -2,6 +2,10 @@
 _build
 .vscode/
 
+# Von savefig-Beispielen in den Notebooks erzeugte Abbildungen
+# (Quellabbildungen liegen in chapterXX/pics/ als SVG und bleiben getrackt)
+chapter*/*.png
+
 ## MacOs ##
 # General
 .DS_Store

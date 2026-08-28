@@ -10,25 +10,25 @@ In Kapitel 1.1 haben wir einzelne Messwerte in Variablen gespeichert und mit
 einer Verzweigung geprüft, ob ein Tempolimit eingehalten wird. Ein Prüffahrzeug
 liefert während eines Beschleunigungstests aber nicht nur einen einzelnen
 Messwert, sondern eine ganze Messreihe. Eine einzelne Variable reicht dafür
-nicht mehr aus. In diesem Abschnitt lernen wir daher die Datenstrukturen
+nicht mehr aus. In diesem Kapitel lernen wir daher die Datenstrukturen
 **Liste** und **Dictionary** kennen, mit denen wir mehrere Werte gemeinsam
 verwalten. Anschließend kapseln wir wiederkehrende Berechnungen wie die
 Umrechnung von km/h in m/s in eigenen **Funktionen**.
+
+Wie in Kapitel 1.1 sind zur Vorbereitung wieder kurze Videos am Ende der
+Abschnitte eingebettet.
 
 ## Lernziele
 
 ```{admonition} Lernziele
 :class: attention
 * [ ] Sie können **Listen** erzeugen, mit `append()` erweitern und über den
-  **Index** sowie mit **Slicing** auf Elemente zugreifen.
-* [ ] Sie wissen, dass ein **Tupel** wie eine Liste ist, sich aber nicht
-  verändern lässt.
+  **Index** auf Elemente zugreifen.
 * [ ] Sie können **Dictionaries** mit Schlüssel-Wert-Paaren erstellen,
   lesen und verändern.
-* [ ] Sie können eigene **Funktionen** mit `def` schreiben, Parameter und
-  **Default-Werte** verwenden und mit `return` einen Wert zurückgeben.
-* [ ] Sie wissen, was der **Scope** einer Variable ist und was ein
-  **Docstring** ist.
+* [ ] Sie können eigene **Funktionen** mit `def` schreiben, Parameter
+  verwenden und mit `return` einen Wert zurückgeben.
+* [ ] Sie wissen, was ein **Default-Wert** und ein **Docstring** sind.
 ```
 
 ## Wie sammeln wir mehrere Messwerte in einer Liste?
@@ -61,16 +61,6 @@ print(f'Erste Messung: {erste_messung} km/h')
 print(f'Letzte Messung: {letzte_messung} km/h')
 ```
 
-Mit dem sogenannten **Slicing** greifen wir auf einen ganzen Ausschnitt der
-Liste zu. Dazu schreiben wir Start- und Endindex, getrennt durch einen
-Doppelpunkt, in die eckigen Klammern. Der Endindex selbst gehört nicht mehr
-zum Ausschnitt.
-
-```{code-cell} python
-mittlere_messungen = geschwindigkeiten_kmh[1:3]
-print(mittlere_messungen)
-```
-
 Um eine neue Messung am Ende der Liste zu ergänzen, verwenden wir die
 Methode `append()`.
 
@@ -78,20 +68,6 @@ Methode `append()`.
 geschwindigkeiten_kmh.append(75)
 print(geschwindigkeiten_kmh)
 ```
-
-````{admonition} Was ist ... ein Tupel?
-:class: note
-Neben der Liste kennt Python das **Tupel**, erkennbar an runden statt
-eckigen Klammern. Ein Tupel verhält sich wie eine Liste, lässt sich nach der
-Erzeugung aber nicht mehr verändern. Tupel eignen sich daher für Werte, die
-fest zusammengehören, zum Beispiel ein Mindest- und ein Höchstwert.
-
-```python
-geschwindigkeit_grenzwerte = (30.0, 130.0)
-print(geschwindigkeit_grenzwerte)
-# geschwindigkeit_grenzwerte[0] = 0   # würde einen Fehler auslösen
-```
-````
 
 Wenn wir jeden Messwert einer Liste verarbeiten wollen, durchlaufen wir die
 Liste direkt mit einer for-Schleife, ohne den Umweg über `range()` und den
@@ -102,7 +78,7 @@ for geschwindigkeit in geschwindigkeiten_kmh:
     print(f'Messwert: {geschwindigkeit} km/h')
 ```
 
-```{admonition} Mini-Übung
+```{admonition} Mini-Übung (✩)
 :class: tip
 Erstellen Sie eine Liste `temperaturen` mit fünf Temperaturmesswerten Ihrer
 Wahl. Hängen Sie einen weiteren Messwert mit `append()` an und geben Sie
@@ -113,7 +89,7 @@ Beantworten Sie zusätzlich, ohne den Code auszuführen: Was gibt
 Begründen Sie Ihre Antwort.
 ```
 
-```{code-cell} python ipython3
+```{code-cell} python
 # Code-Zelle
 ```
 
@@ -186,7 +162,7 @@ sensor['kalibrierdatum'] = '2026-01-15'
 print(sensor)
 ```
 
-```{admonition} Mini-Übung
+```{admonition} Mini-Übung (✩)
 :class: tip
 Erstellen Sie ein Dictionary `messung` für einen Temperaturmesswert mit den
 Schlüsseln `temperatur` (23.5), `ort` (`'Pruefstand_2'`) und `zeitstempel`
@@ -197,7 +173,7 @@ Beantworten Sie zusätzlich: Warum wäre eine Liste `[23.5, 'Pruefstand_2',
 Sie Ihre Antwort in eigenen Worten.
 ```
 
-```{code-cell} python ipython3
+```{code-cell} python
 # Code-Zelle
 ```
 
@@ -229,7 +205,7 @@ clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" refe
 
 ## Wie kapseln wir Berechnungen in Funktionen?
 
-In Abschnitt 1.1 haben wir die Formel `geschwindigkeit_kmh / 3.6` zur
+In Kapitel 1.1 haben wir die Formel `geschwindigkeit_kmh / 3.6` zur
 Umrechnung in m/s mehrfach von Hand hingeschrieben. Mit einer eigenen
 **Funktion** kapseln wir diese Berechnung, sodass wir sie nur einmal
 definieren und beliebig oft wiederverwenden können.
@@ -256,37 +232,28 @@ for geschwindigkeit in geschwindigkeiten_kmh:
     print(f'{geschwindigkeit} km/h entsprechen {kmh_zu_ms(geschwindigkeit):.1f} m/s')
 ```
 
-Funktionen können mehrere Parameter besitzen und für einzelne Parameter
-einen **Default-Wert** festlegen. Rufen wir die Funktion ohne diesen
-Parameter auf, verwendet Python automatisch den Default-Wert.
+Eine Funktion kann mehrere Parameter besitzen. Schreiben wir hinter einen
+Parameter ein `=` mit einem Wert, ist das ein **Default-Wert**: Rufen wir die
+Funktion ohne dieses Argument auf, verwendet Python automatisch den
+Default-Wert.
 
 ```{code-cell} python
 def kinetische_energie(geschwindigkeit_ms, masse=1200):
     return 0.5 * masse * geschwindigkeit_ms**2
 
-print(f'{kinetische_energie(27.8):.1f} Joule')
+print(f'{kinetische_energie(27.8):.1f} Joule')            # masse = 1200
 print(f'{kinetische_energie(27.8, masse=1500):.1f} Joule')
 ```
 
-Im ersten Aufruf verwendet Python den Default-Wert `masse=1200`, im zweiten
-Aufruf überschreiben wir ihn mit `masse=1500`.
-
 Direkt unter der Kopfzeile einer Funktion können wir in dreifachen
-Anführungszeichen einen **Docstring** notieren, der kurz beschreibt, was die
-Funktion tut.
+Anführungszeichen einen **Docstring** notieren, einen kurzen Satz, der
+beschreibt, was die Funktion tut.
 
 ```{code-cell} python
 def kmh_zu_ms(geschwindigkeit_kmh):
     """Rechnet eine Geschwindigkeit von km/h in m/s um."""
     return geschwindigkeit_kmh / 3.6
 ```
-
-Variablen, die wir innerhalb einer Funktion anlegen, zum Beispiel
-`geschwindigkeit_ms` im ersten Beispiel dieses Abschnitts, existieren nur
-innerhalb dieser Funktion. Diesen Gültigkeitsbereich nennen wir **Scope**.
-Außerhalb der Funktion ist diese Variable nicht bekannt, selbst wenn außerhalb
-zufällig eine Variable mit demselben Namen existiert. Nur der Rückgabewert über
-`return` verlässt die Funktion.
 
 ```{dropdown} Video "Funktionen selbst definieren" von Programmieren Starten
 <iframe width="560" height="315" src="https://www.youtube.com/embed/LQCfN5HS9xI" 
@@ -308,7 +275,7 @@ clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen
 </iframe>
 ```
 
-```{admonition} Mini-Übung
+```{admonition} Mini-Übung (✩)
 :class: tip
 Schreiben Sie eine Funktion `bremsweg(geschwindigkeit_kmh)`, die den
 Bremsweg nach der Faustformel `(geschwindigkeit_kmh / 10) ** 2 / 2`
@@ -320,7 +287,7 @@ Funktionsaufruf zurück, wenn Sie in der Funktion das Schlüsselwort `return`
 vergessen? Begründen Sie Ihre Antwort.
 ```
 
-```{code-cell} python ipython3
+```{code-cell} python
 # Code-Zelle
 ```
 
@@ -341,17 +308,15 @@ wird.
 
 ## Zusammenfassung und Ausblick
 
-In diesem Abschnitt haben wir gelernt, wie wir mehrere Messwerte in einer
+In diesem Kapitel haben wir gelernt, wie wir mehrere Messwerte in einer
 **Liste** sammeln, mit aussagekräftigen Schlüsseln in einem **Dictionary**
 strukturieren und wiederkehrende Berechnungen in eigenen **Funktionen** mit
-Parametern, Default-Werten und Rückgabewerten kapseln. Damit besitzen wir
-nun das vollständige Handwerkszeug, um die Messreihen aus unseren
-Beschleunigungstests zu verarbeiten.
+Parametern und Rückgabewerten kapseln. Damit besitzen wir nun das
+Handwerkszeug, um die Messreihen aus unseren Beschleunigungstests zu
+verarbeiten.
 
-Zwei Themen haben wir bewusst ausgespart: kompakte List Comprehensions als
-Kurzschreibweise für Schleifen sowie die Fehlerbehandlung mit `try` und
-`except`. Wir holen Letzteres nach, sobald wir in den numerischen Verfahren
-auf typische Fehlerquellen wie eine Division durch null oder ausbleibende
-Konvergenz stoßen. Ab Woche 2 verwenden wir **NumPy** und **Plotly**, um
-ganze Messreihen wie `geschwindigkeiten_kmh` ohne eigene Schleife auf einmal
-zu verarbeiten und grafisch darzustellen.
+Einige Python-Themen haben wir bewusst ausgespart und holen sie später nach,
+wenn wir sie brauchen, zum Beispiel die Fehlerbehandlung mit `try` und
+`except` bei den numerischen Verfahren. In Kapitel 2 verwenden wir **NumPy**
+und **Matplotlib**, um ganze Messreihen wie `geschwindigkeiten_kmh` ohne
+eigene Schleife auf einmal zu verarbeiten und grafisch darzustellen.

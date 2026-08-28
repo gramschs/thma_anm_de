@@ -4,7 +4,16 @@ kernelspec:
   display_name: 'Python 3'
 ---
 
-# Übungen
+# 1.5 Übungen
+
+Diese Aufgaben sind für das Selbststudium zuhause gedacht und wiederholen den
+Stoff der Kapitel 1.1 bis 1.4. Rechnen Sie mit rund 90 Minuten Bearbeitungszeit.
+
+Der Schwierigkeitsgrad steht im Titel jeder Aufgabe:
+
+* ✩ Verständnis: Code und Ausgaben vorhersagen und erklären (ca. 5 min)
+* ✩✩ Anwendung: eigenen Code schreiben und Ergebnisse interpretieren (ca. 10 min)
+* ✩✩✩ Mini-Projekt: mehrere Konzepte des Parts kombinieren (ca. 30 min)
 
 ```{admonition} Aufgabe 1.1 (✩)
 :class: tip
@@ -35,7 +44,10 @@ print(type(7))
 print(type(-7))
 print(type('Stahl'))
 print(type(7.0))
-print(type(7,0))
+
+komma_zahl = 7,0
+print(type(komma_zahl))
+
 print(type(7**2))
 print(type(7**(1/2)))
 print(type(7 == 7.0))
@@ -45,11 +57,11 @@ print(type(7 == 7.0))
 (`2.6457513110645907`). `7 == 7.0` ist ein `bool` mit dem Wert `True`, da
 Python beim Vergleich den Zahlenwert betrachtet, nicht den Datentyp.
 
-Der interessanteste Fall ist `7,0`: Das Komma ohne Klammern erzeugt in
-Python kein Float, sondern ein **Tupel** `(7, 0)` mit zwei Elementen, denn
-das Komma ist das Zeichen zum Erzeugen von Tupeln. Es kommt dabei zu keiner
-Fehlermeldung, was diesen Tippfehler besonders tückisch macht. Verwenden Sie
-für Dezimalzahlen daher immer einen Punkt statt eines Kommas.
+Der interessanteste Fall ist `7,0`: Das Komma erzeugt in Python keine
+Dezimalzahl, sondern bündelt die beiden Werte `7` und `0` zu einem Paar. Es
+kommt dabei zu keiner Fehlermeldung, was diesen Tippfehler besonders tückisch
+macht. Verwenden Sie für Dezimalzahlen daher immer einen Punkt statt eines
+Kommas.
 ````
 
 ```{admonition} Aufgabe 1.2 (✩✩)
@@ -178,12 +190,11 @@ gewünschten Temperaturen ab.
 
 ```{admonition} Aufgabe 1.6 (✩✩)
 :class: tip
-Ein Bauteil kühlt sich ausgehend von `temperatur = 180.0` Grad Celsius in
-jedem Zeitschritt um 12 Grad ab. Schreiben Sie eine while-Schleife, die
-Zeitschritt und Temperatur ausgibt, bis die Temperatur unter 20 Grad fällt.
-Bauen Sie zusätzlich einen Sicherheitsabbruch mit `break` ein, der die
-Schleife nach spätestens 20 Zeitschritten beendet, falls die Abkühlung
-unerwartet langsamer verlaufen sollte.
+Ein Bauteil kühlt sich ausgehend von 180 Grad Celsius in jedem Zeitschritt um
+12 Grad ab. Schreiben Sie eine for-Schleife mit `range(15)`, die für jeden
+Zeitschritt die Temperatur berechnet und ausgibt. Ergänzen Sie im
+Schleifenkörper eine `if`-Abfrage, die zusätzlich `unter 20 Grad` ausgibt,
+sobald die Temperatur die Marke von 20 Grad Celsius unterschreitet.
 ```
 
 ```{code-cell} python
@@ -194,26 +205,16 @@ unerwartet langsamer verlaufen sollte.
 :class: tip
 :class: dropdown
 ```python
-temperatur = 180.0
-zeitschritt = 0
-
-while temperatur >= 20.0:
-    temperatur = temperatur - 12.0
-    zeitschritt = zeitschritt + 1
-    print(f'Zeitschritt {zeitschritt}: {temperatur:.1f} Grad Celsius')
-
-    if zeitschritt >= 20:
-        print('Sicherheitsabbruch: maximale Anzahl Zeitschritte erreicht.')
-        break
-
-print('Abkühlung beendet.')
+for zeitschritt in range(15):
+    temperatur = 180 - zeitschritt * 12
+    print(f'Zeitschritt {zeitschritt}: {temperatur} Grad Celsius')
+    if temperatur < 20:
+        print('unter 20 Grad')
 ```
-Die Temperatur unterschreitet 20 Grad Celsius nach 14 Zeitschritten bei
-12.0 Grad Celsius. Der Sicherheitsabbruch greift in diesem Fall nicht, da
-die Schleife deutlich vor dem 20. Durchgang regulär endet. Ein solcher
-Sicherheitsabbruch ist trotzdem sinnvoll, da er verhindert, dass sich das
-Programm bei einer fehlerhaften Abbruchbedingung in einer Endlosschleife
-verfängt.
+Die Temperatur sinkt in gleichmäßigen Schritten von 180 auf 12 Grad Celsius.
+Ab Zeitschritt 14 liegt sie mit 12 Grad Celsius erstmals unter der Marke von
+20 Grad, dort erscheint die Zusatzmeldung. Mit `range(15)` decken wir alle
+Zeitschritte bis zum Unterschreiten der Marke ab.
 ````
 
 ```{admonition} Aufgabe 1.7 (✩)
@@ -221,10 +222,10 @@ verfängt.
 Gegeben ist die Liste `liste = [15, 8, 23, 4, 16, 42]`. Notieren Sie zunächst
 Ihre Vermutung, bevor Sie den Code ausführen.
 
-* `liste[1]` -->
+* `liste[0]` -->
+* `liste[2]` -->
+* `liste[-1]` -->
 * `liste[-3]` -->
-* `liste[:3]` -->
-* `liste[3:]` -->
 * `len(liste)` -->
 ```
 
@@ -237,16 +238,16 @@ Ihre Vermutung, bevor Sie den Code ausführen.
 :class: dropdown
 ```python
 liste = [15, 8, 23, 4, 16, 42]
-print(liste[1])
+print(liste[0])
+print(liste[2])
+print(liste[-1])
 print(liste[-3])
-print(liste[:3])
-print(liste[3:])
 print(len(liste))
 ```
-`liste[1]` ist `8`, das Element an Index 1. `liste[-3]` ist `4`, denn von
-hinten gezählt liegen `42` bei -1, `16` bei -2 und `4` bei -3. `liste[:3]`
-liefert die ersten drei Elemente `[15, 8, 23]`, `liste[3:]` liefert alle
-Elemente ab Index 3, also `[4, 16, 42]`. `len(liste)` ergibt `6`.
+`liste[0]` ist `15`, das erste Element, `liste[2]` ist `23`, das Element an
+Index 2. `liste[-1]` ist `42`, das letzte Element. `liste[-3]` ist `4`, denn
+von hinten gezählt liegen `42` bei -1, `16` bei -2 und `4` bei -3.
+`len(liste)` ergibt `6`, die Anzahl der Elemente.
 ````
 
 ```{admonition} Aufgabe 1.8 (✩✩)
