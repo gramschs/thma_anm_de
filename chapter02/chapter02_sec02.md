@@ -4,7 +4,7 @@ kernelspec:
   display_name: 'Python 3'
 ---
 
-# Aufgabe: Prüfstand für eine Windkraftanlage
+# 2.2 Prüfstand für eine Windkraftanlage
 
 Ein Testlauf misst die Windgeschwindigkeit an 8 Zeitpunkten während einer
 70-sekündigen Anlaufphase (in m/s):

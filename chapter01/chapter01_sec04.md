@@ -1,18 +1,10 @@
 ---
-jupytext:
-  formats: ipynb,md:myst
-  text_representation:
-    extension: .md
-    format_name: myst
-    format_version: 0.13
-    jupytext_version: 1.15.2
 kernelspec:
-  display_name: Python 3
-  language: python
   name: python3
+  display_name: 'Python 3'
 ---
 
-# Vertiefung 1.2
+# Vertiefung (Teil 2)
 
 Die folgenden Aufgaben bearbeiten wir in der restlichen Zeit dieses
 Blocks. Aufgaben mit einem Stern (✩) und zwei Sternen (✩✩) sind
@@ -32,7 +24,7 @@ zunächst Ihre Vermutung, bevor Sie den Code ausführen.
 Überprüfen Sie anschließend jede Zeile in einer Code-Zelle.
 ```
 
-```{code-cell} ipython3
+```{code-cell} python
 # Code-Zelle
 ```
 
@@ -61,7 +53,7 @@ Sie dabei nicht die eingebaute Funktion `sum()`. Geben Sie das Ergebnis
 gerundet auf eine Nachkommastelle aus.
 ```
 
-```{code-cell} ipython3
+```{code-cell} python
 # Code-Zelle
 ```
 
@@ -95,7 +87,7 @@ Informationen:
 Geben Sie dann aus: "Pruefstand_3 (Baujahr 2021) erlaubt bis zu 180.0 km/h."
 ```
 
-```{code-cell} ipython3
+```{code-cell} python
 # Code-Zelle
 ```
 
@@ -126,7 +118,7 @@ Funktion anschließend in einer for-Schleife für jeden Wert der Liste
 m/s aus.
 ```
 
-```{code-cell} ipython3
+```{code-cell} python
 # Code-Zelle
 ```
 
@@ -170,7 +162,7 @@ Messreihe tritt dieser Maximalwert auf, und warum lässt sich das ohne
 Ausführen des Codes bereits vermuten?
 ```
 
-```{code-cell} ipython3
+```{code-cell} python
 # Code-Zelle
 ```
 

@@ -1,15 +1,7 @@
 ---
-jupytext:
-  formats: ipynb,md:myst
-  text_representation:
-    extension: .md
-    format_name: myst
-    format_version: 0.13
-    jupytext_version: 1.15.2
 kernelspec:
-  display_name: Python 3
-  language: python
   name: python3
+  display_name: 'Python 3'
 ---
 
 # Übungen
@@ -31,7 +23,7 @@ bevor Sie den Code ausführen.
 Überprüfen Sie anschließend jede Zeile mit `type()` in einer Code-Zelle.
 ```
 
-```{code-cell} ipython3
+```{code-cell} python
 # Code-Zelle
 ```
 
@@ -68,7 +60,7 @@ Auslenkung von 0.12 m. Geben Sie das Ergebnis mit einem f-String und der
 Einheit Newton aus, gerundet auf zwei Nachkommastellen.
 ```
 
-```{code-cell} ipython3
+```{code-cell} python
 # Code-Zelle
 ```
 
@@ -100,7 +92,7 @@ bevor Sie den Code ausführen.
 * `(5 > 3) or (2 > 4)` -->
 ```
 
-```{code-cell} ipython3
+```{code-cell} python
 # Code-Zelle
 ```
 
@@ -133,7 +125,7 @@ Verzweigung, die folgende Kategorien ausgibt:
 * über 600 MPa: `'hochfest'`
 ```
 
-```{code-cell} ipython3
+```{code-cell} python
 # Code-Zelle
 ```
 
@@ -167,7 +159,7 @@ ungleich 1. Der Wert `stop` selbst gehört nicht mehr zum Bereich, wählen Sie
 ihn daher passend größer.
 ```
 
-```{code-cell} ipython3
+```{code-cell} python
 # Code-Zelle
 ```
 
@@ -194,7 +186,7 @@ Schleife nach spätestens 20 Zeitschritten beendet, falls die Abkühlung
 unerwartet langsamer verlaufen sollte.
 ```
 
-```{code-cell} ipython3
+```{code-cell} python
 # Code-Zelle
 ```
 
@@ -236,7 +228,7 @@ Ihre Vermutung, bevor Sie den Code ausführen.
 * `len(liste)` -->
 ```
 
-```{code-cell} ipython3
+```{code-cell} python
 # Code-Zelle
 ```
 
@@ -265,7 +257,7 @@ kleinsten und größten Wert der Liste, ohne die eingebauten Funktionen
 `min()` und `max()` zu verwenden.
 ```
 
-```{code-cell} ipython3
+```{code-cell} python
 # Code-Zelle
 ```
 
@@ -305,7 +297,7 @@ Geben Sie dann aus: "Welle_A1 aus 42CrMo4 (Durchmesser 25.0 mm) hält
 maximal 180 Nm."
 ```
 
-```{code-cell} ipython3
+```{code-cell} python
 # Code-Zelle
 ```
 
@@ -340,7 +332,7 @@ Querschnitt sowie einmal mit `kraft_n = 5000` und
 Satz.
 ```
 
-```{code-cell} ipython3
+```{code-cell} python
 # Code-Zelle
 ```
 
@@ -390,7 +382,7 @@ erstmals überschritten, und was bedeutet das physikalisch für die
 Werkstoffprobe?
 ```
 
-```{code-cell} ipython3
+```{code-cell} python
 # Code-Zelle
 ```
 

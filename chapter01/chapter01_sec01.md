@@ -1,15 +1,7 @@
 ---
-jupytext:
-  formats: ipynb,md:myst
-  text_representation:
-    extension: .md
-    format_name: myst
-    format_version: 0.13
-    jupytext_version: 1.15.2
 kernelspec:
-  display_name: Python 3
-  language: python
   name: python3
+  display_name: 'Python 3'
 ---
 
 # 1.1 Variablen, Operatoren und Kontrollstrukturen
@@ -49,7 +41,7 @@ Stellen wir uns vor, ein Sensor an einem Prüffahrzeug misst die aktuelle
 Geschwindigkeit. Wir wollen diesen Wert sowie weitere Informationen zur
 Messung in unserem Programm speichern.
 
-```{code-cell}
+```{code-cell} python
 geschwindigkeit = 27.8
 anzahl_messungen = 50
 sensorname = 'Sensor_A'
@@ -65,7 +57,7 @@ Computers.
 Als nächstes geben wir den Inhalt der Variablen auf dem Monitor oder Display
 aus. Dazu benutzen wir die in Python eingebaute Funktion `print()`.
 
-```{code-cell}
+```{code-cell} python
 print(geschwindigkeit)
 print(anzahl_messungen)
 print(sensorname)
@@ -88,7 +80,7 @@ diesem Abschnitt lernen wir drei einfache Datentypen kennen:
 Mit der Funktion `type()` lassen wir uns den Datentyp einer Variable
 anzeigen.
 
-```{code-cell}
+```{code-cell} python
 print(type(geschwindigkeit))
 print(type(anzahl_messungen))
 print(type(sensorname))
@@ -97,7 +89,7 @@ print(type(sensorname))
 Variablen lassen sich auch nachträglich verändern. Häufig schreiben wir Code
 wie im folgenden Beispiel, um eine Variable um einen Wert zu erhöhen.
 
-```{code-cell}
+```{code-cell} python
 anzahl_messungen = anzahl_messungen + 1
 print(anzahl_messungen)
 ```
@@ -113,7 +105,7 @@ Um Werte gemeinsam mit Text auszugeben, verwenden wir **f-Strings**. Dazu
 setzen wir ein `f` direkt vor das Anführungszeichen und schreiben den
 Variablennamen in geschweifte Klammern.
 
-```{code-cell}
+```{code-cell} python
 print(f'Der Sensor {sensorname} misst eine Geschwindigkeit von {geschwindigkeit} km/h.')
 ```
 
@@ -121,7 +113,7 @@ Bei Floats können wir zusätzlich die Anzahl der Nachkommastellen festlegen.
 Dazu schreiben wir hinter den Variablennamen einen Doppelpunkt, gefolgt von
 der gewünschten Anzahl Nachkommastellen und einem `f`.
 
-```{code-cell}
+```{code-cell} python
 pi = 3.141592653589793
 print(f'Pi auf zwei Nachkommastellen: {pi:.2f}')
 ```
@@ -138,7 +130,7 @@ würde `type()` zurückgeben, wenn Sie stattdessen `masse = 5` ohne
 Dezimalpunkt schreiben? Begründen Sie Ihre Antwort.
 ```
 
-```{code-cell} ipython3
+```{code-cell} python ipython3
 # Code-Zelle
 ```
 
@@ -194,7 +186,7 @@ Aus der Physik-Grundvorlesung kennen wir bereits die SI-Einheit m/s für die
 Geschwindigkeit. Sensordaten liegen aber häufig in km/h vor, daher rechnen
 wir zunächst um.
 
-```{code-cell}
+```{code-cell} python
 geschwindigkeit_kmh = 100
 geschwindigkeit_ms = geschwindigkeit_kmh / 3.6
 print(geschwindigkeit_ms)
@@ -205,7 +197,7 @@ Python kennt die üblichen arithmetischen Operatoren: `+` für die Addition,
 und `**` für das Potenzieren. Mit diesen Operatoren berechnen wir
 beispielsweise die kinetische Energie eines Fahrzeugs.
 
-```{code-cell}
+```{code-cell} python
 masse = 1200                # kg
 geschwindigkeit_ms = 27.8   # m/s
 
@@ -219,7 +211,7 @@ Beispiel um zu prüfen, ob ein Tempolimit eingehalten wird. Dafür stehen uns
 gleich" und `!=` für "ist ungleich". Das Ergebnis eines Vergleichs ist immer
 ein **Wahrheitswert**, also entweder `True` oder `False`.
 
-```{code-cell}
+```{code-cell} python
 tempolimit_ms = 33.3   # entspricht 120 km/h
 
 print(geschwindigkeit_ms > tempolimit_ms)
@@ -237,7 +229,7 @@ Verwechslung gehört zu den häufigsten Anfängerfehlern in Python.
 Mehrere Bedingungen verknüpfen wir mit den **logischen Operatoren** `and`,
 `or` und `not`.
 
-```{code-cell}
+```{code-cell} python
 ist_schnell = geschwindigkeit_ms > 25
 ist_ueber_limit = geschwindigkeit_ms > tempolimit_ms
 
@@ -256,7 +248,7 @@ Beantworten Sie zusätzlich ohne Ausführen des Codes: Was gibt der Ausdruck
 Begründen Sie Ihre Antwort.
 ```
 
-```{code-cell} ipython3
+```{code-cell} python ipython3
 # Code-Zelle
 ```
 
@@ -301,7 +293,7 @@ Bisher wurde jede Zeile unseres Programms genau einmal ausgeführt. Häufig
 wollen wir aber abhängig von einer Bedingung unterschiedlichen Code
 ausführen, zum Beispiel je nachdem, ob ein Tempolimit eingehalten wird.
 
-```{code-cell}
+```{code-cell} python
 geschwindigkeit_ms = 35.0
 tempolimit_ms = 33.3
 
@@ -324,7 +316,7 @@ Oft müssen wir eine Anweisung mehrfach wiederholen, zum Beispiel um mehrere
 Zeitschritte einer Messung zu simulieren. Dafür verwenden wir die
 **for-Schleife** zusammen mit der Funktion `range()`.
 
-```{code-cell}
+```{code-cell} python
 for zeitschritt in range(5):
     print(f'Zeitschritt {zeitschritt}: Messung wird durchgeführt.')
 ```
@@ -340,7 +332,7 @@ Manchmal kennen wir die Anzahl der Wiederholungen nicht im Voraus, sondern
 wollen so lange weiterrechnen, bis eine Bedingung erfüllt ist. Dafür
 verwenden wir die **while-Schleife**.
 
-```{code-cell}
+```{code-cell} python
 geschwindigkeit_ms = 0.0
 zeit = 0
 
@@ -360,7 +352,7 @@ Manchmal wollen wir eine Schleife schon vorzeitig verlassen, bevor die
 Abbruchbedingung von selbst erreicht ist. Dafür verwenden wir das
 Schlüsselwort `break`.
 
-```{code-cell}
+```{code-cell} python
 for zeitschritt in range(10):
     geschwindigkeit_ms = zeitschritt * 5.0
     if geschwindigkeit_ms > tempolimit_ms:
@@ -386,7 +378,7 @@ liegt. Beantworten Sie vor dem Ausführen: Bei welchem Schleifendurchgang
 wird `break` ausgelöst? Begründen Sie Ihre Antwort.
 ```
 
-```{code-cell} ipython3
+```{code-cell} python ipython3
 # Code-Zelle
 ```
 

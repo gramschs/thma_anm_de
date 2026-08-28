@@ -1,18 +1,10 @@
 ---
-jupytext:
-  formats: ipynb,md:myst
-  text_representation:
-    extension: .md
-    format_name: myst
-    format_version: 0.13
-    jupytext_version: 1.15.2
 kernelspec:
-  display_name: Python 3
-  language: python
   name: python3
+  display_name: 'Python 3'
 ---
 
-# Vertiefung 1.1
+# 1.2 Vertiefung (Teil 1)
 
 Die folgenden Aufgaben bearbeiten wir in der restlichen Zeit dieses
 Blocks. Aufgaben mit einem Stern (✩) und zwei Sternen (✩✩) sind
@@ -35,7 +27,7 @@ Sie den Code ausführen.
 Überprüfen Sie anschließend jede Zeile mit `type()` in einer Code-Zelle.
 ```
 
-```{code-cell} ipython3
+```{code-cell} python
 # Code-Zelle
 ```
 
@@ -66,7 +58,7 @@ Sie das Ergebnis mit einem f-String und der Einheit Joule aus, gerundet auf
 eine Nachkommastelle.
 ```
 
-```{code-cell} ipython3
+```{code-cell} python
 # Code-Zelle
 ```
 
@@ -92,7 +84,7 @@ Verzweigung, ob das Tempolimit von `tempolimit_ms = 33.3` eingehalten, genau
 erreicht oder überschritten wird. Geben Sie eine passende Meldung aus.
 ```
 
-```{code-cell} ipython3
+```{code-cell} python
 # Code-Zelle
 ```
 
@@ -125,7 +117,7 @@ erhöht und ausgibt. Brechen Sie die Schleife mit `break` ab, sobald die
 Temperatur über 90 Grad Celsius liegt.
 ```
 
-```{code-cell} ipython3
+```{code-cell} python
 # Code-Zelle
 ```
 
@@ -165,7 +157,7 @@ Abbruchbedingung in der while-Kopfzeile niemals erfüllt wird? Erklären Sie
 das Konzept der Endlosschleife in eigenen Worten.
 ```
 
-```{code-cell} ipython3
+```{code-cell} python
 # Code-Zelle
 ```
 

@@ -1,18 +1,10 @@
 ---
-jupytext:
-  formats: ipynb,md:myst
-  text_representation:
-    extension: .md
-    format_name: myst
-    format_version: 0.13
-    jupytext_version: 1.15.2
 kernelspec:
-  display_name: Python 3
-  language: python
   name: python3
+  display_name: 'Python 3'
 ---
 
-# 1.2 Listen, Dictionaries und Funktionen
+# 1.3 Listen, Dictionaries und Funktionen
 
 In Kapitel 1.1 haben wir einzelne Messwerte in Variablen gespeichert und mit
 einer Verzweigung geprüft, ob ein Tempolimit eingehalten wird. Ein Prüffahrzeug
@@ -45,7 +37,7 @@ Stellen wir uns einen Beschleunigungstest vor, bei dem ein Sensor die
 Geschwindigkeit zu mehreren Zeitpunkten erfasst. Wir sammeln diese Werte in
 einer **Liste**, erkennbar an den eckigen Klammern.
 
-```{code-cell}
+```{code-cell} python
 geschwindigkeiten_kmh = [80, 95, 120, 60, 110]
 print(geschwindigkeiten_kmh)
 ```
@@ -53,7 +45,7 @@ print(geschwindigkeiten_kmh)
 Eine Liste kann beliebig viele Elemente enthalten. Mit `len()` lassen wir
 uns die Anzahl der Elemente anzeigen.
 
-```{code-cell}
+```{code-cell} python
 anzahl_messungen = len(geschwindigkeiten_kmh)
 print(f'Anzahl Messungen: {anzahl_messungen}')
 ```
@@ -62,7 +54,7 @@ Auf einzelne Elemente greifen wir über den **Index** zu. Python beginnt die
 Zählung bei 0. Mit dem Index `-1` greifen wir bequem auf das letzte Element
 zu.
 
-```{code-cell}
+```{code-cell} python
 erste_messung = geschwindigkeiten_kmh[0]
 letzte_messung = geschwindigkeiten_kmh[-1]
 print(f'Erste Messung: {erste_messung} km/h')
@@ -74,7 +66,7 @@ Liste zu. Dazu schreiben wir Start- und Endindex, getrennt durch einen
 Doppelpunkt, in die eckigen Klammern. Der Endindex selbst gehört nicht mehr
 zum Ausschnitt.
 
-```{code-cell}
+```{code-cell} python
 mittlere_messungen = geschwindigkeiten_kmh[1:3]
 print(mittlere_messungen)
 ```
@@ -82,7 +74,7 @@ print(mittlere_messungen)
 Um eine neue Messung am Ende der Liste zu ergänzen, verwenden wir die
 Methode `append()`.
 
-```{code-cell}
+```{code-cell} python
 geschwindigkeiten_kmh.append(75)
 print(geschwindigkeiten_kmh)
 ```
@@ -105,7 +97,7 @@ Wenn wir jeden Messwert einer Liste verarbeiten wollen, durchlaufen wir die
 Liste direkt mit einer for-Schleife, ohne den Umweg über `range()` und den
 Index zu gehen.
 
-```{code-cell}
+```{code-cell} python
 for geschwindigkeit in geschwindigkeiten_kmh:
     print(f'Messwert: {geschwindigkeit} km/h')
 ```
@@ -121,7 +113,7 @@ Beantworten Sie zusätzlich, ohne den Code auszuführen: Was gibt
 Begründen Sie Ihre Antwort.
 ```
 
-```{code-cell} ipython3
+```{code-cell} python ipython3
 # Code-Zelle
 ```
 
@@ -169,7 +161,7 @@ steht, bei Index 1 der Standort und bei Index 2 der Name. Für solche Fälle
 eignet sich das **Dictionary** besser, da wir über aussagekräftige Schlüssel
 statt über einen numerischen Index zugreifen.
 
-```{code-cell}
+```{code-cell} python
 sensor = {
     'name': 'Sensor_A',
     'standort': 'Pruefstand_1',
@@ -181,14 +173,14 @@ print(sensor)
 Der Zugriff auf einen Wert erfolgt über den zugehörigen Schlüssel in eckigen
 Klammern.
 
-```{code-cell}
+```{code-cell} python
 print(f'Sensor: {sensor["name"]}')
 print(f'Standort: {sensor["standort"]}')
 ```
 
 Wir können bestehende Werte ändern oder neue Schlüssel-Wert-Paare ergänzen.
 
-```{code-cell}
+```{code-cell} python
 sensor['messbereich_max'] = 250.0
 sensor['kalibrierdatum'] = '2026-01-15'
 print(sensor)
@@ -205,7 +197,7 @@ Beantworten Sie zusätzlich: Warum wäre eine Liste `[23.5, 'Pruefstand_2',
 Sie Ihre Antwort in eigenen Worten.
 ```
 
-```{code-cell} ipython3
+```{code-cell} python ipython3
 # Code-Zelle
 ```
 
@@ -242,7 +234,7 @@ Umrechnung in m/s mehrfach von Hand hingeschrieben. Mit einer eigenen
 **Funktion** kapseln wir diese Berechnung, sodass wir sie nur einmal
 definieren und beliebig oft wiederverwenden können.
 
-```{code-cell}
+```{code-cell} python
 def kmh_zu_ms(geschwindigkeit_kmh):
     geschwindigkeit_ms = geschwindigkeit_kmh / 3.6
     return geschwindigkeit_ms
@@ -259,7 +251,7 @@ zurückgegeben wird. Sobald die Funktion definiert ist, rufen wir sie beliebig
 oft mit unterschiedlichen Argumenten auf, zum Beispiel für jeden Messwert
 unserer Liste.
 
-```{code-cell}
+```{code-cell} python
 for geschwindigkeit in geschwindigkeiten_kmh:
     print(f'{geschwindigkeit} km/h entsprechen {kmh_zu_ms(geschwindigkeit):.1f} m/s')
 ```
@@ -268,7 +260,7 @@ Funktionen können mehrere Parameter besitzen und für einzelne Parameter
 einen **Default-Wert** festlegen. Rufen wir die Funktion ohne diesen
 Parameter auf, verwendet Python automatisch den Default-Wert.
 
-```{code-cell}
+```{code-cell} python
 def kinetische_energie(geschwindigkeit_ms, masse=1200):
     return 0.5 * masse * geschwindigkeit_ms**2
 
@@ -283,7 +275,7 @@ Direkt unter der Kopfzeile einer Funktion können wir in dreifachen
 Anführungszeichen einen **Docstring** notieren, der kurz beschreibt, was die
 Funktion tut.
 
-```{code-cell}
+```{code-cell} python
 def kmh_zu_ms(geschwindigkeit_kmh):
     """Rechnet eine Geschwindigkeit von km/h in m/s um."""
     return geschwindigkeit_kmh / 3.6
@@ -328,7 +320,7 @@ Funktionsaufruf zurück, wenn Sie in der Funktion das Schlüsselwort `return`
 vergessen? Begründen Sie Ihre Antwort.
 ```
 
-```{code-cell} ipython3
+```{code-cell} python ipython3
 # Code-Zelle
 ```
 
