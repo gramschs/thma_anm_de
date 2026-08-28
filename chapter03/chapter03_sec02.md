@@ -4,292 +4,230 @@ kernelspec:
   display_name: 'Python 3'
 ---
 
-# 3.2 LGS lösen mit NumPy
+# 3.2 Vertiefung: Auflagerkräfte an einem Träger
 
-```{admonition} Warnung
-:class: warning
-Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
-```
+In Kapitel 3.1 haben wir ein Gleichungssystem als Matrixgleichung geschrieben,
+seine Lösbarkeit geprüft und es mit `np.linalg.solve` gelöst. In diesem Kapitel
+wenden wir dasselbe Vorgehen auf ein Problem aus der Technischen Mechanik an:
+die Auflagerkräfte eines belasteten Trägers. Bearbeiten Sie die Teilaufgaben
+möglichst zu zweit und der Reihe nach, jeder Teil baut auf dem vorherigen auf.
 
-Im letzten Kapitel haben wir das Obstmarkt-Problem als Matrixgleichung
-$\mathbf{A} \cdot \vec{x} = \vec{b}$ aufgeschrieben und mit der Determinante
-geprüft, ob eine eindeutige Lösung existiert. Jetzt berechnen wir sie.
-
-## Lernziele
-
-```{admonition} Lernziele
-:class: attention
-* [ ] Sie können ein LGS mit `np.linalg.solve(A, b)` lösen.
-* [ ] Sie können das Ergebnis mit einer Probe absichern.
-* [ ] Sie wissen, wofür `np.linalg.inv()` sinnvoll ist und wann `solve` vorzuziehen ist.
-```
-
-+++
-
-## Lösen mit `np.linalg.solve`
-
-Wir starten sofort mit dem Code. Das Obstmarkt-System aus Kapitel 3.1 kennen
-wir bereits:
-
-```{code-cell} python
-import numpy as np
-
-# Koeffizientenmatrix: Zeile = Einkaufstag, Spalte = Fruchtsorte
-A = np.array([
-    [3, 2, 1],
-    [2, 3, 0],
-    [1, 1, 3],
-], dtype=float)
-
-# Rechte Seite: bezahlte Gesamtbeträge in Euro
-b = np.array([2.10, 1.70, 2.80])
-
-# np.linalg.solve löst A * x = b in einer einzigen Zeile
-# Intern verwendet NumPy eine LU-Zerlegung (schneller als Gauß von Hand)
-# Wichtig: solve erwartet immer zuerst A, dann b
-x = np.linalg.solve(A, b)
-
-# x ist ein 1D-Array: x[0]=Apfel, x[1]=Banane, x[2]=Clementinen
-print(f'Preis Apfel:      {x[0]:.2f} €')
-print(f'Preis Banane:     {x[1]:.2f} €')
-print(f'Preis Clementine: {x[2]:.2f} €')
-```
-
-+++
-
-## Das Ergebnis immer prüfen: die Probe
-
-*Woher wissen wir, dass das Ergebnis stimmt?* Wenn $\vec{x}$ die richtige
-Lösung ist, muss das Matrixprodukt $\mathbf{A} \cdot \vec{x}$ exakt den
-Vektor $\vec{b}$ reproduzieren. Das ist unsere **Probe**:
-
-```{code-cell} python
-# Probe: A mal x muss gleich b ergeben
-# @ ist der Matrixmultiplikations-Operator in NumPy (nicht * verwenden!)
-b_probe = A @ x
-
-print('Ergebnis A @ x:', b_probe)
-print('Soll-Wert   b: ', b)
-
-# np.allclose prüft, ob alle Einträge bis auf winzige Rundungsfehler gleich sind
-# Hintergrund: Fließkommazahlen sind nie exakt, daher schlägt == oft fehl
-# allclose toleriert Abweichungen kleiner als 1e-8 (Standard-Schwellenwert)
-print('Probe bestanden:', np.allclose(b_probe, b))
-```
-
-```{admonition} Achtung: Zuweisung ist keine Kopie
-:class: warning
-Eine einfache Zuweisung `B = A` erstellt **keine** unabhängige Kopie, sondern
-nur einen zweiten Namen für dasselbe Array im Speicher. Änderungen an `B`
-verändern dann auch `A`, ohne jede Fehlermeldung. Um eine echte, unabhängige
-Kopie zu erhalten, verwenden Sie immer `B = A.copy()`.
-```
-
-```{admonition} Mini-Übung
+````{admonition} Projekt: Auflagerkräfte an einem Träger (✩✩)
 :class: tip
-Legen Sie mit `A_falsch = A.copy()` eine Kopie von `A` an und ersetzen Sie
-darin `A_falsch[0, 0]` durch `4` statt `3`. Lösen Sie das System mit
-`A_falsch` und führen Sie die Probe durch. Was gibt
-`np.allclose(A_falsch @ x_falsch, b)` aus und was bedeutet das für die
-Verlässlichkeit der Probe?
+Ein waagerechter Träger der Länge $L = 4\,\text{m}$ ist links im Punkt A durch
+ein **Festlager** und rechts im Punkt B durch ein **Loslager** gelagert. Das
+Festlager kann eine waagerechte Kraft $A_x$ und eine senkrechte Kraft $A_y$
+aufnehmen, das Loslager nur eine senkrechte Kraft $B_y$. Die x-Achse zeigt nach
+rechts, die y-Achse nach oben, der Ursprung liegt in A.
 
-*Hinweis:* Verwenden Sie `.copy()`, denn ohne diese Methode würden Sie
-versehentlich auch das Original-Array `A` verändern.
-```
+Auf den Träger wirken:
 
-```{code-cell} python
-# Hier Ihren Code eingeben
-```
+* eine **Seilkraft** im Abstand $1\,\text{m}$ von A, mit den Komponenten
+  $6\,\text{kN}$ nach rechts und $8\,\text{kN}$ nach oben,
+* eine **Last** $F = 12\,\text{kN}$ senkrecht nach unten im Abstand
+  $3\,\text{m}$ von A.
 
-````{admonition} Lösung
-:class: tip
-:class: dropdown
-```python
-import numpy as np
-
-A = np.array([[3, 2, 1], [2, 3, 0], [1, 1, 3]], dtype=float)
-b = np.array([2.10, 1.70, 2.80])
-
-# Kopie anlegen, damit das Original-Array A unverändert bleibt
-A_falsch = A.copy()
-A_falsch[0, 0] = 4.0       # absichtlicher Tippfehler
-
-x_falsch = np.linalg.solve(A_falsch, b)
-
-print('Probe mit falschem A:', np.allclose(A_falsch @ x_falsch, b))  # True!
-print('Probe mit richtigem A:', np.allclose(A @ x_falsch, b))        # False
-```
-
-Die Probe mit `A_falsch` besteht, weil `x_falsch` zur *falschen* Matrix
-passt und nicht zur richtigen. Die Probe prüft nur Konsistenz, nicht
-Korrektheit. Deshalb lohnt es sich, `A` und `b` vor dem Lösen nochmals
-auszugeben und visuell zu kontrollieren.
+Gesucht sind die drei Auflagerkräfte $A_x$, $A_y$ und $B_y$.
 ````
 
-+++
-
-## Die Inverse: eine Alternative für Spezialfälle (optional)
-
-Dieser Abschnitt ist für das Verständnis von Kapitel 3.3 nicht erforderlich.
-Er lohnt sich, wenn Sie verstehen möchten, wann `np.linalg.inv` gegenüber
-`np.linalg.solve` sinnvoll ist.
-
-Es gibt einen zweiten Weg zur Lösung. Aus
-$\mathbf{A} \cdot \vec{x} = \vec{b}$ folgt durch Multiplikation mit der
-**inversen Matrix** $\mathbf{A}^{-1}$ von links:
-
-$$\vec{x} = \mathbf{A}^{-1} \cdot \vec{b}$$
-
-Die Inverse ist so definiert, dass $\mathbf{A}^{-1} \cdot \mathbf{A}$
-die **Einheitsmatrix** $\mathbf{I}$ ergibt: Einsen auf der Diagonale,
-Nullen überall sonst. Das ist das Matrix-Äquivalent der Aussage
-$\frac{1}{a} \cdot a = 1$:
-
-```{code-cell} python
-# Inverse berechnen
-A_inv = np.linalg.inv(A)
-
-# Probe: A_inv @ A soll die Einheitsmatrix ergeben
-# np.round auf 10 Stellen, damit winzige Rundungsfehler nicht stören
-print('A_inv @ A:')
-print(np.round(A_inv @ A, 10))
-
-# Lösung über die Inverse: dieselbe wie mit solve
-x_via_inv = A_inv @ b
-print('Lösung via Inverse:', np.round(x_via_inv, 2))
-```
-
-```{admonition} solve oder inv?
-:class: note
-**Zum Lösen von LGS immer `np.linalg.solve`.** Es ist schneller und
-numerisch stabiler als der Umweg über die Inverse, weil es die Matrix nicht
-explizit invertiert. Das gilt auch dann, wenn viele verschiedene rechte
-Seiten $\vec{b}_1, \vec{b}_2, \ldots$ vorliegen: `solve(A, B)` akzeptiert
-eine Matrix `B`, deren Spalten die verschiedenen rechten Seiten sind, und
-löst alle in einem einzigen Aufruf.
-
-**`np.linalg.inv`** ist kein Lösungsverfahren für LGS, sondern berechnet
-die Inverse als Ergebnis. Sinnvoll ist es nur, wenn $\mathbf{A}^{-1}$
-selbst weiterverwendet werden soll, etwa in einer analytischen Herleitung
-oder beim Prüfen von $\mathbf{A}^{-1}\mathbf{A} = \mathbf{I}$.
-```
-
-```{admonition} Mini-Übung
+```{admonition} Teil 1: Gleichgewichtsbedingungen aufstellen
 :class: tip
-1. Die Einheitsmatrix hat Einsen auf der Diagonale und Nullen sonst.
-   Erzeugen Sie sie direkt mit `np.eye(3)` und vergleichen Sie sie mit
-   dem Ergebnis von `A_inv @ A`. Stimmen sie überein?
-2. Ein Café betreibt drei Filialen. In jeder Filiale gelten dieselben
-   Preise (dieselbe Matrix `A`), aber die Tagesumsätze `b` sind
-   verschieden. Erklären Sie in einem Satz, wie `np.linalg.solve` auch
-   diesen Fall effizient löst.
-3. Was gibt `np.linalg.inv(A_sing)` aus, wenn `A_sing` singulär ist?
-   Testen Sie es.
+Am starren Träger gelten drei Gleichgewichtsbedingungen: Die Summe aller
+waagerechten Kräfte ist null, die Summe aller senkrechten Kräfte ist null, und
+die Summe aller Momente um den Punkt A ist null.
+
+Stellen Sie die drei Gleichungen mit den Zahlenwerten aus dem Projektkopf auf.
+Verwenden Sie die Vorzeichenkonvention: Kräfte nach rechts und nach oben sind
+positiv, Momente gegen den Uhrzeigersinn sind positiv. Die Seilkraft greift auf
+Höhe der Trägerachse an, ihre waagerechte Komponente erzeugt daher kein Moment
+um A.
 ```
 
 ```{code-cell} python
-# Hier Ihren Code eingeben
+# Code-Zelle
 ```
 
-````{admonition} Lösung
+````{admonition} Lösung Teil 1
 :class: tip
 :class: dropdown
-```python
-import numpy as np
+Summe der waagerechten Kräfte:
 
-A = np.array([[3, 2, 1], [2, 3, 0], [1, 1, 3]], dtype=float)
-A_inv = np.linalg.inv(A)
+$$A_x + 6 = 0$$
 
-# Frage 1: np.eye erzeugt die Einheitsmatrix
-einheitsmatrix = np.eye(3)
-print(einheitsmatrix)
-print('Gleich?', np.allclose(A_inv @ A, einheitsmatrix))  # True
+Summe der senkrechten Kräfte:
 
-# Frage 3: Inverse einer singulären Matrix
-# try/except fängt den LinAlgError bei singulärer Matrix ab
-A_sing = np.array([[1, 2], [2, 4]], dtype=float)
-try:
-    print(np.linalg.inv(A_sing))
-except np.linalg.LinAlgError:
-    print('Fehler: Matrix ist singulär.')
-```
+$$A_y + B_y + 8 - 12 = 0 \quad\Longrightarrow\quad A_y + B_y = 4$$
 
-Für die drei Filialen mit derselben Matrix `A` ist `solve(A, B)` die
-richtige Wahl: Die drei rechten Seiten werden als Spalten einer Matrix `B`
-zusammengefasst, und `solve` führt intern nur eine einzige LU-Zerlegung
-durch. Die explizite Inverse über `inv` wäre numerisch ungünstiger und
-nicht schneller. Für singuläre Matrizen wirft auch `inv` einen `LinAlgError`.
+Summe der Momente um A (Hebelarm mal Kraft, gegen den Uhrzeigersinn positiv):
+
+$$4 \cdot B_y + 1 \cdot 8 - 3 \cdot 12 = 0 \quad\Longrightarrow\quad 4\,B_y = 28$$
+
+Die senkrechte Seilkomponente ($8\,\text{kN}$ nach oben im Abstand $1\,\text{m}$)
+erzeugt ein positives Moment, die Last ($12\,\text{kN}$ nach unten im Abstand
+$3\,\text{m}$) ein negatives.
 ````
 
-+++
-
-```{admonition} Mini-Übung
+```{admonition} Teil 2: In Matrixform bringen und Lösbarkeit prüfen
 :class: tip
-Lösen Sie das folgende Café-System vollständig: Legen Sie `A` und
-`b` an, führen Sie den Determinanten-Test durch, lösen Sie mit `solve` und
-sichern Sie das Ergebnis mit einer Probe ab.
-
-| Tag | Kaffee | Tee | Eis    | Umsatz (€) |
-|-----|--------|-----|--------|------------|
-| **Mo**  | 5      | 2   | 3      | 25.60      |
-| **Di**  | 3      | 4   | 1      | 17.60      |
-| **Mi**  | 4      | 2   | 3      | 23.30      |
-
-Beantworten Sie außerdem: Welcher Schritt aus diesem Kapitel könnte bei
-einem größeren System mit 50 Unbekannten besonders lange dauern?
+Fassen Sie die drei Gleichungen aus Teil 1 zur Matrixgleichung
+$\mathbf{A} \cdot \vec{x} = \vec{b}$ zusammen, mit dem Unbekanntenvektor
+$\vec{x} = (A_x,\ A_y,\ B_y)^\top$. Legen Sie `A` als zweidimensionales Array
+und `b` als eindimensionales Array an und prüfen Sie mit der Determinante, ob
+das System eine eindeutige Lösung hat.
 ```
 
 ```{code-cell} python
-# Hier Ihren Code eingeben
+# Code-Zelle
 ```
 
-````{admonition} Lösung
+````{admonition} Lösung Teil 2
 :class: tip
 :class: dropdown
 ```python
 import numpy as np
 
-# Koeffizientenmatrix: Zeile = Wochentag, Spalte = Getränkesorte
+# Unbekannte: x = [A_x, A_y, B_y]
 A = np.array([
-    [5, 2, 3],
-    [3, 4, 1],
-    [4, 2, 3],
+    [1, 0, 0],   # Summe Fx:  1*A_x + 0*A_y + 0*B_y = -6
+    [0, 1, 1],   # Summe Fy:  0*A_x + 1*A_y + 1*B_y =  4
+    [0, 0, 4],   # Summe M_A: 0*A_x + 0*A_y + 4*B_y = 28
 ], dtype=float)
 
-# Rechte Seite: Tagesumsätze in Euro
-b = np.array([25.60, 17.60, 23.30])
+b = np.array([-6.0, 4.0, 28.0])
 
-# Schritt 1: Lösbarkeit prüfen
 det_A = np.linalg.det(A)
-print(f'Determinante: {det_A:.2f}')   # 10.0 -> eindeutige Lösung
+print(f'Determinante: {det_A:.1f}')
+print('eindeutig lösbar:', not np.isclose(det_A, 0.0))
+```
+Die Determinante ist 4.0 und damit ungleich null. Das System hat genau eine
+Lösung. Der Träger ist **statisch bestimmt**: Er hat genau so viele
+Auflagerreaktionen, wie zur Fesselung nötig sind.
+````
 
-# Schritt 2: Lösen
+```{admonition} Teil 3: Lösen und Probe
+:class: tip
+Lösen Sie das System mit `np.linalg.solve` und sichern Sie das Ergebnis mit
+einer Probe ab. Geben Sie die drei Auflagerkräfte in kN aus.
+```
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung Teil 3
+:class: tip
+:class: dropdown
+```python
 x = np.linalg.solve(A, b)
-print(f'Kaffee: {x[0]:.2f} €')
-print(f'Tee:    {x[1]:.2f} €')
-print(f'Eis:    {x[2]:.2f} €')
 
-# Schritt 3: Probe
+print(f'A_x = {x[0]:.1f} kN')
+print(f'A_y = {x[1]:.1f} kN')
+print(f'B_y = {x[2]:.1f} kN')
+
 print('Probe bestanden:', np.allclose(A @ x, b))
 ```
-
-Ausgabe: Kaffee 2,30 €, Tee 1,80 €, Eis 3,50 €. Die Probe ist bestanden.
-Bei einem System mit 50 Unbekannten würde die Berechnung der Inversen
-`np.linalg.inv` am längsten dauern und wäre numerisch am ungünstigsten.
-`np.linalg.solve` ist in jedem Fall vorzuziehen.
+Die Lösung lautet $A_x = -6.0\,\text{kN}$, $A_y = -3.0\,\text{kN}$,
+$B_y = 7.0\,\text{kN}$. Die Probe ist bestanden.
 ````
 
-+++
+```{admonition} Teil 4: Ergebnis interpretieren
+:class: tip
+Beantworten Sie in eigenen Worten:
 
-## Zusammenfassung und Ausblick
+1. Was bedeutet das negative Vorzeichen von $A_x$ für die Richtung der
+   waagerechten Auflagerkraft?
+2. Auch $A_y$ ist negativ. In welche Richtung zeigt die senkrechte
+   Auflagerkraft am Festlager, und wie passt das zur angreifenden Seilkraft?
+```
 
-`np.linalg.solve(A, b)` löst ein LGS in einer Zeile, auch mit einer Matrix
-`B` aus mehreren rechten Seiten. Die Probe `np.allclose(A @ x, b)` sichert
-jedes Ergebnis ab. Die Inverse `np.linalg.inv(A)` berechnet
-$\mathbf{A}^{-1}$ als Ergebnis und ist kein Ersatz für `solve`, sondern
-sinnvoll, wenn die Inverse selbst weiterverwendet werden soll.
+````{admonition} Lösung Teil 4
+:class: tip
+:class: dropdown
+1. Wir hatten $A_x$ als Kraft nach rechts angesetzt. Das Ergebnis
+   $A_x = -6\,\text{kN}$ bedeutet, dass die tatsächliche Auflagerkraft mit
+   $6\,\text{kN}$ nach links zeigt. Sie hält der waagerechten Seilkomponente
+   das Gleichgewicht.
+2. $A_y = -3\,\text{kN}$ bedeutet, dass die senkrechte Auflagerkraft am
+   Festlager nach unten zeigt. Das Festlager hält den Träger an dieser Stelle
+   also fest. Der Grund ist die Seilkraft: Sie zieht mit $8\,\text{kN}$ nach
+   oben, das ist in der Nähe von A mehr, als zum Gleichgewicht nötig wäre, und
+   der Träger würde ohne das Festlager an dieser Stelle abheben.
+````
 
-Im nächsten Kapitel verlassen wir den Obststand und wenden das Gelernte
-auf ein reales Ingenieurproblem an: die Berechnung von Temperaturen in einer
-mehrschichtigen Wand. Das Prinzip ist identisch, aber die Gleichungen kommen
-jetzt aus der Physik.
+```{admonition} Abschlussfrage
+:class: tip
+Angenommen, bei A säße statt des Festlagers ein Loslager, das nur eine
+senkrechte Kraft **nach oben** aufnehmen kann (es kann drücken, aber nicht
+ziehen). Was würde mit dem Träger passieren? Nutzen Sie Ihr Ergebnis aus
+Teil 3.
+```
+
+````{admonition} Lösung Abschlussfrage
+:class: tip
+:class: dropdown
+Aus Teil 3 wissen wir, dass die senkrechte Auflagerkraft bei A nach unten
+zeigt ($A_y = -3\,\text{kN}$). Ein Loslager, das nur drücken kann, ist dazu
+nicht in der Lage. Der Träger würde bei A abheben und sich um das Lager B
+drehen, bis er an einem anderen Bauteil anschlägt oder herunterfällt. Er wäre
+nicht mehr im Gleichgewicht. Das rechnerische Modell mit drei Unbekannten
+setzt also stillschweigend voraus, dass das Festlager Kräfte in beide
+Richtungen aufnehmen kann.
+````
+
+````{admonition} Zusatzaufgabe: Ein Träger ohne waagerechte Fesselung (✩✩✩)
+:class: tip
+Jetzt sind **beide** Lager Loslager, die nur senkrechte Kräfte aufnehmen. Es
+gibt daher nur noch zwei unbekannte Auflagerkräfte, $A_y$ und $B_y$, aber
+weiterhin drei Gleichgewichtsbedingungen. Die Belastung bleibt unverändert.
+
+1. Schreiben Sie die drei Gleichungen mit den zwei Unbekannten als
+   $\mathbf{A} \cdot \vec{x} = \vec{b}$. Die Matrix `A` hat dann drei Zeilen
+   und zwei Spalten.
+2. Versuchen Sie, das System mit `np.linalg.solve` zu lösen. Was meldet
+   Python?
+3. Betrachten Sie die erste Gleichung ($\sum F_x = 0$) für sich allein. Ist
+   sie erfüllbar?
+4. Erklären Sie physikalisch, warum dieser Träger nicht im Gleichgewicht sein
+   kann.
+````
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung Zusatzaufgabe
+:class: tip
+:class: dropdown
+```python
+import numpy as np
+
+# Unbekannte: x = [A_y, B_y]
+A = np.array([
+    [0, 0],   # Summe Fx:  0*A_y + 0*B_y = -6
+    [1, 1],   # Summe Fy:  1*A_y + 1*B_y =  4
+    [0, 4],   # Summe M_A: 0*A_y + 4*B_y = 28
+], dtype=float)
+
+b = np.array([-6.0, 4.0, 28.0])
+
+print('Form von A:', A.shape)
+
+try:
+    x = np.linalg.solve(A, b)
+except np.linalg.LinAlgError as fehler:
+    print('solve schlägt fehl:', fehler)
+```
+`np.linalg.solve` verlangt eine quadratische Matrix und bricht bei der
+Form `(3, 2)` mit einem `LinAlgError` ab.
+
+Die erste Gleichung lautet $0 \cdot A_y + 0 \cdot B_y = -6$, also $0 = -6$.
+Das ist ein Widerspruch, keine Wahl von $A_y$ und $B_y$ kann ihn erfüllen. Das
+System hat **keine Lösung**.
+
+Physikalisch heißt das: Auf den Träger wirkt mit der waagerechten
+Seilkomponente eine Kraft von $6\,\text{kN}$ nach rechts, aber keines der
+beiden Loslager kann eine waagerechte Gegenkraft aufbringen. Der Träger würde
+nach rechts wegrutschen, er ist ein **verschiebliches System** und nicht im
+Gleichgewicht. Für die statische Berechnung brauchen wir mindestens ein Lager,
+das waagerechte Kräfte aufnimmt.
+````

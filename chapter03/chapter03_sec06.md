@@ -4,257 +4,220 @@ kernelspec:
   display_name: 'Python 3'
 ---
 
-# 3.6 Anwendung: Parametrische Analyse der Messbrücke
+# Exkurs: Modellierung einer Messbrücke
 
-```{admonition} Warnung
-:class: warning
-Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
-```
+Dieses Kapitel ist ein optionaler Exkurs. Es zeigt an einer elektrischen
+Schaltung, dass der Weg von den physikalischen Gleichungen zur Matrix immer
+derselbe ist, und es führt mit dem **Rang** das allgemeine Kriterium für die
+Lösbarkeit eines Gleichungssystems ein.
 
-In Kapitel 3.5 haben wir die Funktion `solve_bridge(R4)` entwickelt, die
-den Querstrom $I$ für einen einzelnen Widerstandswert berechnet. Jetzt
-nutzen wir sie systematisch: Wir variieren $R_4$ über einen großen Bereich,
-berechnen $I(R_4)$ und die Verlustleistung $P_B(R_4) = R_B \cdot I^2$ und
-stellen die Ergebnisse grafisch dar. Das Ziel ist, den Abgleichwert
-$R_4^*$ zu finden, bei dem $I = 0$ gilt, und ihn mit der analytischen
-Formel aus Kapitel 3.5 zu vergleichen.
+In Kapitel 3.3 haben wir ein Gleichungssystem aus Energiebilanzen aufgestellt.
+Für elektrische Schaltungen nutzen wir stattdessen die **Kirchhoffschen
+Regeln**. Als Beispiel modellieren wir eine **Wheatstone-Brücke**: Drei
+Widerstände sind bekannte Referenzwiderstände, der vierte, $R_4$, ist ein
+Messwiderstand, dessen Wert sich durch eine physikalische Einwirkung ändert,
+zum Beispiel durch Dehnung bei einem Dehnungsmessstreifen. Stehen alle vier
+Widerstände in einem bestimmten Verhältnis, ist der Querstrom $I$ durch den
+Brückenwiderstand $R_B$ null, die Brücke ist **abgeglichen**. Jede Abweichung
+erzeugt einen messbaren Strom.
 
 ## Lernziele
 
 ```{admonition} Lernziele
 :class: attention
-* [ ] Sie können eine Parameterstudie mit einer `for`-Schleife über
-  viele $R_4$-Werte durchführen und die Ergebnisse in Arrays speichern.
-* [ ] Sie können $I(R_4)$ und $P_B(R_4)$ in einem Subplot mit
-  gemeinsamer x-Achse darstellen.
-* [ ] Sie können die Nullstelle von $I(R_4)$ numerisch mit
-  `np.argmin` bestimmen und physikalisch erklären.
-* [ ] Sie können das numerische Ergebnis mit einer analytischen Formel
-  vergleichen und die Übereinstimmung prüfen.
+* [ ] Sie können die Kirchhoffsche Knoten- und Maschenregel in ein LGS
+  $\mathbf{A} \cdot \vec{x} = \vec{b}$ überführen.
+* [ ] Sie können mit `np.linalg.matrix_rank` den Rang einer Matrix bestimmen
+  und daraus ablesen, ob ein LGS genau eine, keine oder unendlich viele
+  Lösungen hat.
+* [ ] Sie können eine Parameterstudie über einen Widerstand durchführen und
+  den Abgleichpunkt der Brücke bestimmen.
 ```
 
-+++
+## Von den Kirchhoffschen Regeln zum Gleichungssystem
 
-## Vorbereitung: `solve_bridge` übernehmen
+```{figure} pics/wheatstone_bruecke.svg
+:alt: Wheatstone-Brückenschaltung mit eingezeichneten Stromrichtungen
+:align: center
+:width: 75%
 
-Wir übernehmen die Funktion und die festen Parameter aus Kapitel 3.5.
-Die Koeffizientenmatrix ist dieselbe wie zuvor; nur $R_4$ wird als
-Parameter übergeben:
+Wheatstone-Brücke mit den vier Widerständen $R_1, R_2, R_3, R_4$, dem
+Brückenwiderstand $R_B$ und der Spannungsquelle $U_0$. Die Pfeile geben die
+angenommenen Zählrichtungen der sechs Ströme an.
+(Quelle: eigene Abbildung; Lizenz [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0))
+```
+
+Die Brücke hat sechs unbekannte Ströme:
+$\vec{x} = (I_0,\ I_1,\ I_2,\ I_3,\ I_4,\ I)^\top$. Wir brauchen also sechs
+Gleichungen.
+
+Die **Knotenregel** (Ladungserhaltung) sagt: An jedem Knoten ist die Summe der
+zufließenden gleich der Summe der abfließenden Ströme. Die drei Knoten liefern:
+
+$$I_0 - I_1 - I_3 = 0 \qquad
+I_1 - I_2 - I = 0 \qquad
+I_3 + I - I_4 = 0$$
+
+Die **Maschenregel** (Energieerhaltung) sagt: Entlang einer geschlossenen
+Masche ist die Summe der Spannungsabfälle $R \cdot I$ gleich der
+Quellenspannung. Die zwei äußeren Maschen und die Quermasche liefern:
+
+$$R_1 I_1 + R_2 I_2 = U_0 \qquad
+R_3 I_3 + R_4 I_4 = U_0 \qquad
+R_1 I_1 - R_3 I_3 - R_B I = 0$$
+
+Diese sechs Gleichungen setzen wir in eine Matrix um. Wir verpacken das gleich
+in eine Funktion, damit wir $R_4$ später leicht variieren können.
 
 ```{code-cell} python
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.style as style
-style.use('seaborn-v0_8')
 
-# --- Feste Parameter (als Notebook-Konstanten und Funktions-Defaults) ---
-R1 = 100.   # Ohm
-R2 = 100.   # Ohm
-R3 = 100.   # Ohm
-RB = 10.    # Ohm
-U0 = 10.    # V
+R1 = 100.0   # Ohm
+R2 = 100.0   # Ohm
+R3 = 100.0   # Ohm
+RB = 10.0    # Ohm (Brückenwiderstand)
+U0 = 10.0    # V
 
-def solve_bridge(R4, R1=100., R2=100., R3=100., RB=10., U0=10.):
-    """Berechnet den Querstrom I durch R_B für gegebenes R4.
+def loese_bruecke(R4):
+    """Löst das 6x6-Gleichungssystem der Wheatstone-Brücke.
 
-    Parameter
-    ----------
-    R4 : float
-        Variabler Messwiderstand in Ohm
-    R1, R2, R3 : float
-        Feste Brückenwiderstände in Ohm (Default: 100)
-    RB : float
-        Brückenwiderstand in Ohm (Default: 10)
-    U0 : float
-        Speisespannung in V (Default: 10)
-
-    Rückgabe
-    --------
-    I : float
-        Querstrom in Ampere
+    R4: Messwiderstand in Ohm
+    Rückgabe: Lösungsvektor [I0, I1, I2, I3, I4, I] in Ampere
     """
-    # Koeffizientenmatrix aus Kapitel 3.5 (Kirchhoffsche Regeln)
     A = np.array([
-        [+1., -1.,  0., -1.,   0.,   0.],   # K1
-        [ 0., +1., -1.,  0.,   0.,  -1.],   # K2
-        [ 0.,  0.,  0., +1.,  -1.,  +1.],   # K3
-        [ 0.,  R1,  R2,  0.,   0.,   0.],   # M1
-        [ 0.,  0.,  0.,  R3,   R4,   0.],   # M2
-        [ 0.,  R1,  0., -R3,   0.,  -RB],   # M3
+        [+1.0, -1.0,  0.0, -1.0,  0.0,  0.0],   # Knoten 1
+        [ 0.0, +1.0, -1.0,  0.0,  0.0, -1.0],   # Knoten 2
+        [ 0.0,  0.0,  0.0, +1.0, -1.0, +1.0],   # Knoten 3
+        [ 0.0,   R1,   R2,  0.0,  0.0,  0.0],   # Masche 1
+        [ 0.0,  0.0,  0.0,   R3,   R4,  0.0],   # Masche 2
+        [ 0.0,   R1,  0.0,  -R3,  0.0,  -RB],   # Quermasche
     ])
-    b = np.array([0., 0., 0., U0, U0, 0.])
-    return np.linalg.solve(A, b)[5]
+    b = np.array([0.0, 0.0, 0.0, U0, U0, 0.0])
+    return np.linalg.solve(A, b)
+
+x = loese_bruecke(R4=200.0)
+I0, I1, I2, I3, I4, I = x
+
+print(f'Gesamtstrom I0 = {I0 * 1000:.2f} mA')
+print(f'Querstrom   I  = {I * 1000:.4f} mA')
 ```
 
-## Parameterstudie
+Bei $R_4 = 200\,\Omega$ fließt ein Querstrom von rund −15.6 mA. Das negative
+Vorzeichen sagt, dass der Strom entgegen der angenommenen Zählpfeilrichtung
+fließt.
 
-Wir lassen $R_4$ von $1\,\Omega$ bis $2000\,\Omega$ laufen und rufen
-`solve_bridge` für jeden Wert auf. Die Ergebnisse speichern wir
-parallel in zwei Arrays:
-
-```{code-cell} python
-# R4-Werte und Ergebnis-Arrays vorbereiten
-R4_werte = np.linspace(1., 2000., 500)
-I_werte  = np.zeros(len(R4_werte))
-PB_werte = np.zeros(len(R4_werte))
-
-# --- Parameterstudie: ein LGS pro R4-Wert ---
-for i, R4 in enumerate(R4_werte):
-    I_i         = solve_bridge(R4)
-    I_werte[i]  = I_i
-    PB_werte[i] = RB * I_i**2   # Verlustleistung P_B = R_B * I^2
-
-print(f'Minimaler Querstrom:      {I_werte.min()*1000:.4f} mA')
-print(f'Maximaler Querstrom:      {I_werte.max()*1000:.4f} mA')
-print(f'Maximale Verlustleistung: {PB_werte.max()*1000:.4f} mW')
-```
-
-## Visualisierung
-
-Wir zeigen $I(R_4)$ und $P_B(R_4)$ übereinander. `sharex=True` koppelt
-die x-Achsen beider Subplots: Ein Zoom im oberen Diagramm wirkt sich
-automatisch auf das untere aus, und die x-Achsenbeschriftung erscheint
-nur einmal unten:
-
-```{code-cell} python
-fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(9, 7), sharex=True)
-
-# --- Oberes Diagramm: Querstrom ---
-ax[0].plot(R4_werte, I_werte * 1000,   # Umrechnung A -> mA
-           linewidth=2)
-ax[0].axhline(0, color='gray', linestyle='dashed', linewidth=1)
-ax[0].set_ylabel('Querstrom $I$ in mA')
-ax[0].set_title('Messbrücke: Querstrom und Verlustleistung als Funktion von $R_4$')
-ax[0].grid(True)
-
-# --- Unteres Diagramm: Verlustleistung ---
-ax[1].plot(R4_werte, PB_werte * 1000,  # Umrechnung W -> mW
-           linewidth=2)
-ax[1].set_xlabel('$R_4$ in $\\Omega$')
-ax[1].set_ylabel('Verlustleistung $P_B$ in mW')
-ax[1].grid(True)
-
-plt.tight_layout()
-plt.show()
-```
-
-```{admonition} Mini-Übung
+```{admonition} Mini-Übung (✩)
 :class: tip
-Sehen Sie sich das Diagramm an und beantworten Sie folgende Fragen,
-bevor Sie weiteren Code ausführen.
-
-1. Bei welchem $R_4$-Wert schätzen Sie die Nullstelle von $I$ aus dem
-   Diagramm ab?
-2. Für welche $R_4$-Werte ist $I$ positiv, für welche negativ? Erklären
-   Sie das Vorzeichen physikalisch: Was bedeutet ein Vorzeichenwechsel
-   für die Stromrichtung durch $R_B$?
-3. $P_B = R_B \cdot I^2$ hat bei $R_4^*$ ein Minimum. Warum ist dieses
-   Minimum gleich null, und warum kann $P_B$ nicht negativ werden?
-   Skizzieren Sie den qualitativen Verlauf von $P_B$ in der Nähe
-   der Nullstelle, bevor Sie nachsehen.
+1. Rufen Sie `loese_bruecke(R4=50.0)` auf und geben Sie den Querstrom aus.
+2. Beantworten Sie ohne weiteren Code: Bei $R_4 = 200\,\Omega$ ist der
+   Querstrom negativ, bei $R_4 = 50\,\Omega$ positiv. Was passiert
+   offenbar bei einem Wert dazwischen, und was bedeutet das für die
+   Brücke?
 ```
 
-```{admonition} Lösung
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
 :class: tip
 :class: dropdown
-**Zu Frage 1:** Die Nullstelle liegt bei $R_4^* \approx 100\,\Omega$,
-erkennbar am Schnittpunkt der Kurve mit der gestrichelten Nulllinie.
-
-**Zu Frage 2:** Für $R_4 < 100\,\Omega$ ist $I$ negativ (Strom fließt
-entgegen der definierten Zählpfeilrichtung), für $R_4 > 100\,\Omega$
-positiv. Das Vorzeichen zeigt, in welche Richtung der Querstrom durch
-$R_B$ fließt: Links von $R_4^*$ überwiegt die Spannung auf der rechten
-Seite der Brücke, rechts davon die linke Seite.
-
-**Zu Frage 3:** $P_B = R_B \cdot I^2$ ist immer nichtnegativ, weil ein
-Quadrat nie negativ werden kann. Bei $R_4^*$ gilt $I = 0$, also
-$P_B(R_4^*) = 0$: Das ist das globale Minimum. Für alle anderen
-$R_4$-Werte ist $I \neq 0$ und damit $P_B > 0$. Der Verlauf ist
-parabelförmig um die Nullstelle.
+```python
+x = loese_bruecke(R4=50.0)
+print(f'Querstrom I = {x[5] * 1000:.4f} mA')
 ```
-
-+++
-
-## Nullstelle bestimmen und Abgleichbedingung prüfen
-
-Wir suchen den Index des betragskleinsten Querstroms mit `np.argmin`
-und vergleichen den numerisch gefundenen Wert mit der analytischen
-Abgleichbedingung der Wheatstone-Brücke:
-
-$$\frac{R_1}{R_2} = \frac{R_3}{R_4^*}
-\quad\Rightarrow\quad
-R_4^* = \frac{R_2 \cdot R_3}{R_1}$$
-
-```{code-cell} python
-# --- Nullstelle numerisch bestimmen ---
-# np.argmin(np.abs(...)) findet den Index des betragskleinsten Eintrags
-idx_null = np.argmin(np.abs(I_werte))
-R4_null  = R4_werte[idx_null]
-
-print(f'Numerisch gefunden:            R4* ≈ {R4_null:.1f} Ω')
-print(f'I bei R4*: {I_werte[idx_null]*1e9:.2f} nA  (numerisch ≈ 0)')
-
-# --- Analytische Abgleichbedingung ---
-R4_analytisch = R2 * R3 / R1
-print(f'Analytische Abgleichbedingung: R4* = {R4_analytisch:.1f} Ω')
-print(f'Übereinstimmung: {np.isclose(R4_analytisch, R4_null, atol=5.)}')
-
-# --- Nullstelle im Diagramm markieren ---
-fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(9, 7), sharex=True)
-
-ax[0].plot(R4_werte, I_werte * 1000, linewidth=2,
-           label='Querstrom $I$')
-ax[0].axhline(0, color='gray', linestyle='dashed', linewidth=1)
-ax[0].axvline(R4_null, color='tab:red', linestyle='dashed', linewidth=1.5,
-              label=f'$R_4^* = {R4_null:.0f}\\,\\Omega$')
-ax[0].scatter([R4_null], [I_werte[idx_null]*1000],
-              color='tab:red', s=80, zorder=5)
-ax[0].set_ylabel('Querstrom $I$ in mA')
-ax[0].set_title('Messbrücke: Nullstelle bei $R_4^*$')
-ax[0].legend()
-ax[0].grid(True)
-
-ax[1].plot(R4_werte, PB_werte * 1000, linewidth=2,
-           label='Verlustleistung $P_B$')
-ax[1].axvline(R4_null, color='tab:red', linestyle='dashed', linewidth=1.5,
-              label=f'$R_4^* = {R4_null:.0f}\\,\\Omega$')
-ax[1].scatter([R4_null], [PB_werte[idx_null]*1000],
-              color='tab:red', s=80, zorder=5)
-ax[1].set_xlabel('$R_4$ in $\\Omega$')
-ax[1].set_ylabel('Verlustleistung $P_B$ in mW')
-ax[1].legend()
-ax[1].grid(True)
-
-plt.tight_layout()
-plt.show()
-```
-
-Die kleine Abweichung zwischen numerischem und analytischem Wert entsteht,
-weil `np.linspace` die Nullstelle nicht exakt trifft, sondern nur
-annähert. Je feiner das Gitter, desto kleiner die Abweichung.
-
-````{admonition} Mini-Übung
-:class: tip
-In der Praxis ist $R_3$ der einstellbare Referenzwiderstand und $R_4$
-der unbekannte Messwiderstand. Die Brücke wird abgeglichen, indem man
-$R_3$ so lange variiert, bis $I = 0$ gilt. Aus dem Abgleichwert $R_3^*$
-lässt sich dann $R_4$ bestimmen.
-
-1. Schreiben Sie eine Funktion `solve_bridge_R3(R3_var)`, die bei
-   festem $R_4 = 150\,\Omega$ den Querstrom als Funktion von $R_3$
-   berechnet. Die Koeffizientenmatrix hat dieselbe Struktur wie in
-   `solve_bridge`, nur $R_3$ und $R_4$ tauschen die Rollen.
-2. Führen Sie eine Parameterstudie für
-   $R_3 \in [1\,\Omega, 400\,\Omega]$ durch und stellen Sie $I(R_3)$
-   grafisch dar.
-3. Bestimmen Sie den Abgleichwert $R_3^*$ numerisch mit
-   `np.argmin(np.abs(...))`.
-4. Überprüfen Sie mit der analytischen Abgleichbedingung
-   $R_3^* = R_1 \cdot R_4 / R_2$, ob Ihr Ergebnis stimmt.
+Bei $R_4 = 50\,\Omega$ ist der Querstrom mit rund +22.7 mA positiv, bei
+$R_4 = 200\,\Omega$ war er negativ. Irgendwo dazwischen wechselt er das
+Vorzeichen und ist dabei null. An diesem Wert von $R_4$ ist die Brücke
+abgeglichen. Diesen Punkt bestimmen wir weiter unten genau.
 ````
 
+## Wann hat ein LGS keine eindeutige Lösung? Der Rang
+
+Für die sechs unbekannten Ströme haben wir genau sechs Gleichungen genommen:
+drei Knoten und drei Maschen. *Was wäre passiert, wenn wir eine weitere
+Maschengleichung dazugenommen hätten?* Sie wäre keine neue Information gewesen,
+sondern eine Kombination der vorhandenen. Das Gleichungssystem hätte dann mehr
+Zeilen als Unbekannte gehabt, ohne besser bestimmt zu sein.
+
+Wie viele Gleichungen wirklich unabhängige Information tragen, misst der
+**Rang** einer Matrix. In Kapitel 3.1 haben wir die Lösbarkeit über die
+Determinante geprüft. Der Rang ist das allgemeinere Kriterium: Er ist auch für
+nicht-quadratische Matrizen definiert und sagt zusätzlich, ob ein nicht
+eindeutig lösbares System *keine* oder *unendlich viele* Lösungen hat.
+
+Dafür brauchen wir neben $\mathbf{A}$ auch die **erweiterte
+Koeffizientenmatrix** $[\mathbf{A} \mid \vec{b}]$: die Matrix $\mathbf{A}$ mit
+$\vec{b}$ als zusätzlicher Spalte. In NumPy hängt `np.column_stack` sie an.
+
 ```{code-cell} python
-# Hier Ihren Code eingeben
+# Ein eindeutig lösbares System
+A = np.array([
+    [2.0, 1.0, 1.0],
+    [1.0, 3.0, 1.0],
+    [1.0, 1.0, 4.0],
+])
+b = np.array([1.0, 2.0, 3.0])
+
+Ab = np.column_stack((A, b))
+
+n = A.shape[1]   # Anzahl Unbekannte
+print('Rang von A:      ', np.linalg.matrix_rank(A))
+print('Rang von [A | b]:', np.linalg.matrix_rank(Ab))
+print('Anzahl Unbekannte:', n)
+```
+
+Für ein System mit $n$ Unbekannten gelten die drei Fälle:
+
+| $\text{rang}(\mathbf{A})$ | $\text{rang}([\mathbf{A} \mid \vec{b}])$ | Lösbarkeit |
+| :---: | :---: | :--- |
+| $= n$ | $= n$ | genau eine Lösung |
+| $< n$ | $= \text{rang}(\mathbf{A})$ | unendlich viele Lösungen |
+| $< n$ | $> \text{rang}(\mathbf{A})$ | keine Lösung |
+
+Wir sehen uns die beiden nicht eindeutigen Fälle an einer Matrix an, deren
+zweite Zeile das Doppelte der ersten ist:
+
+```{code-cell} python
+A = np.array([
+    [1.0, 2.0, 1.0],
+    [2.0, 4.0, 2.0],   # = 2 * Zeile 1, keine neue Information
+    [0.0, 1.0, 1.0],
+])
+
+b_widerspruch = np.array([3.0, 7.0, 2.0])   # b[1] müsste 2*b[0] = 6 sein, ist aber 7
+b_vertraeglich = np.array([3.0, 6.0, 2.0])  # b[1] = 6 = 2*b[0], passt zu Zeile 2 = 2*Zeile 1
+
+print('rang A:', np.linalg.matrix_rank(A))
+print('mit b_widerspruch:  rang [A|b] =',
+      np.linalg.matrix_rank(np.column_stack((A, b_widerspruch))))
+print('mit b_vertraeglich: rang [A|b] =',
+      np.linalg.matrix_rank(np.column_stack((A, b_vertraeglich))))
+```
+
+Bei `b_widerspruch` steigt der Rang der erweiterten Matrix auf 3, während
+$\text{rang}(\mathbf{A}) = 2$ bleibt: Das System hat **keine Lösung**, die
+Gleichungen widersprechen sich. Bei `b_vertraeglich` bleibt der Rang bei 2: Das
+System hat **unendlich viele Lösungen**, eine Unbekannte bleibt frei wählbar.
+Denselben Widerspruchsfall haben wir in der Zusatzaufgabe von Kapitel 3.2
+gesehen: ein Träger ohne waagerechte Fesselung.
+
+```{admonition} Mini-Übung (✩)
+:class: tip
+Gegeben ist
+
+$$\mathbf{A} = \begin{pmatrix} 1 & 1 & 2 \\ 3 & 3 & 6 \\ 1 & 0 & 1 \end{pmatrix},
+\qquad \vec{b} = \begin{pmatrix} 4 \\ 12 \\ 1 \end{pmatrix}.$$
+
+1. Beantworten Sie ohne Code: Welche zwei Zeilen von $\mathbf{A}$ sind
+   voneinander abhängig?
+2. Bestimmen Sie $\text{rang}(\mathbf{A})$ und
+   $\text{rang}([\mathbf{A} \mid \vec{b}])$ mit `np.linalg.matrix_rank`. Welcher
+   der drei Fälle liegt vor?
+```
+
+```{code-cell} python
+# Code-Zelle
 ```
 
 ````{admonition} Lösung
@@ -262,70 +225,119 @@ lässt sich dann $R_4$ bestimmen.
 :class: dropdown
 ```python
 import numpy as np
+
+A = np.array([
+    [1.0, 1.0, 2.0],
+    [3.0, 3.0, 6.0],
+    [1.0, 0.0, 1.0],
+])
+b = np.array([4.0, 12.0, 1.0])
+
+n = A.shape[1]
+rang_A = np.linalg.matrix_rank(A)
+rang_Ab = np.linalg.matrix_rank(np.column_stack((A, b)))
+
+print(f'rang A = {rang_A}, rang [A|b] = {rang_Ab}, n = {n}')
+```
+Ausgabe: `rang A = 2, rang [A|b] = 2, n = 3`.
+
+Die zweite Zeile von $\mathbf{A}$ ist das Dreifache der ersten. Da auch
+$b[1] = 3 \cdot b[0]$ gilt, widerspricht sich nichts:
+$\text{rang}(\mathbf{A}) = \text{rang}([\mathbf{A} \mid \vec{b}]) = 2 < 3$. Das
+System hat unendlich viele Lösungen.
+````
+
+## Parameterstudie: den Abgleichpunkt finden
+
+Jetzt variieren wir $R_4$ systematisch und suchen den Wert, bei dem der
+Querstrom null wird. Für jeden $R_4$-Wert lösen wir ein eigenes
+Gleichungssystem.
+
+```{code-cell} python
 import matplotlib.pyplot as plt
+import matplotlib.style as style
+style.use('seaborn-v0_8')
 
-R4_fest = 150.   # Ohm, fester Messwiderstand
+r4_werte = np.linspace(10.0, 300.0, 500)
+i_werte = np.zeros(500)
+p_werte = np.zeros(500)
 
-def solve_bridge_R3(R3_var, R1=100., R2=100., R4_fest=150., RB=10., U0=10.):
-    """Querstrom I bei variablem R3 und festem R4 = 150 Ohm."""
-    # Gleiche Struktur wie solve_bridge, aber R3_var und R4_fest vertauscht
-    A = np.array([
-        [+1., -1.,  0.,       -1.,      0.,   0.],
-        [ 0., +1., -1.,        0.,      0.,  -1.],
-        [ 0.,  0.,  0.,       +1.,     -1.,  +1.],
-        [ 0.,  R1,  R2,        0.,      0.,   0.],
-        [ 0.,  0.,  0.,   R3_var, R4_fest,    0.],
-        [ 0.,  R1,  0.,  -R3_var,      0.,   -RB],
-    ])
-    b = np.array([0., 0., 0., U0, U0, 0.])
-    return np.linalg.solve(A, b)[5]
+for k, r4 in enumerate(r4_werte):
+    strom = loese_bruecke(r4)[5]
+    i_werte[k] = strom
+    p_werte[k] = RB * strom**2   # Verlustleistung P = R_B * I^2
 
-# Parameterstudie
-R3_werte = np.linspace(1., 400., 500)
-I_werte3 = np.array([solve_bridge_R3(r) for r in R3_werte])
+fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(7, 7), sharex=True)
 
-# Nullstelle bestimmen
-idx    = np.argmin(np.abs(I_werte3))
-R3_num = R3_werte[idx]
+ax[0].plot(r4_werte, i_werte * 1000)
+ax[0].axhline(0, color='gray', linestyle='dashed', linewidth=1)
+ax[0].set_ylabel('Querstrom in mA')
+ax[0].set_title('Wheatstone-Brücke: Querstrom und Verlustleistung')
+ax[0].grid(True)
 
-# Analytische Abgleichbedingung
-R3_anal = 100. * 150. / 100.   # R1 * R4_fest / R2
+ax[1].plot(r4_werte, p_werte * 1000)
+ax[1].set_xlabel('Messwiderstand R4 in Ohm')
+ax[1].set_ylabel('Verlustleistung in mW')
+ax[1].grid(True)
 
-print(f'Numerisch:  R3* ≈ {R3_num:.1f} Ω')
-print(f'Analytisch: R3* = {R3_anal:.1f} Ω')
-print(f'Übereinstimmung: {np.isclose(R3_num, R3_anal, atol=5.)}')
-
-# Diagramm
-plt.figure(figsize=(8, 4))
-plt.plot(R3_werte, I_werte3 * 1000, linewidth=2)
-plt.axhline(0, color='gray', linestyle='dashed', linewidth=1)
-plt.axvline(R3_num, color='tab:red', linestyle='dashed', linewidth=1.5,
-            label=f'$R_3^* = {R3_num:.0f}\\,\\Omega$')
-plt.xlabel('$R_3$ in $\\Omega$')
-plt.ylabel('Querstrom $I$ in mA')
-plt.title('Abgleich der Brücke über $R_3$ bei festem $R_4 = 150\\,\\Omega$')
-plt.legend()
-plt.grid(True)
 plt.tight_layout()
 plt.show()
 ```
 
-Bei $R_4 = 150\,\Omega$ ergibt sich $R_3^* = R_1 \cdot R_4 / R_2 = 150\,\Omega$.
-Das numerische Ergebnis stimmt mit der analytischen Formel überein.
+Der Querstrom kreuzt die Nulllinie, die Verlustleistung berührt dort die
+x-Achse. Den Nulldurchgang finden wir mit `np.argmin` über den Betrag und
+vergleichen ihn mit der bekannten Abgleichbedingung
+$R_4^\ast = R_2 \cdot R_3 / R_1$.
+
+```{code-cell} python
+k_null = np.argmin(np.abs(i_werte))
+r4_abgleich = r4_werte[k_null]
+
+r4_analytisch = R2 * R3 / R1
+
+print(f'numerisch:   R4* = {r4_abgleich:.1f} Ohm')
+print(f'analytisch:  R4* = {r4_analytisch:.1f} Ohm')
+```
+
+Der numerische Wert weicht leicht vom analytischen ab, weil `np.linspace` die
+Nullstelle nicht exakt trifft. Ein feineres Gitter verkleinert die Abweichung.
+
+```{admonition} Mini-Übung (✩)
+:class: tip
+1. Erhöhen Sie in der Parameterstudie die Anzahl der Stützstellen von 500 auf
+   2000. Wie ändert sich der numerisch gefundene Abgleichwert $R_4^\ast$?
+2. Beantworten Sie ohne Code: Warum berührt die Verlustleistung an der
+   Nullstelle die x-Achse, statt sie zu kreuzen?
+```
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+r4_fein = np.linspace(10.0, 300.0, 2000)
+i_fein = np.array([loese_bruecke(r4)[5] for r4 in r4_fein])
+print(f'R4* mit 2000 Stützstellen: {r4_fein[np.argmin(np.abs(i_fein))]:.2f} Ohm')
+```
+Mit mehr Stützstellen liegt der gefundene Wert näher an den analytischen
+100 Ohm. Die Verlustleistung $P = R_B \cdot I^2$ enthält den Strom im Quadrat.
+Ein Quadrat ist nie negativ, daher kann $P$ die x-Achse nicht kreuzen. An der
+Nullstelle des Stroms wird $P$ genau null und berührt die Achse.
 ````
 
-+++
+## Zusammenfassung
 
-## Zusammenfassung und Ausblick
+Das Modell der Wheatstone-Brücke besteht aus sechs Kirchhoff-Gleichungen für
+sechs unbekannte Ströme. Der **Rang** von $\mathbf{A}$ und der erweiterten
+Matrix $[\mathbf{A} \mid \vec{b}]$ sagt, ob ein Gleichungssystem genau eine,
+keine oder unendlich viele Lösungen hat, und ist damit allgemeiner als der
+Determinanten-Test. Mit einer Parameterstudie über $R_4$ und `np.argmin` haben
+wir den Abgleichpunkt der Brücke bestimmt und mit der analytischen Formel
+bestätigt.
 
-Wir haben `solve_bridge` in einer Schleife über 500 $R_4$-Werte
-aufgerufen und die Ergebnisse als NumPy-Arrays gespeichert. Der Subplot
-mit `sharex=True` erlaubt den direkten Vergleich von $I(R_4)$ und
-$P_B(R_4)$. Die Nullstelle bei $R_4^* = 100\,\Omega$, numerisch über
-`np.argmin` gefunden, bestätigt das Wheatstonesche Abgleichprinzip und
-stimmt mit der analytischen Formel überein.
-
-Im nächsten Kapitel wechseln wir die Perspektive: Statt eines
-physikalischen Problems untersuchen wir, wie die Rechenzeit von
-`np.linalg.solve` mit der Systemgröße $n$ wächst, und überprüfen die
-theoretische $O(n^3)$-Skalierung der LU-Zerlegung experimentell.
+Der zweite Exkurs in Kapitel 3.7 wechselt die Perspektive: Dort untersuchen
+wir, wie die Rechenzeit von `np.linalg.solve` mit der Größe des
+Gleichungssystems wächst.

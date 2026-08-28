@@ -4,348 +4,41 @@ kernelspec:
   display_name: 'Python 3'
 ---
 
-# 3.5 Anwendung: Modellierung einer Messbrücke
+# 3.5 Übungen
 
-```{admonition} Warnung
-:class: warning
-Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
-```
+Diese Aufgaben sind für das Selbststudium zuhause gedacht und wiederholen den
+Stoff der Kapitel 3.1 bis 3.4. Rechnen Sie mit gut eineinhalb Stunden
+Bearbeitungszeit.
 
-Bisher haben wir LGS aus Energiebilanzen hergeleitet, zum Beispiel beim
-Wärmedurchgang durch eine Mehrschichtwand. Dasselbe Vorgehen funktioniert
-für elektrische Schaltungen: Statt Energiebilanzgleichungen nutzen wir die
-**Kirchhoffschen Regeln**.
+Der Schwierigkeitsgrad steht im Titel jeder Aufgabe:
 
-In diesem Kapitel modellieren wir eine **Wheatstone-Brückenschaltung**.
-Das Messprinzip: Drei der vier Widerstände sind bekannte
-Referenzwiderstände; der vierte, $R_4$, ist der **Messwiderstand**, dessen
-Wert sich durch eine physikalische Einwirkung ändert, zum Beispiel durch
-mechanische Dehnung bei einem Dehnungsmessstreifen oder durch Temperatur
-bei einem NTC-Widerstand. Wenn alle vier Widerstände in einem bestimmten
-Verhältnis stehen, ist der Querstrom $I$ durch den Brückenwiderstand $R_B$
-exakt null: Die Brücke ist **abgeglichen**. Jede Abweichung von $R_4$ vom
-Sollwert erzeugt einen messbaren Querstrom, aus dem sich der aktuelle Wert
-von $R_4$ zurückrechnen lässt.
+* ✩ Verständnis: Code und Ausgaben vorhersagen und erklären (ca. 5 min)
+* ✩✩ Anwendung: eigenen Code schreiben und Ergebnisse interpretieren (ca. 10 min)
+* ✩✩✩ Mini-Projekt: mehrere Konzepte des Parts kombinieren (ca. 30 min)
 
-Warum dieser Umweg über eine Brückenschaltung? Weil sie empfindlicher ist
-als eine direkte Widerstandsmessung: Schon minimale Änderungen von $R_4$
-erzeugen einen deutlich messbaren Strom $I$, solange die anderen drei
-Widerstände stabil bleiben.
-
-*Wie groß ist $I$ für einen gegebenen Wert von $R_4$, und bei welchem
-$R_4$ ist die Brücke abgeglichen?*
-
-## Lernziele
-
-```{admonition} Lernziele
-:class: attention
-* [ ] Sie können die Kirchhoffsche **Knotenregel** und **Maschenregel**
-  auf eine einfache Schaltung anwenden und ein LGS
-  $\mathbf{A} \cdot \vec{x} = \vec{b}$ daraus ablesen.
-* [ ] Sie können das LGS als Python-Funktion implementieren, die den
-  Querstrom $I$ für ein gegebenes $R_4$ zurückgibt.
-* [ ] Sie können den Sonderfall der abgeglichenen Brücke physikalisch
-  begründen und numerisch überprüfen.
-```
-
-+++
-
-## Die Schaltung
-
-Die Brückenschaltung besteht aus vier Widerständen und einem
-Brückenwiderstand $R_B$. Von oben fließt der Gesamtstrom $I_0$; er teilt
-sich in einen linken Zweig ($I_1$, $I_2$) und einen rechten Zweig
-($I_3$, $I_4$) auf. Der Querstrom $I$ fließt durch $R_B$.
-
-```{figure} pics/wheatstone_bruecke.svg
-:alt: Wheatstone-Brückenschaltung mit eingezeichneten Stromrichtungen
-:align: center
-:width: 75%
-
-Wheatstone‑Brückenschaltung mit den vier Brückenwiderständen $R_1, R_2, R_3,
-R_4$ und dem Brückenwiderstand $R_B$. Die Pfeile geben die definierten
-Zählpfeilrichtungen der Ströme $I_0, I_1, I_2, I_3, I_4$ und des Querstroms $I$
-durch $R_B$ an; sie bilden die Grundlage für die Formulierung der Knoten‑
-(K1-K3) und Maschengleichungen (M1-M3). Die Spannungsquelle $U_0$ speist die
-Brücke von rechts, mit Pluspol oben. (Quelle: eigene Abbildung; Lizenz [CC BY-SA
-4.0](https://creativecommons.org/licenses/by-sa/4.0))
-```
-
-Gegebene Größen:
-$R_1 = R_2 = R_3 = 100\,\Omega$, $R_B = 10\,\Omega$, $U_0 = 10\,\text{V}$.
-Der Messwiderstand $R_4$ ist variabel.
-
-Der Lösungsvektor enthält alle sechs Ströme:
-$\vec{x} = (I_0,\, I_1,\, I_2,\, I_3,\, I_4,\, I)^{\top}$.
-
-+++
-
-## Knotenregel: die ersten drei Gleichungen
-
-Wir beginnen mit der **Knotenregel** (1. Kirchhoffsches Gesetz): An
-jedem Knoten ist die Summe der zufließenden Ströme gleich der Summe der
-abfließenden. Das folgt aus der Ladungserhaltung: Ladung kann sich an
-einem Knoten nicht ansammeln.
-
-Jeder Knoten liefert eine Gleichung. Zufließende Ströme erhalten
-ein positives Vorzeichen, abfließende ein negatives:
-
-\begin{align*}
-I_0 - I_1 - I_3 &= 0 \tag{K1} \\
-I_1 - I_2 - I   &= 0 \tag{K2} \\
-I_3 + I - I_4   &= 0 \tag{K3}
-\end{align*}
-
-Die gegebenen Messwerte und die Beschreibung der Knotenregel übertragen wir in
-Python-Code.
-
-```{code-cell} python
-import numpy as np
-
-# --- Gegebene Größen ---
-R1 = 100.   # Ohm
-R2 = 100.   # Ohm
-R3 = 100.   # Ohm
-R4 = 200.   # Ohm  (Testwert: Messwiderstand vom Sollwert abgewichen)
-RB = 10.    # Ohm  (Brückenwiderstand)
-U0 = 10.    # V
-
-# Unbekannte: x = [I0, I1, I2, I3, I4, I]  (6 Ströme, 6 Gleichungen)
-
-# --- Knotenregel (1. Kirchhoffsches Gesetz) ---
-# Knotengleichung: zufließende Ströme (+) = abfließende Ströme (-)
-# rechte Seite b = 0 (keine externe Quelle an einem Knoten)
-#
-# K1  oberer Knoten: I0 fließt zu, I1 und I3 fließen ab
-#     I0 - I1 - I3 = 0
-#     Koeffizienten [I0, I1, I2, I3, I4,  I]: [+1, -1,  0, -1,  0,  0]
-#
-# K2  Knoten Mitte links: I1 fließt zu, I2 und I fließen ab
-#     I1 - I2 - I = 0
-#     Koeffizienten:                           [ 0, +1, -1,  0,  0, -1]
-#
-# K3  Knoten Mitte rechts: I3 und I fließen zu, I4 fließt ab
-#     I3 - I4 + I = 0
-#     Koeffizienten:                           [ 0,  0,  0, +1, -1, +1]
-
-A_knoten = np.array([
-    [+1., -1.,  0., -1.,  0.,  0.],   # K1
-    [ 0., +1., -1.,  0.,  0., -1.],   # K2
-    [ 0.,  0.,  0., +1., -1., +1.],   # K3
-])
-print('Knotengleichungen (erste 3 Zeilen von A):')
-print(A_knoten)
-```
-
-## Maschenregel: die restlichen drei Gleichungen
-
-Die **Maschenregel** (2. Kirchhoffsches Gesetz) sagt: Die Summe aller
-Spannungsabfälle entlang einer geschlossenen Masche ist gleich der
-Quellenspannung. Das folgt aus der Energieerhaltung. Der
-Spannungsabfall an einem Widerstand berechnet sich nach dem Ohmschen
-Gesetz als $U = R \cdot I$.
-
-Wir durchlaufen jede Masche im Uhrzeigersinn. Durchläuft man einen
-Widerstand in Richtung des definierten Stroms, ergibt das einen
-positiven Beitrag; entgegen der Stromrichtung einen negativen:
-
-\begin{align}
-R_1 I_1 + R_2 I_2                   &= U_0 \tag{M1} \\
-R_3 I_3 + R_4 I_4                   &= U_0 \tag{M2} \\
-R_1 I_1 - R_3 I_3 - R_B I           &= 0   \tag{M3}
-\end{align}
-
-```{code-cell} python
-# --- Maschenregel (2. Kirchhoffsches Gesetz) ---
-# Maschengleichung: Summe der Spannungsabfälle = Quellenspannung
-# Spannungsabfall: U = R * I (Ohmsches Gesetz)
-# Widerstand in Stromrichtung durchlaufen:        +R * I
-# Widerstand entgegen der Stromrichtung:          -R * I
-#
-# M1  linke Masche (Uhrzeigersinn: Quelle -> R1 -> R2):
-#     R1*I1 + R2*I2 = U0
-#     Koeffizienten [I0,  I1,  I2,  I3,  I4,  I]: [ 0,  R1,  R2,   0,   0,   0]  | b = U0
-#
-# M2  rechte Masche (Uhrzeigersinn: Quelle -> R3 -> R4):
-#     R3*I3 + R4*I4 = U0
-#     Koeffizienten:                               [ 0,   0,   0,  R3,  R4,   0]  | b = U0
-#
-# M3  Quermasche (Uhrzeigersinn: R1 -> RB -> R3, keine Quelle):
-#     R1 in Richtung I1:  +R1*I1
-#     RB entgegen I:      -RB*I   (wir laufen entgegen der definierten I-Richtung)
-#     R3 entgegen I3:     -R3*I3
-#     R1*I1 - R3*I3 - RB*I = 0
-#     Koeffizienten:                               [ 0,  R1,   0, -R3,   0, -RB]  | b = 0
-
-A = np.array([
-    [+1., -1.,  0., -1.,   0.,   0.],   # K1
-    [ 0., +1., -1.,  0.,   0.,  -1.],   # K2
-    [ 0.,  0.,  0., +1.,  -1.,  +1.],   # K3
-    [ 0.,  R1,  R2,  0.,   0.,   0.],   # M1
-    [ 0.,  0.,  0.,  R3,   R4,   0.],   # M2
-    [ 0.,  R1,  0., -R3,   0.,  -RB],   # M3
-])
-b = np.array([0., 0., 0., U0, U0, 0.])
-
-# --- Lösbarkeit prüfen und lösen ---
-print(f'Determinante: {np.linalg.det(A):.4f}')
-
-x = np.linalg.solve(A, b)
-I0, I1, I2, I3, I4, I = x
-
-print(f'Gesamtstrom  I0 = {I0*1000:.2f} mA')
-print(f'Querstrom    I  = {I*1000:.4f} mA')
-print(f'Probe bestanden: {np.allclose(A @ x, b)}')
-```
-
-Der Querstrom $I$ ist bei $R_4 = 200\,\Omega$ ungleich null. Das
-Vorzeichen sagt, in welche Richtung $I$ tatsächlich fließt: positiv
-bedeutet Fluss in der definierten Zählpfeilrichtung, negativ entgegen.
-
-Wie viele Gleichungen brauchen wir insgesamt? Für 6 Unbekannte genau
-6 unabhängige Gleichungen. Drei Knoten und drei Maschen reichen genau
-aus. Eine vierte Maschengleichung, etwa für die äußere Gesamtmasche,
-wäre eine Linearkombination der drei obigen und würde den Rang der
-Matrix nicht erhöhen.
-
-```{admonition} Mini-Übung
+````{admonition} Aufgabe 3.1 (✩)
 :class: tip
-Sehen Sie sich die Koeffizientenmatrix $\mathbf{A}$ an und beantworten
-Sie die folgenden Fragen zunächst im Kopf, ohne Code auszuführen.
+Gegeben ist folgender Code:
 
-1. In Zeile 4 (M1) steht $A_{4,2} = R_1 = 100$. Aus welcher
-   physikalischen Gleichung stammt dieser Eintrag? Was bedeutet er
-   inhaltlich?
-2. In Zeile 6 (M3) steht $A_{6,4} = -R_3 = -100$. Warum ist dieser
-   Eintrag negativ?
-3. Die Einträge $b[0] = b[1] = b[2] = 0$, aber $b[3] = b[4] = U_0$.
-   Was bedeutet es, wenn ein Eintrag von $\vec{b}$ null ist?
-4. Ändern Sie im Code oben $R_4 = 50\,\Omega$ und führen Sie die
-   Zelle aus. Ändert sich das Vorzeichen von $I$? Was sagt das
-   physikalisch aus?
-```
-
-```{code-cell} python
-# Hier Ihren Code eingeben
-```
-
-````{admonition} Lösung
-:class: tip
-:class: dropdown
-**Zu Frage 1:** $A_{4,2} = R_1$ stammt aus Gleichung M1:
-$R_1 \cdot I_1 + R_2 \cdot I_2 = U_0$. Der Eintrag ist der Koeffizient
-von $I_1$ (zweite Unbekannte, Index 1) in der Maschengleichung der linken
-Masche. Er beschreibt den Spannungsabfall, den der Strom $I_1$ am
-Widerstand $R_1$ erzeugt.
-
-**Zu Frage 2:** In Gleichung M3 wird die Quermasche im Uhrzeigersinn
-durchlaufen. Der Widerstand $R_3$ wird dabei entgegen der definierten
-Zählpfeilrichtung von $I_3$ durchquert; das Vorzeichen wechselt daher.
-
-**Zu Frage 3:** $b_i = 0$ bedeutet, dass in dieser Gleichung keine
-Spannungsquelle auftaucht. Die drei Knotengleichungen enthalten keine
-externe Quelle. Auch die Quermasche (M3) enthält keine Quelle, daher
-ist auch $b[5] = 0$.
-
-**Zu Frage 4:**
 ```python
 import numpy as np
 
-R1 = 100.; R2 = 100.; R3 = 100.; R4 = 50.; RB = 10.; U0 = 10.
-
-A = np.array([
-    [+1., -1.,  0., -1.,   0.,   0.],
-    [ 0., +1., -1.,  0.,   0.,  -1.],
-    [ 0.,  0.,  0., +1.,  -1.,  +1.],
-    [ 0.,  R1,  R2,  0.,   0.,   0.],
-    [ 0.,  0.,  0.,  R3,   R4,   0.],
-    [ 0.,  R1,  0., -R3,   0.,  -RB],
-])
-b = np.array([0., 0., 0., U0, U0, 0.])
-x = np.linalg.solve(A, b)
-print(f'I = {x[5]*1000:.4f} mA')
+A = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=float)
+b = np.array([1.0, 2.0, 3.0])
 ```
 
-Bei $R_4 = 50\,\Omega$ ändert sich das Vorzeichen von $I$ gegenüber
-$R_4 = 200\,\Omega$. Das ist physikalisch sinnvoll: der Querstrom
-kehrt beim Übergang durch den Abgleichwert $R_4^* = 100\,\Omega$
-seine Richtung um. Oberhalb des Abgleichwerts fließt er in die eine,
-unterhalb in die andere Richtung.
-````
+Notieren Sie Ihre Vermutung, bevor Sie den Code ausführen.
 
-+++
-
-## Als Funktion implementieren
-
-Das Muster aus der Zelle oben verallgemeinern wir zu einer Funktion.
-$R_4$ wird als Parameter übergeben; alles andere bleibt gleich:
-
-```{code-cell} python
-def solve_bridge(R4, R1=100., R2=100., R3=100., RB=10., U0=10.):
-    """Berechnet den Querstrom I durch den Brückenwiderstand R_B.
-
-    Parameter
-    ----------
-    R4 : float
-        Variabler Messwiderstand in Ohm
-    R1, R2, R3 : float
-        Feste Brückenwiderstände in Ohm (Default: 100)
-    RB : float
-        Brückenwiderstand in Ohm (Default: 10)
-    U0 : float
-        Speisespannung in V (Default: 10)
-
-    Rückgabe
-    --------
-    I : float
-        Querstrom durch R_B in Ampere, oder None bei singulärer Matrix
-    """
-    # Koeffizientenmatrix: gleiche Struktur wie oben, R4 als Parameter
-    A = np.array([
-        [+1., -1.,  0., -1.,   0.,   0.],   # K1: I0 - I1 - I3 = 0
-        [ 0., +1., -1.,  0.,   0.,  -1.],   # K2: I1 - I2 - I  = 0
-        [ 0.,  0.,  0., +1.,  -1.,  +1.],   # K3: I3 - I4 + I  = 0
-        [ 0.,  R1,  R2,  0.,   0.,   0.],   # M1: R1*I1 + R2*I2 = U0
-        [ 0.,  0.,  0.,  R3,   R4,   0.],   # M2: R3*I3 + R4*I4 = U0
-        [ 0.,  R1,  0., -R3,   0.,  -RB],   # M3: R1*I1 - R3*I3 - RB*I = 0
-    ])
-    b = np.array([0., 0., 0., U0, U0, 0.])
-
-    if np.isclose(np.linalg.det(A), 0.):
-        print(f'Warnung: singuläre Matrix bei R4 = {R4} Ohm')
-        return None
-
-    # Index 5 im Lösungsvektor ist der Querstrom I
-    return np.linalg.solve(A, b)[5]
-
-
-# Test für R4 = 200 Ohm
-R4_test = 200.
-I_test  = solve_bridge(R4_test)
-
-print(f'R4 = {R4_test:.0f} Ohm')
-print(f'Querstrom        I   = {I_test*1000:.4f} mA')
-print(f'Verlustleistung  P_B = {RB * I_test**2 * 1000:.4f} mW')
-```
-
-````{admonition} Mini-Übung
-:class: tip
-Überprüfen Sie `solve_bridge` für den Sonderfall $R_4 = 100\,\Omega$
-(alle vier Brückenwiderstände gleich groß).
-
-1. Was erwarten Sie physikalisch für den Querstrom $I$? Überlegen Sie
-   zunächst im Kopf: Was passiert mit den Spannungen in der linken und
-   rechten Hälfte der Brücke, wenn $R_1 = R_2 = R_3 = R_4$?
-2. Rufen Sie `solve_bridge(100.)` auf. Stimmt das Ergebnis mit Ihrer
-   Erwartung überein?
-3. Erweitern Sie die Funktion oder schreiben Sie eine neue Zelle, die
-   den gesamten Lösungsvektor $\vec{x}$ berechnet. Wie groß ist der
-   Gesamtstrom $I_0$ bei $R_4 = 100\,\Omega$? Überprüfen Sie das
-   Ergebnis mit einer Probe.
+1. Was gibt `A.shape` zurück?
+2. Was gibt `A[2, 0]` zurück?
+3. Was gibt `A[1, 2]` zurück?
+4. Schauen Sie sich die drei Zeilen von `A` genau an. Wird `np.linalg.det(A)`
+   nahe bei null liegen? Begründen Sie.
+5. Führen Sie den Code aus und überprüfen Sie Ihre Vorhersagen.
 ````
 
 ```{code-cell} python
-# Hier Ihren Code eingeben
+# Code-Zelle
 ```
 
 ````{admonition} Lösung
@@ -354,54 +47,430 @@ print(f'Verlustleistung  P_B = {RB * I_test**2 * 1000:.4f} mW')
 ```python
 import numpy as np
 
-# Frage 1: Erwartung
-# Bei R1=R2=R3=R4=100 Ohm teilen beide Hälfte U0 symmetrisch auf.
-# Spannung in der Mitte links:  U0 * R2/(R1+R2) = 5 V
-# Spannung in der Mitte rechts: U0 * R4/(R3+R4) = 5 V
-# Keine Spannungsdifferenz über R_B -> kein Querstrom: I = 0
+A = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=float)
 
-# Frage 2
-I_abgeglichen = solve_bridge(100.)
-print(f'I bei R4 = 100 Ohm: {I_abgeglichen:.2e} A   (numerisch nahezu 0)')
-
-# Frage 3: gesamter Lösungsvektor
-R4 = 100.
-A = np.array([
-    [+1., -1.,  0., -1.,   0.,   0.],
-    [ 0., +1., -1.,  0.,   0.,  -1.],
-    [ 0.,  0.,  0., +1.,  -1.,  +1.],
-    [ 0.,  R1,  R2,  0.,   0.,   0.],
-    [ 0.,  0.,  0.,  R3,   R4,   0.],
-    [ 0.,  R1,  0., -R3,   0.,  -RB],
-])
-b = np.array([0., 0., 0., U0, U0, 0.])
-x = np.linalg.solve(A, b)
-
-print(f'I0 = {x[0]*1000:.2f} mA   (Gesamtstrom)')
-print(f'I  = {x[5]:.2e} A    (Querstrom, nahezu 0)')
-print(f'Probe bestanden: {np.allclose(A @ x, b)}')
+print(A.shape)
+print(A[2, 0])
+print(A[1, 2])
+print(np.linalg.det(A))
 ```
-
-Bei $R_1 = R_2 = R_3 = R_4$ ist die Brücke **abgeglichen**: der
-Querstrom ist numerisch nahezu null. Genau das ist das Messprinzip
-der Wheatstone-Brücke: Jede Abweichung von $R_4 = 100\,\Omega$
-erzeugt einen messbaren Querstrom. Im nächsten Kapitel variieren
-wir $R_4$ systematisch und stellen $I(R_4)$ grafisch dar.
+Ausgabe:
+```
+(3, 3)
+7.0
+6.0
+-9.51619735392994e-16
+```
+`A.shape` ist `(3, 3)`, also drei Zeilen und drei Spalten. `A[2, 0]` ist der
+Wert in Zeile 2, Spalte 0, also `7.0`. `A[1, 2]` steht in Zeile 1, Spalte 2 und
+ist `6.0`. Die Determinante ist im Rechner eine winzige Zahl nahe null, weil
+die dritte Zeile eine Kombination der ersten beiden ist:
+$[7,8,9] = 2 \cdot [4,5,6] - [1,2,3]$. Das System hat keine eindeutige Lösung.
 ````
 
-+++
+````{admonition} Aufgabe 3.2 (✩)
+:class: tip
+Gegeben ist folgender Code:
 
-## Zusammenfassung und Ausblick
+```python
+import numpy as np
 
-Das Vorgehen ist dasselbe wie bei der Wärmeübertragung in Kapitel 3.3:
-physikalische Gleichungen aufstellen, alle Unbekannten auf die linke
-Seite bringen, $\mathbf{A}$ und $\vec{b}$ ablesen. Neu ist nur, dass
-die Gleichungen jetzt aus der Knotenregel und der Maschenregel stammen.
+A = np.array([[2, 1], [5, 3]], dtype=float)
+b = np.array([8.0, 19.0])
+```
 
-Als Funktion `solve_bridge(R4)` verpackt, lässt sich das System für
-beliebige $R_4$-Werte auswerten. Im nächsten Kapitel nutzen wir diese
-Funktion für eine vollständige Parameterstudie: Wir berechnen $I(R_4)$
-und die Verlustleistung $P_B(R_4)$ für viele Werte und stellen die
-Ergebnisse in einem Diagramm dar. Dort sehen wir auch die Nullstelle
-bei $R_4^* = 100\,\Omega$ und können sie mit der analytischen
-Abgleichbedingung vergleichen.
+Notieren Sie Ihre Vermutung, bevor Sie den Code ausführen.
+
+1. Berechnen Sie die Determinante im Kopf: $\det = 2 \cdot 3 - 1 \cdot 5$. Hat
+   das System eine eindeutige Lösung?
+2. Was gibt `np.linalg.solve(A, b)` zurück?
+3. Setzen Sie Ihre Lösung von Hand in beide Gleichungen ein und prüfen Sie,
+   dass sie stimmt.
+4. Führen Sie den Code aus und überprüfen Sie Ihre Vorhersagen.
+````
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+import numpy as np
+
+A = np.array([[2, 1], [5, 3]], dtype=float)
+b = np.array([8.0, 19.0])
+
+print(np.linalg.det(A))
+x = np.linalg.solve(A, b)
+print(x)
+print('Probe:', np.allclose(A @ x, b))
+```
+Ausgabe:
+```
+1.0000000000000002
+[ 5. -2.]
+Probe: True
+```
+Die Determinante ist $2 \cdot 3 - 1 \cdot 5 = 1$, also ungleich null: genau eine
+Lösung. `np.linalg.solve` gibt $x = (5,\ -2)$ zurück. Die Probe von Hand:
+$2 \cdot 5 + 1 \cdot (-2) = 8$ und $5 \cdot 5 + 3 \cdot (-2) = 19$, beide
+Gleichungen stimmen.
+````
+
+````{admonition} Aufgabe 3.3 (✩)
+:class: tip
+Gegeben ist folgender Code:
+
+```python
+import numpy as np
+
+A = np.array([[2, 4], [1, 2]], dtype=float)
+b = np.array([10.0, 3.0])
+
+try:
+    x = np.linalg.solve(A, b)
+    print('Lösung:', x)
+except np.linalg.LinAlgError:
+    print('Matrix ist singulär.')
+```
+
+Notieren Sie Ihre Vermutung, bevor Sie den Code ausführen.
+
+1. Berechnen Sie `np.linalg.det(A)` im Kopf. Was fällt an den beiden Zeilen
+   von `A` auf?
+2. Wird der `try`-Zweig oder der `except`-Zweig ausgeführt? Was wird
+   ausgegeben?
+3. Führen Sie den Code aus und überprüfen Sie Ihre Vorhersagen.
+````
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+import numpy as np
+
+A = np.array([[2, 4], [1, 2]], dtype=float)
+b = np.array([10.0, 3.0])
+
+print('Determinante:', np.linalg.det(A))
+
+try:
+    x = np.linalg.solve(A, b)
+    print('Lösung:', x)
+except np.linalg.LinAlgError:
+    print('Matrix ist singulär.')
+```
+Ausgabe:
+```
+Determinante: 0.0
+Matrix ist singulär.
+```
+Die zweite Zeile ist genau die Hälfte der ersten ($[1, 2] = 0.5 \cdot [2, 4]$),
+sie enthält also keine neue Information. Die Determinante ist null,
+`np.linalg.solve` wirft einen `LinAlgError`, und der `except`-Zweig gibt
+`Matrix ist singulär.` aus.
+````
+
+```{admonition} Aufgabe 3.4 (✩✩)
+:class: tip
+Drei Personen teilen sich die Kosten für einen Haushalt. In drei Monaten
+zahlen sie unterschiedliche Anteile für Miete (M), Strom (S) und Internet (I),
+und der Gesamtbetrag ist bekannt:
+
+| Monat | Anteil M | Anteil S | Anteil I | Gesamt in Euro |
+| --- | --- | --- | --- | --- |
+| Januar | 0.50 | 0.30 | 0.20 | 980.00 |
+| Februar | 0.40 | 0.35 | 0.25 | 960.00 |
+| März | 0.45 | 0.25 | 0.30 | 970.00 |
+
+Gesucht sind die monatlichen Gesamtkosten $M$, $S$, $I$ der drei Posten.
+
+1. Schreiben Sie das Gleichungssystem als $\mathbf{A} \cdot \vec{x} = \vec{b}$
+   mit $\vec{x} = (M,\ S,\ I)^\top$.
+2. Prüfen Sie mit der Determinante die Lösbarkeit.
+3. Lösen Sie das System mit `np.linalg.solve` und geben Sie die drei Kosten
+   aus.
+4. Führen Sie eine Probe durch.
+
+Strukturieren Sie Ihren Code mit EVA-Kommentaren.
+```
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+import numpy as np
+
+# Eingabe
+A = np.array([
+    [0.50, 0.30, 0.20],
+    [0.40, 0.35, 0.25],
+    [0.45, 0.25, 0.30],
+])
+b = np.array([980.00, 960.00, 970.00])
+
+# Verarbeitung
+det_A = np.linalg.det(A)
+x = np.linalg.solve(A, b)
+
+# Ausgabe
+print(f'Determinante: {det_A:.5f}')
+print(f'Miete:    {x[0]:.2f} Euro')
+print(f'Strom:    {x[1]:.2f} Euro')
+print(f'Internet: {x[2]:.2f} Euro')
+print('Probe bestanden:', np.allclose(A @ x, b))
+```
+Ausgabe:
+```
+Determinante: 0.00750
+Miete:    1080.00 Euro
+Strom:    880.00 Euro
+Internet: 880.00 Euro
+Probe bestanden: True
+```
+Die Determinante ist mit 0.0075 klein, aber nicht null: Das System hat genau
+eine Lösung. Miete kostet 1080 Euro im Monat, Strom und Internet je 880 Euro.
+````
+
+```{admonition} Aufgabe 3.5 (✩✩)
+:class: tip
+Ein waagerechter Träger der Länge $L = 6\,\text{m}$ ist links in A durch ein
+Festlager, rechts in B durch ein Loslager gelagert. Das Festlager nimmt $A_x$
+(waagerecht) und $A_y$ (senkrecht) auf, das Loslager nur $B_y$. Auf den Träger
+wirken:
+
+* eine waagerechte Kraft $H = 3\,\text{kN}$ nach rechts auf Höhe der
+  Trägerachse,
+* eine Last $F_1 = 6\,\text{kN}$ senkrecht nach unten im Abstand $2\,\text{m}$
+  von A,
+* eine Last $F_2 = 3\,\text{kN}$ senkrecht nach unten im Abstand $4\,\text{m}$
+  von A.
+
+1. Stellen Sie die drei Gleichgewichtsbedingungen auf ($\sum F_x = 0$,
+   $\sum F_y = 0$, $\sum M_A = 0$; Kräfte nach rechts und oben positiv, Momente
+   gegen den Uhrzeigersinn positiv).
+2. Schreiben Sie sie als $\mathbf{A} \cdot \vec{x} = \vec{b}$ mit
+   $\vec{x} = (A_x,\ A_y,\ B_y)^\top$, prüfen Sie die Determinante und lösen
+   Sie das System.
+3. Geben Sie die drei Auflagerkräfte aus und deuten Sie das Vorzeichen von
+   $A_x$.
+
+Strukturieren Sie Ihren Code mit EVA-Kommentaren.
+```
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+import numpy as np
+
+# Eingabe
+# Summe Fx:  A_x + 3 = 0
+# Summe Fy:  A_y + B_y - 6 - 3 = 0   ->   A_y + B_y = 9
+# Summe M_A: 6*B_y - 6*2 - 3*4 = 0   ->   6*B_y = 24
+A = np.array([
+    [1.0, 0.0, 0.0],
+    [0.0, 1.0, 1.0],
+    [0.0, 0.0, 6.0],
+])
+b = np.array([-3.0, 9.0, 24.0])
+
+# Verarbeitung
+det_A = np.linalg.det(A)
+x = np.linalg.solve(A, b)
+
+# Ausgabe
+print(f'Determinante: {det_A:.1f}')
+print(f'A_x = {x[0]:.1f} kN')
+print(f'A_y = {x[1]:.1f} kN')
+print(f'B_y = {x[2]:.1f} kN')
+print('Probe bestanden:', np.allclose(A @ x, b))
+```
+Ausgabe:
+```
+Determinante: 6.0
+A_x = -3.0 kN
+A_y = 5.0 kN
+B_y = 4.0 kN
+Probe bestanden: True
+```
+Die Determinante ist 6.0, das System ist eindeutig lösbar. Das negative
+Vorzeichen von $A_x$ bedeutet, dass die waagerechte Auflagerkraft mit
+$3\,\text{kN}$ nach links zeigt, entgegen der angesetzten Richtung. Sie hält
+der waagerechten Kraft $H$ das Gleichgewicht.
+````
+
+```{admonition} Aufgabe 3.6 (✩✩)
+:class: tip
+Ein Menüplan wird aus drei Zutaten zusammengestellt: Reis (R), Hähnchen (H)
+und Brokkoli (B). Die Tabelle zeigt den Gehalt an Kalorien, Protein und
+Kohlenhydraten pro 100 g sowie die Zielwerte pro Mahlzeit:
+
+| Nährstoff | Reis | Hähnchen | Brokkoli | Ziel |
+| --- | --- | --- | --- | --- |
+| Kalorien | 130 | 165 | 34 | 600 |
+| Protein in g | 2.7 | 31.0 | 2.8 | 55 |
+| Kohlenhydrate in g | 28.0 | 0.0 | 7.0 | 80 |
+
+Gesucht ist die Menge jeder Zutat (in 100-g-Einheiten), die genau diese
+Nährwerte liefert.
+
+1. Schreiben Sie das Gleichungssystem als $\mathbf{A} \cdot \vec{x} = \vec{b}$.
+2. Prüfen Sie die Determinante, lösen Sie das System und geben Sie die Mengen
+   in Gramm aus.
+3. Führen Sie eine Probe durch.
+
+Strukturieren Sie Ihren Code mit EVA-Kommentaren.
+```
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+import numpy as np
+
+# Eingabe
+# Zeile = Nährstoff, Spalte = Zutat [Reis, Hähnchen, Brokkoli]
+A = np.array([
+    [130.0, 165.0, 34.0],
+    [  2.7,  31.0,  2.8],
+    [ 28.0,   0.0,  7.0],
+])
+b = np.array([600.0, 55.0, 80.0])
+
+# Verarbeitung
+det_A = np.linalg.det(A)
+x = np.linalg.solve(A, b)
+
+# Ausgabe
+print(f'Determinante: {det_A:.1f}')
+print(f'Reis:     {x[0] * 100:.0f} g')
+print(f'Hähnchen: {x[1] * 100:.0f} g')
+print(f'Brokkoli: {x[2] * 100:.0f} g')
+print('Probe bestanden:', np.allclose(A @ x, b))
+```
+Ausgabe:
+```
+Determinante: 8515.5
+Reis:     227 g
+Hähnchen: 136 g
+Brokkoli: 236 g
+Probe bestanden: True
+```
+Die Determinante ist deutlich ungleich null. Der Menüplan besteht aus rund
+227 g Reis, 136 g Hähnchen und 236 g Brokkoli. Die Probe bestätigt, dass diese
+Mengen genau die drei Zielwerte treffen.
+````
+
+````{admonition} Aufgabe 3.7 (✩✩✩) Mini-Projekt: Stromtarife
+:class: tip
+Ein Haushalt bezieht Strom zu drei Tarifen: Hochtarif (HT), Niedertarif (NT)
+und Sondertarif (ST). In drei Monaten wurden die Verbräuche gemessen und die
+Rechnungsbeträge gestellt:
+
+| Monat | HT in kWh | NT in kWh | ST in kWh | Betrag in Euro |
+| --- | --- | --- | --- | --- |
+| Januar | 210 | 180 | 40 | 105.00 |
+| Februar | 190 | 160 | 35 | 94.25 |
+| März | 230 | 200 | 50 | 116.50 |
+
+**Teil 1:** Stellen Sie das Gleichungssystem auf, prüfen Sie die Determinante
+und berechnen Sie die Preise für HT, NT und ST in Cent pro kWh.
+
+**Teil 2:** Im April werden 250 kWh HT, 220 kWh NT und 60 kWh ST verbraucht.
+Berechnen Sie den erwarteten Rechnungsbetrag mit der Lösung aus Teil 1.
+Hinweis: Der Betrag ist das Skalarprodukt aus Verbrauchsvektor und Preisvektor,
+also `verbrauch_april @ x`.
+
+**Teil 3:** Der HT-Preis steigt um 10 Prozent. Legen Sie einen neuen
+Preisvektor an (die anderen beiden Preise bleiben gleich) und berechnen Sie den
+neuen April-Betrag sowie die absolute und die prozentuale Änderung.
+
+**Abschlussfrage:** Der HT-Preis steigt um 10 Prozent, der Rechnungsbetrag aber
+nur um rund 6 Prozent. Woran liegt das?
+
+Strukturieren Sie Ihren Code mit EVA-Kommentaren.
+````
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+import numpy as np
+
+# Eingabe
+A = np.array([
+    [210.0, 180.0, 40.0],
+    [190.0, 160.0, 35.0],
+    [230.0, 200.0, 50.0],
+])
+b = np.array([105.00, 94.25, 116.50])
+
+# Verarbeitung Teil 1: Tarifpreise
+det_A = np.linalg.det(A)
+x = np.linalg.solve(A, b)
+
+print(f'Determinante: {det_A:.1f}')
+print(f'HT-Preis: {x[0] * 100:.2f} ct/kWh')
+print(f'NT-Preis: {x[1] * 100:.2f} ct/kWh')
+print(f'ST-Preis: {x[2] * 100:.2f} ct/kWh')
+print('Probe bestanden:', np.allclose(A @ x, b))
+
+# Verarbeitung Teil 2: Vorhersage April
+verbrauch_april = np.array([250.0, 220.0, 60.0])
+betrag_april = verbrauch_april @ x
+print(f'April-Rechnung: {betrag_april:.2f} Euro')
+
+# Verarbeitung Teil 3: HT-Preis plus 10 Prozent
+x_neu = np.array([x[0] * 1.10, x[1], x[2]])
+betrag_neu = verbrauch_april @ x_neu
+aenderung_abs = betrag_neu - betrag_april
+aenderung_proz = aenderung_abs / betrag_april * 100
+
+print(f'April-Rechnung nach HT-Erhöhung: {betrag_neu:.2f} Euro')
+print(f'Absolute Änderung:   {aenderung_abs:.2f} Euro')
+print(f'Prozentuale Änderung: {aenderung_proz:.2f} %')
+```
+Ausgabe:
+```
+Determinante: -3000.0
+HT-Preis: 30.00 ct/kWh
+NT-Preis: 20.00 ct/kWh
+ST-Preis: 15.00 ct/kWh
+Probe bestanden: True
+April-Rechnung: 128.00 Euro
+April-Rechnung nach HT-Erhöhung: 135.50 Euro
+Absolute Änderung:   7.50 Euro
+Prozentuale Änderung: 5.86 %
+```
+Die drei Tarifpreise betragen 30, 20 und 15 ct/kWh. Die April-Rechnung steigt
+von 128.00 auf 135.50 Euro.
+
+**Abschlussfrage:** Der HT-Preis steigt zwar um 10 Prozent, aber der Hochtarif
+macht nur einen Teil der Rechnung aus. Von den 128 Euro entfallen $250 \cdot
+0.30 = 75$ Euro auf HT, der Rest auf NT und ST, deren Preise unverändert
+bleiben. 10 Prozent von 75 Euro sind 7.50 Euro, und bezogen auf die gesamten
+128 Euro sind das eben nur rund 6 Prozent.
+````

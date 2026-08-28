@@ -4,306 +4,239 @@ kernelspec:
   display_name: 'Python 3'
 ---
 
-# 3.4 Übungen
+# 3.4 Vertiefung: Wie viel bringt eine dickere Dämmung?
 
-```{admonition} Warnung
-:class: warning
-Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
-```
+In Kapitel 3.3 haben wir die Temperaturen und den Wärmestrom in einer
+dreischichtigen Wand berechnet. In diesem Kapitel erweitern wir die Wand um
+eine Dämmschicht und untersuchen mit einer Parameterstudie, wie stark der
+Wärmestrom sinkt, wenn wir die Dämmung verstärken. Bearbeiten Sie die
+Teilaufgaben möglichst zu zweit und der Reihe nach.
 
-````{admonition} Übung 3.1 (✩)
+````{admonition} Projekt: Parameterstudie zur Dämmstärke (✩✩)
 :class: tip
-Gegeben ist folgender Code:
+Eine Außenwand besteht aus vier Schichten. Innen herrscht
+$T_{LA} = 293\,\text{K}$ (20 °C), außen $T_{DR} = 263\,\text{K}$ (−10 °C).
 
-```python
-import numpy as np
+| Schicht | Bauteil | $R$ in K/W |
+| --- | --- | --- |
+| A | Innenputz | 0.04 |
+| B | Mauerwerk | 0.5 |
+| C | Dämmung | $R_C$ (variabel) |
+| D | Außenputz | 0.04 |
 
-A = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=float)
-b = np.array([1.0, 2.0, 3.0])
-```
-
-1. Was gibt `print(A.shape)` aus?
-2. Was gibt `print(A[2, 0])` aus? Ermitteln Sie das Ergebnis zuerst im Kopf.
-3. Was gibt `print(A[:, 2])` aus? Ermitteln Sie das Ergebnis zuerst im Kopf.
-4. Berechnen Sie die Determinante von `A`. Hat das System eine eindeutige
-   Lösung? Überlegen Sie, bevor Sie den Code ausführen: Schauen Sie sich
-   die Zeilen von `A` genau an.
-5. Führen Sie den Code aus und überprüfen Sie Ihre Vorhersagen.
+Die Unbekannten sind die drei Grenzflächentemperaturen $T_{AB}$, $T_{BC}$,
+$T_{CD}$ und der Wärmestrom $Q$. Wie in Kapitel 3.3 gilt für jede Schicht
+$Q = \Delta T_i / R_i$.
 ````
+
+```{admonition} Teil 1: Das Gleichungssystem aufstellen
+:class: tip
+Formen Sie die vier Schichtgleichungen so um, dass alle Unbekannten links
+stehen (multiplizieren Sie jede mit ihrem $R_i$). Schreiben Sie das Ergebnis
+als Matrixgleichung $\mathbf{A} \cdot \vec{x} = \vec{b}$ mit
+$\vec{x} = (T_{AB},\ T_{BC},\ T_{CD},\ Q)^\top$. Die Matrix hat dieselbe
+Struktur wie in Kapitel 3.3, nur mit einer Zeile und einer Spalte mehr.
+```
 
 ```{code-cell} python
 # Code-Zelle
 ```
 
-````{admonition} Lösung
+````{admonition} Lösung Teil 1
 :class: tip
 :class: dropdown
-```python
-import numpy as np
+Die umgeformten Gleichungen lauten:
 
-A = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=float)
-b = np.array([1.0, 2.0, 3.0])
+$$T_{AB} + R_A Q = T_{LA}$$
+$$-T_{AB} + T_{BC} + R_B Q = 0$$
+$$-T_{BC} + T_{CD} + R_C Q = 0$$
+$$-T_{CD} + R_D Q = -T_{DR}$$
 
-print(A.shape)             # (3, 3)
-print(A[2, 0])             # 7.0
-print(A[:, 2])             # [3. 6. 9.]
-print(np.linalg.det(A))    # nahezu 0
-```
+Daraus die Matrixform:
 
-`A.shape` ist `(3, 3)`: 3 Zeilen und 3 Spalten. `A[2, 0]` ist der Wert
-in Zeile 2, Spalte 0, also `7.0`. `A[:, 2]` ist die dritte Spalte:
-`[3. 6. 9.]`.
-
-Die Determinante ist numerisch nahezu null, weil Zeile 3 eine Linearkombination
-aus Zeile 1 und Zeile 2 ist ($[7,8,9] = 2 \cdot [4,5,6] - [1,2,3]$). Das System
-hat keine eindeutige Lösung.
+$$\begin{pmatrix}
++1 &  0 &  0 & R_A \\
+-1 & +1 &  0 & R_B \\
+ 0 & -1 & +1 & R_C \\
+ 0 &  0 & -1 & R_D
+\end{pmatrix}
+\cdot
+\begin{pmatrix} T_{AB} \\ T_{BC} \\ T_{CD} \\ Q \end{pmatrix}
+=
+\begin{pmatrix} T_{LA} \\ 0 \\ 0 \\ -T_{DR} \end{pmatrix}$$
 ````
 
-````{admonition} Übung 3.2 (✩)
+```{admonition} Teil 2: Für eine feste Dämmung lösen
 :class: tip
-Gegeben ist folgender Code:
-
-```python
-import numpy as np
-
-A = np.array([[2, 1], [5, 3]], dtype=float)
-b = np.array([8.0, 19.0])
+Legen Sie `A` und `b` für $R_C = 1.0\,\text{K/W}$ als NumPy-Arrays an. Prüfen
+Sie die Determinante, lösen Sie mit `np.linalg.solve` und geben Sie die drei
+Grenzflächentemperaturen (in °C) und den Wärmestrom aus. Sichern Sie das
+Ergebnis mit einer Probe ab.
 ```
-
-1. Sagen Sie vorher: Hat das System eine eindeutige Lösung? Berechnen Sie
-   die Determinante im Kopf: $\det = 2 \cdot 3 - 1 \cdot 5$.
-2. Was gibt `np.linalg.solve(A, b)` zurück? Überprüfen Sie das Ergebnis
-   von Hand: Setzen Sie Ihre Lösung in die Originalgleichungen ein.
-3. Berechnen Sie `np.linalg.inv(A)` und überprüfen Sie mit
-   `np.allclose(A_inv @ A, np.eye(2))`.
-4. Führen Sie den Code aus und überprüfen Sie Ihre Vorhersagen.
-````
 
 ```{code-cell} python
 # Code-Zelle
 ```
 
-````{admonition} Lösung
+````{admonition} Lösung Teil 2
 :class: tip
 :class: dropdown
 ```python
 import numpy as np
 
-A = np.array([[2, 1], [5, 3]], dtype=float)
-b = np.array([8.0, 19.0])
+R_A = 0.04
+R_B = 0.5
+R_C = 1.0
+R_D = 0.04
+T_LA = 293.0
+T_DR = 263.0
 
-det = np.linalg.det(A)
-print(f'Determinante: {det}')        # 1.0
-
-x = np.linalg.solve(A, b)
-print(f'Lösung: {x}')              
-
-A_inv = np.linalg.inv(A)
-print(np.allclose(A_inv @ A, np.eye(2)))  # True
-```
-
-Die Determinante ist $2 \cdot 3 - 1 \cdot 5 = 1$, also ungleich null.
-Das System hat genau eine Lösung. Die Probe bestätigt das Ergebnis.
-````
-
-````{admonition} Übung 3.3 (✩✩)
-:class: tip
-Drei Personen teilen sich die Kosten für einen gemeinsamen Haushalt. Jeden
-Monat zahlen sie unterschiedliche Anteile für Miete (M), Strom (S) und
-Internet (I). Aus drei Monaten sind folgende Gesamtbeträge bekannt:
-
-| Monat | Anteil M | Anteil S | Anteil I | Gesamt (Euro) |
-|-------|----------|----------|----------|---------------|
-| Jan   | 0.50     | 0.30     | 0.20     | 980.00        |
-| Feb   | 0.40     | 0.35     | 0.25     | 960.00        |
-| Mär   | 0.45     | 0.25     | 0.30     | 970.00        |
-
-1. Formulieren Sie das LGS als Matrixgleichung
-   $\mathbf{A} \cdot \vec{x} = \vec{b}$, wobei $\vec{x} = (M, S, I)^T$
-   die monatlichen Gesamtkosten der drei Posten enthält.
-2. Prüfen Sie mit der Determinante, ob das System eine eindeutige Lösung hat.
-3. Lösen Sie das System mit `np.linalg.solve` und geben Sie die monatlichen
-   Kosten für Miete, Strom und Internet aus.
-4. Führen Sie eine Probe durch.
-
-Strukturieren Sie Ihren Code mit sinnvollen Kommentaren.
-````
-
-```{code-cell} python
-# Code-Zelle
-```
-
-````{admonition} Lösung
-:class: tip
-:class: dropdown
-```python
-import numpy as np
-
-# Eingabe
 A = np.array([
-    [0.50, 0.30, 0.20],
-    [0.40, 0.35, 0.25],
-    [0.45, 0.25, 0.30],
+    [+1.0,  0.0,  0.0, R_A],
+    [-1.0, +1.0,  0.0, R_B],
+    [ 0.0, -1.0, +1.0, R_C],
+    [ 0.0,  0.0, -1.0, R_D],
 ])
-b = np.array([980.00, 960.00, 970.00])
+b = np.array([T_LA, 0.0, 0.0, -T_DR])
 
-# Verarbeitung
-det = np.linalg.det(A)
-print(f'Determinante: {det:.6f}')
+print(f'Determinante: {np.linalg.det(A):.4f}')
 
 x = np.linalg.solve(A, b)
+T_AB, T_BC, T_CD, Q = x
 
-# Ausgabe
-print(f'Miete:    {x[0]:.2f} Euro')
-print(f'Strom:    {x[1]:.2f} Euro')
-print(f'Internet: {x[2]:.2f} Euro')
-print(f'Probe:    {np.allclose(A @ x, b)}')
+print(f'T_AB = {T_AB - 273.15:.1f} °C')
+print(f'T_BC = {T_BC - 273.15:.1f} °C')
+print(f'T_CD = {T_CD - 273.15:.1f} °C')
+print(f'Q    = {Q:.2f} W')
+print('Probe bestanden:', np.allclose(A @ x, b))
 ```
+Mit $R_C = 1.0$ K/W ergibt sich ein Wärmestrom von rund 19.0 W. Die Temperatur
+fällt von 20 °C innen über den Innenputz kaum merklich auf 19.1 °C, dann über
+das Mauerwerk auf 9.6 °C und schließlich innerhalb der Dämmung steil auf
+−9.4 °C. Fast die gesamte Temperaturdifferenz liegt über der Dämmschicht.
 ````
 
-````{admonition} Übung 3.4 (✩✩)
+````{admonition} Teil 3: Parameterstudie und Diagramm
 :class: tip
-Ein Ernährungsberater stellt Menüpläne aus drei Zutaten zusammen: Reis (R),
-Hähnchen (H) und Brokkoli (B). Die folgende Tabelle zeigt den Gehalt
-an Kalorien, Protein und Kohlenhydraten pro 100 g jeder Zutat sowie die
-gewünschten Gesamtmengen pro Mahlzeit:
+Untersuchen Sie, wie der Wärmestrom von der Dämmstärke abhängt. Variieren Sie
+$R_C$ mit
 
-| Nährstoff    | Reis | Hähnchen | Brokkoli | Ziel   |
-|--------------|------|----------|----------|--------|
-| Kalorien     | 130  | 165      | 34       | 600    |
-| Protein (g)  | 2.7  | 31.0     | 2.8      | 55     |
-| Kohlenhydr. (g) | 28.0 | 0.0  | 7.0      | 80     |
+```python
+r_c_werte = np.linspace(0.0, 3.0, 31)
+```
 
-Gesucht ist die Menge jeder Zutat in 100-g-Einheiten, die genau diese
-Nährwerte liefert.
-
-1. Formulieren Sie das LGS als Matrixgleichung.
-2. Prüfen Sie mit Determinante und Rang die Lösbarkeit.
-3. Lösen Sie das System und geben Sie die Mengen in Gramm aus.
-4. Überprüfen Sie die Lösung mit einer Probe.
-
-Strukturieren Sie Ihren Code mit sinnvollen Kommentaren.
+Lösen Sie für jeden Wert das Gleichungssystem, speichern Sie den Wärmestrom in
+einem Array `q_werte` und stellen Sie `q_werte` über `r_c_werte` als Linienplot
+dar (Achsenbeschriftung, Titel, Gitter).
 ````
 
 ```{code-cell} python
 # Code-Zelle
 ```
 
-````{admonition} Lösung
+````{admonition} Lösung Teil 3
 :class: tip
 :class: dropdown
 ```python
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.style as style
+style.use('seaborn-v0_8')
 
-# Eingabe
-# Zeile = Nährstoff, Spalte = Zutat [Reis, Hähnchen, Brokkoli]
-A = np.array([
-    [130.0, 165.0, 34.0],
-    [  2.7,  31.0,  2.8],
-    [ 28.0,   0.0,  7.0],
-])
-b = np.array([600.0, 55.0, 80.0])
+R_A, R_B, R_D = 0.04, 0.5, 0.04
+T_LA, T_DR = 293.0, 263.0
 
-# Verarbeitung: Lösbarkeitstest
-det = np.linalg.det(A)
-rA  = np.linalg.matrix_rank(A)
-rAb = np.linalg.matrix_rank(np.column_stack((A, b)))
-n   = A.shape[1]
+r_c_werte = np.linspace(0.0, 3.0, 31)
+q_werte = np.zeros(31)
 
-print(f'Determinante: {det:.2f}')
-print(f'Rang A: {rA}, Rang [A|b]: {rAb}, n = {n}')
+for i, r_c in enumerate(r_c_werte):
+    A = np.array([
+        [+1.0,  0.0,  0.0, R_A],
+        [-1.0, +1.0,  0.0, R_B],
+        [ 0.0, -1.0, +1.0, r_c],
+        [ 0.0,  0.0, -1.0, R_D],
+    ])
+    b = np.array([T_LA, 0.0, 0.0, -T_DR])
+    x = np.linalg.solve(A, b)
+    q_werte[i] = x[3]
 
-# Verarbeitung: Lösung
-x = np.linalg.solve(A, b)
-
-# Ausgabe
-print(f'\nReis:     {x[0]*100:.1f} g')
-print(f'Hähnchen: {x[1]*100:.1f} g')
-print(f'Brokkoli: {x[2]*100:.1f} g')
-print(f'Probe: {np.allclose(A @ x, b)}')
+fig, ax = plt.subplots(figsize=(7, 4))
+ax.plot(r_c_werte, q_werte)
+ax.set_xlabel('Wärmewiderstand der Dämmung in K/W')
+ax.set_ylabel('Wärmestrom in W')
+ax.set_title('Wärmestrom in Abhängigkeit von der Dämmstärke')
+ax.grid(True)
+plt.show()
 ```
+Für jeden Wert von $R_C$ lösen wir ein eigenes Gleichungssystem. Nur der eine
+Matrixeintrag in Zeile 3, Spalte 4 ändert sich, alles andere bleibt gleich.
 ````
 
-````{admonition} Übung 3.5 (✩✩✩) Mini-Projekt: Stromtarife
+```{admonition} Teil 4: Das Diagramm auswerten
 :class: tip
-Ein Haushalt nutzt drei verschiedene Stromtarife: Hochtarif (HT), Niedertarif
-(NT) und Sondertarif (ST). In drei aufeinanderfolgenden Monaten wurden
-folgende Verbräuche gemessen und folgende Rechnungsbeträge gestellt:
+Beantworten Sie in eigenen Worten:
 
-| Monat | HT (kWh) | NT (kWh) | ST (kWh) | Betrag (Euro) |
-|-------|----------|----------|----------|---------------|
-| Jan   | 210      | 180      | 40       | 89.50         |
-| Feb   | 190      | 160      | 35       | 80.20         |
-| Mär   | 230      | 200      | 50       | 98.30         |
+1. Wie verändert sich der Wärmestrom, wenn $R_C$ von 0 auf 0.5 K/W steigt, und
+   wie, wenn es von 2.5 auf 3.0 K/W steigt?
+2. Was bedeutet die Form der Kurve für die Frage, ob sich eine immer dickere
+   Dämmung lohnt?
+```
 
-**Teil 1: Tarifpreise bestimmen**
+````{admonition} Lösung Teil 4
+:class: tip
+:class: dropdown
+1. Am Anfang bringt zusätzliche Dämmung viel: Von $R_C = 0$ bis $R_C = 0.5$
+   K/W fällt der Wärmestrom von rund 52 W auf rund 28 W. Am Ende bringt sie
+   wenig: Von $R_C = 2.5$ bis $R_C = 3.0$ K/W sinkt er nur noch von etwa
+   9.7 W auf 8.4 W.
+2. Die Kurve fällt zuerst steil und wird dann immer flacher. Der Nutzen jeder
+   weiteren Dämmschicht nimmt ab. Ab einem gewissen Punkt steht der zusätzliche
+   Materialaufwand in keinem Verhältnis mehr zur eingesparten Wärme. Das nennt
+   man den **abnehmenden Grenznutzen** der Dämmung.
+````
 
-Stellen Sie das LGS auf, prüfen Sie die Lösbarkeit und berechnen Sie die
-Preise für HT, NT und ST in Cent pro kWh.
+````{admonition} Zusatzaufgabe: Halbierung des Wärmestroms (✩✩✩)
+:class: tip
+Bestimmen Sie aus der Parameterstudie, bei welchem $R_C$ der Wärmestrom auf die
+Hälfte des Wertes ohne Dämmung ($R_C = 0$) gesunken ist.
 
-**Teil 2: Vorhersage**
-
-Im April werden 250 kWh HT, 220 kWh NT und 60 kWh ST verbraucht. Berechnen
-Sie den erwarteten Rechnungsbetrag mit der Lösung aus Teil 1.
-
-**Teil 3: Sensitivitätsanalyse**
-
-Was ändert sich am Rechnungsbetrag im April, wenn der HT-Preis um 10 %
-steigt? Berechnen Sie den neuen Betrag und die absolute sowie prozentuale
-Änderung.
-
-Strukturieren Sie Ihren Code mit sinnvollen Kommentaren.
+1. Der Wert ohne Dämmung steht in `q_werte[0]`. Bilden Sie das Ziel
+   `q_ziel = q_werte[0] / 2`.
+2. Finden Sie den Index des `q_werte`-Eintrags, der `q_ziel` am nächsten liegt,
+   mit `np.argmin(np.abs(q_werte - q_ziel))`.
+3. Geben Sie das zugehörige $R_C$ aus und markieren Sie den Punkt im Diagramm
+   aus Teil 3 mit einem zweiten `ax.scatter()`-Aufruf.
 ````
 
 ```{code-cell} python
 # Code-Zelle
 ```
 
-````{admonition} Lösung
+````{admonition} Lösung Zusatzaufgabe
 :class: tip
 :class: dropdown
 ```python
-import numpy as np
+q_ziel = q_werte[0] / 2
+i_halb = np.argmin(np.abs(q_werte - q_ziel))
+r_c_halb = r_c_werte[i_halb]
 
-# Eingabe
-A = np.array([
-    [210, 180, 40],
-    [190, 160, 35],
-    [230, 200, 50],
-], dtype=float)
-b = np.array([89.50, 80.20, 98.30])
+print(f'Wärmestrom ohne Dämmung: {q_werte[0]:.1f} W')
+print(f'Halber Wärmestrom:       {q_ziel:.1f} W')
+print(f'erreicht bei R_C = {r_c_halb:.2f} K/W')
 
-# Verarbeitung: Lösbarkeitstest
-det = np.linalg.det(A)
-print(f'Determinante: {det:.4f}')
-
-# Verarbeitung: Tarifpreise
-x = np.linalg.solve(A, b)
-p_HT, p_NT, p_ST = x
-
-# Ausgabe Teil 1
-print(f'\nHT-Preis: {p_HT*100:.2f} ct/kWh')
-print(f'NT-Preis: {p_NT*100:.2f} ct/kWh')
-print(f'ST-Preis: {p_ST*100:.2f} ct/kWh')
-print(f'Probe: {np.allclose(A @ x, b)}')
-
-# Verarbeitung: Vorhersage April
-verbrauch_april = np.array([250, 220, 60], dtype=float)
-betrag_april    = verbrauch_april @ x
-
-# Ausgabe Teil 2
-print(f'\nApril-Rechnung: {betrag_april:.2f} Euro')
-
-# Verarbeitung: Sensitivitätsanalyse
-x_neu           = x.copy()
-x_neu[0]        = x[0] * 1.10   # HT-Preis 10 % teurer
-betrag_neu      = verbrauch_april @ x_neu
-aenderung_abs   = betrag_neu - betrag_april
-aenderung_proz  = aenderung_abs / betrag_april * 100
-
-# Ausgabe Teil 3
-print(f'April-Rechnung nach HT-Erhöhung: {betrag_neu:.2f} Euro')
-print(f'Absolute Änderung:  {aenderung_abs:.2f} Euro')
-print(f'Prozentuale Änderung: {aenderung_proz:.2f} %')
+fig, ax = plt.subplots(figsize=(7, 4))
+ax.plot(r_c_werte, q_werte, label='Wärmestrom')
+ax.scatter(r_c_halb, q_werte[i_halb], color='red', zorder=5,
+           label='halber Wärmestrom')
+ax.set_xlabel('Wärmewiderstand der Dämmung in K/W')
+ax.set_ylabel('Wärmestrom in W')
+ax.set_title('Halbierung des Wärmestroms')
+ax.legend()
+ax.grid(True)
+plt.show()
 ```
+Der Wärmestrom ohne Dämmung beträgt rund 52 W. Die Hälfte davon, rund 26 W,
+wird schon bei einer Dämmung mit $R_C \approx 0.6$ K/W erreicht. Um ihn noch
+einmal zu halbieren, bräuchte man deutlich mehr als das Doppelte an
+Dämmwiderstand, was wieder den abnehmenden Grenznutzen zeigt.
 ````

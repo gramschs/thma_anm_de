@@ -4,35 +4,30 @@ kernelspec:
   display_name: 'Python 3'
 ---
 
-# 3.3 Anwendung: Wärmeübertragung in einer Mehrschichtwand
+# 3.3 Wärmeübertragung in einer Mehrschichtwand
 
-```{admonition} Warnung
-:class: warning
-Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
-```
+In Kapitel 3.1 haben wir lineare Gleichungssysteme mit NumPy gelöst, in
+Kapitel 3.2 die Auflagerkräfte eines Trägers berechnet. Beide Male haben wir
+die Gleichungen von Hand aufgestellt. Jetzt wenden wir dasselbe Werkzeug auf
+ein klassisches Maschinenbau-Problem an: eine Außenwand aus drei Schichten mit
+unterschiedlichen Wärmedurchgangswiderständen. *Wie hoch ist die Temperatur an
+den Grenzflächen, und wie groß ist der Wärmestrom?*
 
-Bisher haben wir LGS an einem Obstmarkt-Beispiel geübt. Jetzt wenden wir
-dasselbe Werkzeug auf ein Problem aus dem Maschinenbau an: eine Außenwand
-aus drei Schichten mit unterschiedlichen Wärmedurchgangswiderständen. *Wie
-hoch ist die Temperatur an den Grenzflächen, und wie groß ist der
-Wärmestrom?*
-
-Wir werden sehen, dass der Weg von den physikalischen Gleichungen zur
-Matrix immer gleich ist: Unbekannte auf die linke Seite, bekannte Größen
+Wir werden sehen, dass der Weg von den physikalischen Gleichungen zur Matrix
+immer gleich ist: alle Unbekannten auf die linke Seite, alle bekannten Größen
 auf die rechte.
 
 ## Lernziele
 
 ```{admonition} Lernziele
 :class: attention
-* [ ] Sie können physikalische Gleichgewichtsbedingungen in ein LGS
-  $\mathbf{A} \cdot \vec{x} = \vec{b}$ überführen.
-* [ ] Sie können die Matrix $\mathbf{A}$ und den Vektor $\vec{b}$ aus
-  umgeformten Gleichungen ablesen.
-* [ ] Sie können das LGS lösen und das Ergebnis physikalisch interpretieren.
+* [ ] Sie können physikalische Bilanzgleichungen so umformen, dass alle
+  Unbekannten auf der linken Seite stehen.
+* [ ] Sie können die Koeffizientenmatrix $\mathbf{A}$ und den Vektor $\vec{b}$
+  aus den umgeformten Gleichungen ablesen.
+* [ ] Sie können das LGS mit `np.linalg.solve` lösen und das Ergebnis
+  physikalisch deuten, auch ein negatives Vorzeichen.
 ```
-
-+++
 
 ## Das physikalische Modell
 
@@ -43,6 +38,7 @@ $T_{LA}$, rechts $T_{CR}$.
 ```{figure} pics/waermeuebertragung_mehrschichtwand.svg
 :alt: Querschnitt einer dreischichtigen Wand mit Temperaturprofil und Wärmestrom
 :align: center
+:label: fig_waermeuebertragung_mehrschichtwand
 
 Temperaturprofil einer Mehrschichtwand im stationären Zustand (schematische
 Darstellung bei gleicher geometrischer Schichtdicke). Da der Wärmestrom durch
@@ -52,13 +48,15 @@ Schicht B am flachsten. (Quelle: eigene Abbildung; Lizenz [CC BY-SA
 4.0](https://creativecommons.org/licenses/by-sa/4.0))
 ```
 
-Im **stationären Zustand** ist der Wärmestrom $Q$ durch alle Schichten
-gleich. Das **Wärmeübertragungsgesetz** (analog zum Ohmschen Gesetz) lautet
-für jede Schicht:
+Im **stationären Zustand** ist der Wärmestrom $Q$ durch alle Schichten gleich
+groß. Das **Wärmeübertragungsgesetz**, analog zum Ohmschen Gesetz, lautet für
+jede Schicht
 
-$$Q = \frac{\Delta T_i}{R_i}$$
+$$Q = \frac{\Delta T_i}{R_i},$$
 
-Das liefert drei Gleichungen mit drei Unbekannten ($T_{AB}$, $T_{BC}$, $Q$):
+wobei $\Delta T_i$ die Temperaturdifferenz über die Schicht ist. Mit den beiden
+unbekannten Grenzflächentemperaturen $T_{AB}$, $T_{BC}$ und dem unbekannten
+Wärmestrom $Q$ liefert das drei Gleichungen:
 
 $$\frac{T_{LA} - T_{AB}}{R_A} = Q \qquad (1)$$
 
@@ -66,12 +64,45 @@ $$\frac{T_{AB} - T_{BC}}{R_B} = Q \qquad (2)$$
 
 $$\frac{T_{BC} - T_{CR}}{R_C} = Q \qquad (3)$$
 
-+++
+```{admonition} Mini-Übung (✩)
+:class: tip
+1. Beantworten Sie ohne Code: Warum ist der Wärmestrom $Q$ im stationären
+   Zustand in allen drei Schichten gleich groß? Was würde es bedeuten, wenn
+   $Q$ in Schicht B größer wäre als in Schicht A?
+2. Für eine einzelne Wand ohne Zwischenschichten gilt
+   $Q = (T_{LA} - T_{CR}) / R_\text{gesamt}$ mit
+   $R_\text{gesamt} = R_A + R_B + R_C$. Berechnen Sie diesen Wert für
+   $R_A = 0.5$, $R_B = 0.3$, $R_C = 0.7$ (alle in K/W), $T_{LA} = 293$ K und
+   $T_{CR} = 273$ K.
+```
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+R_gesamt = 0.5 + 0.3 + 0.7
+Q = (293 - 273) / R_gesamt
+print(f'Gesamtwiderstand: {R_gesamt} K/W')
+print(f'Wärmestrom Q:     {Q:.4f} W')
+```
+Der Wärmestrom ist überall gleich, weil sich im stationären Zustand nirgends
+Wärme ansammelt oder verschwindet: Was in eine Schicht hineinfließt, muss auch
+wieder herausfließen. Wäre $Q$ in Schicht B größer als in Schicht A, würde an
+der Grenzfläche A-B laufend Wärme verschwinden, die Temperatur dort würde
+sinken, und der Zustand wäre nicht stationär. Der Gesamtwiderstand ist
+1.5 K/W, der Wärmestrom rund 13.33 W. Dasselbe Ergebnis liefert gleich auch
+das Gleichungssystem.
+````
 
 ## Von den Gleichungen zur Matrixform
 
-Wir bringen alle Unbekannten auf die linke Seite. Dafür multiplizieren wir
-jede Gleichung mit $R_i$ und ordnen um:
+Die drei Gleichungen enthalten die Unbekannten in Brüchen. Wir bringen alle
+Unbekannten auf die linke Seite, indem wir jede Gleichung mit $R_i$
+multiplizieren und umordnen:
 
 $$T_{AB} + R_A \cdot Q = T_{LA} \qquad (1')$$
 
@@ -79,178 +110,153 @@ $$-T_{AB} + T_{BC} + R_B \cdot Q = 0 \qquad (2')$$
 
 $$-T_{BC} + R_C \cdot Q = -T_{CR} \qquad (3')$$
 
-Jetzt lesen wir die Koeffizientenmatrix zeilenweise ab.
-Der Lösungsvektor ist $\vec{x} = (T_{AB},\, T_{BC},\, Q)^T$:
+Jetzt lesen wir die Koeffizientenmatrix zeilenweise ab. Der Lösungsvektor ist
+$\vec{x} = (T_{AB},\ T_{BC},\ Q)^\top$:
 
-$$\underbrace{\begin{pmatrix}
+$$\begin{pmatrix}
 +1 &  0 & R_A \\
 -1 & +1 & R_B \\
  0 & -1 & R_C
-\end{pmatrix}}_{\mathbf{A}}
+\end{pmatrix}
 \cdot
-\underbrace{\begin{pmatrix} T_{AB} \\ T_{BC} \\ Q \end{pmatrix}}_{\vec{x}}
+\begin{pmatrix} T_{AB} \\ T_{BC} \\ Q \end{pmatrix}
 =
-\underbrace{\begin{pmatrix} T_{LA} \\ 0 \\ -T_{CR} \end{pmatrix}}_{\vec{b}}$$
+\begin{pmatrix} T_{LA} \\ 0 \\ -T_{CR} \end{pmatrix}$$
 
-```{admonition} Rezept: Matrixform ablesen
-:class: note
-Jede umgeformte Gleichung liefert eine Zeile von $\mathbf{A}$ und einen
-Eintrag in $\vec{b}$. Der Koeffizient der $j$-ten Unbekannten in der
-$i$-ten Gleichung steht in $A_{ij}$. Unbekannte, die nicht vorkommen,
-erhalten den Koeffizienten 0.
+Jede umgeformte Gleichung liefert eine Zeile von $\mathbf{A}$ und einen Eintrag
+in $\vec{b}$. Der Koeffizient der $j$-ten Unbekannten in der $i$-ten Gleichung
+steht in $A_{ij}$. Unbekannte, die in einer Gleichung nicht vorkommen, erhalten
+den Koeffizienten 0.
+
+```{admonition} Mini-Übung (✩)
+:class: tip
+Beantworten Sie ohne Code:
+
+1. In der Koeffizientenmatrix steht in Zeile 2, Spalte 1 der Wert $-1$. Aus
+   welcher Gleichung stammt dieser Eintrag, und warum ist er negativ?
+2. Warum ist der zweite Eintrag der rechten Seite, $b[1]$, gleich null? Was
+   bedeutet das physikalisch?
 ```
 
-+++
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+1. Der Eintrag $A_{21} = -1$ stammt aus Gleichung (2'), die durch Umformen aus
+   $(T_{AB} - T_{BC}) / R_B = Q$ entsteht. Die Temperaturdifferenz über
+   Schicht B ist $T_{AB} - T_{BC}$, dort steht $T_{AB}$ mit positivem
+   Vorzeichen. Nach dem Multiplizieren mit $R_B$ und dem Sortieren aller
+   Unbekannten nach links bleibt $-T_{AB}$ stehen, der Koeffizient ist also
+   $-1$.
+2. $b[1] = 0$, weil in Gleichung (2') keine bekannte Temperatur auftaucht. Die
+   mittlere Schicht grenzt nur an die beiden Grenzflächen, deren Temperaturen
+   selbst unbekannt sind. Es gibt für diese Gleichung keine von außen
+   vorgegebene Randbedingung.
+````
 
 ## Implementierung und Lösung
 
 ```{code-cell} python
 import numpy as np
 
-# ---------- gegebene Größen ----------
-R_A  = 0.5   # thermischer Widerstand Schicht A in K/W
-R_B  = 0.3   # thermischer Widerstand Schicht B in K/W
-R_C  = 0.7   # thermischer Widerstand Schicht C in K/W
-T_LA = 300.  # Temperatur linke Seite in K
-T_CR = 310.  # Temperatur rechte Seite in K
+# gegebene Größen
+R_A = 0.5    # thermischer Widerstand Schicht A in K/W
+R_B = 0.3    # thermischer Widerstand Schicht B in K/W
+R_C = 0.7    # thermischer Widerstand Schicht C in K/W
+T_LA = 293.0    # Temperatur linke Seite (innen) in K
+T_CR = 273.0    # Temperatur rechte Seite (außen) in K
 
-# ---------- Koeffizientenmatrix aufstellen ----------
-# Unbekannte: x = [T_AB, T_BC, Q]
-#
-# Gleichung (1') aus  (T_LA - T_AB)/R_A = Q
-#   => T_AB + 0*T_BC + R_A*Q = T_LA
-#   => Zeile 1: [+1,  0, R_A]  |  b[0] = T_LA
-#
-# Gleichung (2') aus  (T_AB - T_BC)/R_B = Q
-#   => -T_AB + T_BC + R_B*Q = 0
-#   => Zeile 2: [-1, +1, R_B]  |  b[1] = 0
-#
-# Gleichung (3') aus  (T_BC - T_CR)/R_C = Q
-#   => 0*T_AB - T_BC + R_C*Q = -T_CR
-#   => Zeile 3: [ 0, -1, R_C]  |  b[2] = -T_CR
+# Koeffizientenmatrix, Unbekannte x = [T_AB, T_BC, Q]
 A = np.array([
-    [+1.,  0., R_A],
-    [-1., +1., R_B],
-    [ 0., -1., R_C],
+    [+1.0,  0.0, R_A],   # Gleichung (1'):  T_AB + R_A*Q = T_LA
+    [-1.0, +1.0, R_B],   # Gleichung (2'): -T_AB + T_BC + R_B*Q = 0
+    [ 0.0, -1.0, R_C],   # Gleichung (3'): -T_BC + R_C*Q = -T_CR
 ])
-b = np.array([T_LA, 0., -T_CR])
+b = np.array([T_LA, 0.0, -T_CR])
 
-# ---------- Lösbarkeit prüfen (wie in Kapitel 3.1) ----------
+# Lösbarkeit prüfen
 det_A = np.linalg.det(A)
 print(f'Determinante: {det_A:.4f}')
-if np.isclose(det_A, 0.):
-    print('Keine eindeutige Lösung.')
-else:
-    print('Eindeutige Lösung vorhanden.')
 
-# ---------- Lösen und Ergebnis ausgeben (wie in Kapitel 3.2) ----------
+# Lösen
 x = np.linalg.solve(A, b)
 T_AB, T_BC, Q = x   # Ergebnis in drei Variablen entpacken
 
-print(f'\nT_AB = {T_AB:.2f} K   (Grenzfläche A-B)')
+print(f'T_AB = {T_AB:.2f} K   (Grenzfläche A-B)')
 print(f'T_BC = {T_BC:.2f} K   (Grenzfläche B-C)')
 print(f'Q    = {Q:.4f} W   (Wärmestrom)')
 
-# ---------- Probe ----------
-print('\nProbe bestanden:', np.allclose(A @ x, b))
+print('Probe bestanden:', np.allclose(A @ x, b))
 ```
 
-Das negative Vorzeichen von $Q$ ist kein Fehler: in unserem Ansatz zeigt
-die positive Richtung von links nach rechts, aber die Wärme fließt von der
-wärmeren rechten Seite ($T_{CR} = 310$ K) zur kälteren linken Seite
-($T_{LA} = 300$ K). Die Abbildung zeigt diesen physikalischen Fluss von
-rechts nach links. Beides ist konsistent.
+Der Wärmestrom $Q$ ist positiv. Das passt zu unserem Ansatz: Die positive
+Richtung zeigt von links nach rechts, und die Wärme fließt von der wärmeren
+linken Seite ($T_{LA} = 293$ K) zur kälteren rechten Seite ($T_{CR} = 273$ K).
+Ein negativer Wert würde bedeuten, dass die Wärme in die andere Richtung
+fließt.
 
-Zur Kontrolle berechnen wir noch die Temperaturdifferenz über jede Schicht.
-Schicht C hat den größten Widerstand und sollte daher den größten
-Temperatursprung liefern, genauso wie der größte Widerstand in einem
-elektrischen Schaltkreis den größten Spannungsabfall erzeugt.
+Zur Kontrolle berechnen wir die Temperaturdifferenz über jede Schicht. Schicht
+C hat den größten Widerstand und sollte daher den größten Temperatursprung
+liefern, genauso wie der größte Widerstand in einem Stromkreis den größten
+Spannungsabfall erzeugt.
 
 ```{code-cell} python
-# Temperaturdifferenzen über jede Schicht
-# Delta_i = R_i * |Q|: je größer der Widerstand, desto größer der Sprung
 delta_A = T_AB - T_LA
 delta_B = T_BC - T_AB
 delta_C = T_CR - T_BC
 
-print(f'Temperaturdiff. Schicht A (R={R_A} K/W): {delta_A:.2f} K')
-print(f'Temperaturdiff. Schicht B (R={R_B} K/W): {delta_B:.2f} K')
-print(f'Temperaturdiff. Schicht C (R={R_C} K/W): {delta_C:.2f} K')
-print(f'Summe (muss T_CR - T_LA = {T_CR - T_LA:.1f} K ergeben): '
-      f'{delta_A + delta_B + delta_C:.2f} K')
+print(f'Temperaturdifferenz Schicht A (R = {R_A} K/W): {delta_A:.2f} K')
+print(f'Temperaturdifferenz Schicht B (R = {R_B} K/W): {delta_B:.2f} K')
+print(f'Temperaturdifferenz Schicht C (R = {R_C} K/W): {delta_C:.2f} K')
+print(f'Summe: {delta_A + delta_B + delta_C:.2f} K '
+      f'(muss T_CR - T_LA = {T_CR - T_LA:.1f} K ergeben)')
 ```
 
-```{admonition} Mini-Übung
+```{admonition} Mini-Übung (✩)
 :class: tip
-Verständnisfragen (ohne Code):
+Eine Kühlhauswand hält innen $T_\text{innen} = 268$ K (−5 °C), während außen
+$T_\text{außen} = 293$ K (20 °C) herrschen. Die linke Seite ist innen
+($T_{LA} = T_\text{innen}$), die rechte außen ($T_{CR} = T_\text{außen}$).
 
-1. In der Koeffizientenmatrix steht in Zeile 2, Spalte 1 der Wert $-1$.
-   Aus welcher physikalischen Gleichung stammt dieser Eintrag, und warum
-   ist er negativ? Begründen Sie in eigenen Worten, ohne Code auszuführen.
-2. Warum ist $b[1] = 0$? Was bedeutet das physikalisch?
+| Schicht | Material | $R$ in K/W |
+| --- | --- | --- |
+| A | Beton | 0.2 |
+| B | Polyurethan-Schaum | 1.8 |
+| C | Stahlblech | 0.05 |
 
-Rechenaufgabe:
-
-Eine Kühlhauswand hält die Innentemperatur bei $T_{\text{innen}} = 268$ K
-(−5 °C), während außen $T_{\text{außen}} = 293$ K (20 °C) herrschen.
-
-| Schicht | Material           | R (K/W) |
-|---------|--------------------|---------|
-| A       | Beton              | 0.2     |
-| B       | Polyurethan-Schaum | 1.8     |
-| C       | Stahlblech         | 0.05    |
-
-Die linke Seite ist innen ($T_{LA} = T_{\text{innen}}$), die rechte außen
-($T_{CR} = T_{\text{außen}}$). Das LGS hat dieselbe Struktur wie oben, nur
-mit anderen Zahlenwerten.
-
-3. Legen Sie `A` und `b` mit den neuen Werten an, lösen Sie das System und
+1. Beantworten Sie ohne Code: Welche Schicht wird den größten Temperaturabfall
+   haben?
+2. Legen Sie `A` und `b` mit den neuen Werten an, lösen Sie das System und
    geben Sie $T_{AB}$, $T_{BC}$ und $Q$ aus.
-4. Welche Schicht hat den größten Temperaturabfall? Ist das plausibel?
+3. Der Wärmestrom kommt negativ heraus. Warum?
 ```
 
 ```{code-cell} python
-# Hier Ihren Code eingeben
+# Code-Zelle
 ```
 
 ````{admonition} Lösung
 :class: tip
 :class: dropdown
-
-**Zu Frage 1:** Der Eintrag $A_{21} = -1$ stammt aus Gleichung (2'), die
-aus $(T_{AB} - T_{BC})/R_B = Q$ durch Umformen entsteht. Nach links
-gebracht steht $-T_{AB}$ am Anfang. Der Koeffizient ist negativ, weil
-$T_{AB}$ in Gleichung (2) mit negativem Vorzeichen auf der linken Seite
-erscheint: die Temperaturdifferenz in Schicht B ist $T_{AB} - T_{BC}$, also
-nimmt $T_{AB}$ dort den Platz des Minuenden ein, der nach dem Umformen
-auf die linke Seite mit umgekehrtem Vorzeichen landet.
-
-**Zu Frage 2:** $b[1] = 0$, weil Gleichung (2') keine bekannte Größe auf
-der rechten Seite enthält. Die mittlere Schicht ist nur von Grenzflächen
-umgeben, deren Temperaturen selbst unbekannt sind. Es gibt keine fest
-vorgegebene Randbedingung, die direkt in diese Gleichung eingeht.
-
-**Zu Fragen 3 und 4:**
-
 ```python
 import numpy as np
 
-# Gegebene Größen
-R_A  = 0.2
-R_B  = 1.8
-R_C  = 0.05
-T_LA = 268.   # Innen (kalt)
-T_CR = 293.   # Aussen (warm)
+R_A = 0.2
+R_B = 1.8
+R_C = 0.05
+T_LA = 268.0    # innen (kalt)
+T_CR = 293.0    # außen (warm)
 
-# Koeffizientenmatrix: gleiche Struktur wie im Beispiel oben
 A = np.array([
-    [+1.,  0., R_A],
-    [-1., +1., R_B],
-    [ 0., -1., R_C],
+    [+1.0,  0.0, R_A],
+    [-1.0, +1.0, R_B],
+    [ 0.0, -1.0, R_C],
 ])
-b = np.array([T_LA, 0., -T_CR])
+b = np.array([T_LA, 0.0, -T_CR])
 
-# Lösung
 x = np.linalg.solve(A, b)
 T_AB, T_BC, Q = x
 
@@ -259,26 +265,29 @@ print(f'T_BC = {T_BC:.2f} K  ({T_BC - 273.15:.1f} °C)')
 print(f'Q    = {Q:.4f} W')
 print('Probe bestanden:', np.allclose(A @ x, b))
 
-print(f'\nTemperaturabfall Schicht A (Beton):   {T_AB - T_LA:.2f} K')
-print(f'Temperaturabfall Schicht B (PU-Foam): {T_BC - T_AB:.2f} K')
-print(f'Temperaturabfall Schicht C (Stahl):   {T_CR - T_BC:.2f} K')
+print(f'Temperaturabfall Schicht A (Beton):  {abs(T_AB - T_LA):.2f} K')
+print(f'Temperaturabfall Schicht B (Schaum): {abs(T_BC - T_AB):.2f} K')
+print(f'Temperaturabfall Schicht C (Stahl):  {abs(T_CR - T_BC):.2f} K')
 ```
+Den größten Temperaturabfall hat Schicht B, der Polyurethan-Schaum, mit rund
+22 K. Ihr thermischer Widerstand ist mit $R_B = 1.8$ K/W bei weitem am
+größten. Genau das ist der Sinn einer Wärmedämmung: Sie übernimmt fast die
+gesamte Temperaturdifferenz zwischen innen und außen.
 
-Den größten Temperaturabfall hat Schicht B (Polyurethan-Schaum), weil ihr
-thermischer Widerstand mit $R_B = 1{,}8$ K/W bei weitem am größten ist.
-Das ist genau der Sinn einer Wärmedämmung: sie übernimmt den Großteil der
-Temperaturdifferenz zwischen innen und außen.
+Der Wärmestrom ist negativ (rund −12.2 W), weil wir die positive Richtung von
+links (innen) nach rechts (außen) gewählt haben, die Wärme aber von der warmen
+Außenseite in das kalte Kühlhaus fließt. Betrag und Vorzeichen sind zusammen
+korrekt.
 ````
-
-+++
 
 ## Zusammenfassung und Ausblick
 
-Das Vorgehen ist immer dasselbe: physikalische Gleichungen umformen, alle
-Unbekannten nach links, alle bekannten Größen nach rechts, dann
-$\mathbf{A}$ und $\vec{b}$ ablesen. `np.linalg.solve` liefert die Lösung,
-`np.allclose` sichert sie ab.
+Der Weg ist immer derselbe: physikalische Bilanzgleichungen umformen, alle
+Unbekannten nach links, alle bekannten Größen nach rechts, dann $\mathbf{A}$
+und $\vec{b}$ zeilenweise ablesen. `np.linalg.solve` liefert die Lösung,
+`np.allclose` sichert sie ab, und das Vorzeichen des Ergebnisses deuten wir
+über die gewählte Richtungskonvention.
 
-Dieses Muster lässt sich auf beliebig komplexe Systeme übertragen. Im
-nächsten Kapitel sammeln wir Übungsaufgaben zu LGS, bevor wir es in
-Kapitel 3.5 auf elektrische Netzwerke anwenden.
+Im nächsten Kapitel vertiefen wir dieses Beispiel: Wir erweitern die Wand um
+eine vierte Schicht und untersuchen mit einer Parameterstudie, wie stark eine
+zusätzliche Dämmung den Wärmestrom senkt.

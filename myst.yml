@@ -32,7 +32,7 @@ project:
       - file: chapter02/chapter02_sec03.md
       - file: chapter02/chapter02_sec04.md
       - file: chapter02/chapter02_sec05.md
-    - title: 3. Lineare Gleichungssysteme I 
+    - title: 3. Lineare Gleichungssysteme I
       children:
       - file: chapter03/chapter03_sec01.md
       - file: chapter03/chapter03_sec02.md
@@ -41,7 +41,6 @@ project:
       - file: chapter03/chapter03_sec05.md
       - file: chapter03/chapter03_sec06.md
       - file: chapter03/chapter03_sec07.md
-      - file: chapter03/chapter03_sec08.md
     - title: 4. Lineare Gleichungssysteme II 
       children:
       - file: chapter04/chapter04_sec01.md
