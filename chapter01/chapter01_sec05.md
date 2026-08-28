@@ -7,7 +7,7 @@ kernelspec:
 # 1.5 Übungen
 
 Diese Aufgaben sind für das Selbststudium zuhause gedacht und wiederholen den
-Stoff der Kapitel 1.1 bis 1.4. Rechnen Sie mit rund 90 Minuten Bearbeitungszeit.
+Stoff der Kapitel 1.1 bis 1.4. Rechnen Sie mit rund zwei Stunden Bearbeitungszeit.
 
 Der Schwierigkeitsgrad steht im Titel jeder Aufgabe:
 
