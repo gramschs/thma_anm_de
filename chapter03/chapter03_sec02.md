@@ -4,7 +4,7 @@ kernelspec:
   display_name: 'Python 3'
 ---
 
-# 3.2 Vertiefung: Auflagerkräfte an einem Träger
+# 3.2 Auflagerkräfte an einem Träger
 
 In Kapitel 3.1 haben wir ein Gleichungssystem als Matrixgleichung geschrieben,
 seine Lösbarkeit geprüft und es mit `np.linalg.solve` gelöst. In diesem Kapitel
@@ -12,7 +12,17 @@ wenden wir dasselbe Vorgehen auf ein Problem aus der Technischen Mechanik an:
 die Auflagerkräfte eines belasteten Trägers. Bearbeiten Sie die Teilaufgaben
 möglichst zu zweit und der Reihe nach, jeder Teil baut auf dem vorherigen auf.
 
-````{admonition} Projekt: Auflagerkräfte an einem Träger (✩✩)
+Wir betrachten den folgenden Träger mit Fest- und Loslager, auf den eine
+Seilkraft und eine Last wirken.
+
+```{figure} pics/traeger_auflagerkraefte.svg
+:width: 75%
+:align: center
+
+Träger mit Fest- und Loslager, Seilkraft und Last $F$.
+```
+
+```{admonition} Projekt: Auflagerkräfte an einem Träger (✩✩)
 :class: tip
 Ein waagerechter Träger der Länge $L = 4\,\text{m}$ ist links im Punkt A durch
 ein **Festlager** und rechts im Punkt B durch ein **Loslager** gelagert. Das
@@ -28,7 +38,7 @@ Auf den Träger wirken:
   $3\,\text{m}$ von A.
 
 Gesucht sind die drei Auflagerkräfte $A_x$, $A_y$ und $B_y$.
-````
+```
 
 ```{admonition} Teil 1: Gleichgewichtsbedingungen aufstellen
 :class: tip

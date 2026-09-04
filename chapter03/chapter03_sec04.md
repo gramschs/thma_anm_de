@@ -4,7 +4,7 @@ kernelspec:
   display_name: 'Python 3'
 ---
 
-# 3.4 Vertiefung: Wie viel bringt eine dickere Dämmung?
+# 3.4 Wie viel bringt eine dickere Dämmung?
 
 In Kapitel 3.3 haben wir die Temperaturen und den Wärmestrom in einer
 dreischichtigen Wand berechnet. In diesem Kapitel erweitern wir die Wand um
