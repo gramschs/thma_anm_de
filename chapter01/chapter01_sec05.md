@@ -58,10 +58,10 @@ print(type(7 == 7.0))
 Python beim Vergleich den Zahlenwert betrachtet, nicht den Datentyp.
 
 Der interessanteste Fall ist `7,0`: Das Komma erzeugt in Python keine
-Dezimalzahl, sondern bündelt die beiden Werte `7` und `0` zu einem Paar. Es
-kommt dabei zu keiner Fehlermeldung, was diesen Tippfehler besonders tückisch
-macht. Verwenden Sie für Dezimalzahlen daher immer einen Punkt statt eines
-Kommas.
+Dezimalzahl, sondern ein **Tupel** `(7, 0)`, `type(komma_zahl)` gibt also
+`tuple` zurück. Es kommt dabei zu keiner Fehlermeldung, was diesen Tippfehler
+besonders tückisch macht. Verwenden Sie für Dezimalzahlen daher immer einen
+Punkt statt eines Kommas.
 ````
 
 ```{admonition} Aufgabe 1.2 (✩✩)

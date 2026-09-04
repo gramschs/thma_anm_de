@@ -103,7 +103,7 @@ anzahl = len(temperaturen)
 print(f'Anzahl Messwerte: {anzahl}')
 ```
 `temperaturen[-2]` gibt das vorletzte Element der Liste zurück, also den
-Wert `22.4`. Der Index `-1` zeigt auf das letzte Element (`23.7`, der gerade
+Wert `20.1`. Der Index `-1` zeigt auf das letzte Element (`23.7`, der gerade
 angehängte Wert), `-2` zeigt auf das Element direkt davor.
 ````
 
