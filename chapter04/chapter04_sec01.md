@@ -4,377 +4,214 @@ kernelspec:
   display_name: 'Python 3'
 ---
 
-# 4.1 Fachwerke: Knoten, Stäbe und Kräfte
+# 4.1 Vom Fachwerk zur Steifigkeitsmatrix
 
-```{admonition} Warnung
-:class: warning
-Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
-```
+In Kapitel 3.2 haben wir die Auflagerkräfte eines Trägers berechnet. Die drei
+Gleichgewichtsbedingungen haben wir dafür von Hand aufgestellt. Das klappt
+bei einem Träger mit zwei Lagern gut. Bei einem Kran, einer Brücke oder einem
+Dachstuhl mit Dutzenden Stäben wird das schnell unübersichtlich. *Wie bringen
+wir den Rechner dazu, das Gleichungssystem für ein ganzes Tragwerk selbst
+aufzustellen?*
 
-In Kapitel 3 haben wir lineare Gleichungssysteme gelöst, deren Koeffizienten
-aus der Physik stammten: Wärmewiderstände, Einkaufsmengen, Kalibrierungsfaktoren.
-In diesem Kapitel kommen die Koeffizienten aus der Strukturmechanik. *Wie stark
-verformen sich die Knoten eines Fachwerkträgers unter Last, und welche Kräfte
-entstehen in den einzelnen Stäben?*
-
-Ein **ideales ebenes Fachwerk** besteht aus geraden Stäben, die an Gelenken
-verbunden sind. An den Gelenken greifen Kräfte an, und bestimmte Gelenke
-sind fest im Raum verankert. Wir nennen die Gelenke **Knoten**. Jeder Knoten
-kann sich in $x$- und $y$-Richtung verschieben, hat also zwei **Freiheitsgrade**.
-Das Ziel ist, diese Verschiebungen zu berechnen.
-
-Für ein ideales ebenes Fachwerk treffen wir außerdem diese Modellannahmen:
-
-- Stäbe sind nur auf **Normalkraft** beansprucht (keine Biegung, kein Torsions-
-  oder Schubmoment).
-- Stäbe sind **gerade** und über **gelenkige Knoten** verbunden.
-- Äußere Lasten greifen nur **in den Knoten** an (keine verteilten Stablasten).
+Wir betrachten dafür **ideale ebene Fachwerke**. Sie bestehen aus geraden
+Stäben, die an ihren Enden gelenkig verbunden sind. Die Verbindungsstellen
+heißen **Knoten**. Äußere Kräfte greifen nur an den Knoten an. Deshalb werden
+die Stäbe nur längs ihrer Achse auf Zug oder Druck beansprucht, nicht auf
+Biegung. In diesem Kapitel beschreiben wir ein Fachwerk im Rechner und bauen
+daraus Schritt für Schritt die Matrix des Gleichungssystems auf.
 
 ## Lernziele
 
 ```{admonition} Lernziele
 :class: attention
-
-* [ ] Sie können ein ebenes Fachwerk durch **Knotenkoordinaten**,
-  **Lagerknoten**, eine **Konnektivitätsmatrix** und einen **Kraftvektor** im
-  Rechner beschreiben.
-* [ ] Sie können die Konnektivitätsmatrix für ein gegebenes Fachwerk aufstellen
-  und ablesen, welche Stäbe existieren.
-* [ ] Sie wissen, was ein **Freiheitsgrad** ist, und können einen Eintrag im
-  Kraft- oder Verschiebungsvektor dem zugehörigen Knoten und der Richtung
-  zuordnen.
+* [ ] Sie können ein ebenes Fachwerk durch Knotenkoordinaten, Lagerknoten,
+  eine **Stabliste** und einen **Kraftvektor** im Rechner beschreiben.
+* [ ] Sie können die **Stabsteifigkeit** $k = EA/L$ berechnen und erklären,
+  warum ein Stab nur in Richtung seiner Achse Kräfte überträgt.
+* [ ] Sie können die **Steifigkeitsmatrix** eines Fachwerks mit einer Funktion
+  zusammensetzen und begründen, warum sie ohne Lager singulär ist.
 ```
 
-## Das Fachwerk beschreiben: Knoten, Stäbe und Kräfte
+## Wie beschreiben wir ein Fachwerk im Rechner?
 
-Als Beispiel betrachten wir einen Kranausleger: zwei Stäbe treffen in einem
-freien Knoten zusammen, an dem eine Last hängt. Die beiden Endknoten sind
-fest gelagert.
+Unser Beispiel ist ein einfacher Kranausleger. Zwei Stahlstäbe treffen sich
+oben in Knoten 1, an dem eine Last von $5000\,\text{N}$ hängt. Die beiden
+unteren Knoten 0 und 2 sind fest gelagert.
 
 ```{figure} pics/chap04_lastkran.svg
-Darstellung des im Beispiel verwendeten ebenen Dreiknoten-Fachwerks
-(Kranausleger) mit beidseitiger Lagerung und punktförmiger Last am mittleren
-Knoten. (Quelle: eigene Abbildung; Lizenz [CC BY-SA
-4.0](https://creativecommons.org/licenses/by-sa/4.0))
+:alt: Kranausleger aus zwei Stäben mit drei Knoten, zwei Lagern und einer Last am oberen Knoten
+:align: center
+
+Der Kranausleger mit drei Knoten, zwei Stäben und einer Last an Knoten 1.
+(Quelle: eigene Abbildung; Lizenz [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0))
 ```
 
-Bevor wir losrechnen, legen wir fest, wie wir das Fachwerk im Rechner abbilden.
-Wir beschreiben nicht die Stäbe selbst, sondern nur die Informationen, die wir
-später für das Gleichungssystem brauchen. Dazu gehören:
-
-- die **Knotenkoordinaten** im $x$-$y$-Koordinatensystem,
-- die Information, welche Knoten **fest gelagert** sind,
-- die **Konnektivität**, also welche Knoten durch einen Stab verbunden sind, und
-- die **Kräfte** an den Knoten.
-
-Im folgenden Code bauen wir genau diese Datenstrukturen auf. Für die
-Berechnung der Knotenverschiebungen werden in Kapitel 4.2 noch die
-**Materialeigenschaften** $E$ (Elastizitätsmodul) und $A$ (Querschnittsfläche)
-hinzukommen. Aus allen fünf Informationen wird dann die **Steifigkeitsmatrix**
-$\mathbf{K}$ entstehen, mit der wir das LGS
-
-\begin{equation*}
-\mathbf{K}\cdot\vec{u} = \vec{F}
-\end{equation*}
-
-lösen.
-
-### Knoten
-
-Zunächst fangen wir mit den Knotenkoordinaten und der Beschreibung der
-Lagerknoten an. Wir speichern die Koordinaten als zweidimensionales Array
-`knoten_pos` der Form `(anzahl_knoten, 2)`: jede **Zeile** entspricht einem
-Knoten, die beiden **Spalten** enthalten die $x$- bzw. $y$-Koordinate. Diese
-Anordnung ist dieselbe wie bei allen weiteren Knotendaten in diesem Kapitel
-(z. B. Kräfte), sodass Knoten $n$ stets in Zeile $n$ steht.
+Für die Rechnung brauchen wir vier Angaben: Wo liegen die Knoten? Welche
+Knoten sind gelagert? Welche Knoten sind durch einen Stab verbunden? Welche
+Kräfte wirken? Das übersetzen wir direkt in Python.
 
 ```{code-cell} python
 import numpy as np
-# --- Knotenkoordinaten: knoten_pos[n, :] = [x_n, y_n] in m ---
-# Knoten 0: linkes Lager   (0.0, 0.0)
-# Knoten 1: freier Knoten  (1.0, 1.0)  <- Last greift hier an
-# Knoten 2: rechtes Lager  (2.0, 0.0)
-knoten_pos = np.array([
-    [0.0,  0.0],   # Knoten 0: x = 0.0 m, y = 0.0 m
-    [1.0,  1.0],   # Knoten 1: x = 1.0 m, y = 1.0 m
-    [2.0,  0.0],   # Knoten 2: x = 2.0 m, y = 0.0 m
-])
-anzahl_knoten = knoten_pos.shape[0]   # Anzahl der Zeilen = Anzahl Knoten
-
-# --- Lagerknoten: diese Knoten können sich nicht verschieben ---
-lager_indizes = [0, 2]
-
-# Ausgabe
-print("Knotenkoordinaten (x, y):")
-for n in range(anzahl_knoten):
-    print(f"  Knoten {n}: ({knoten_pos[n, 0]:.1f} m, {knoten_pos[n, 1]:.1f} m)")
-print("Lagerindizes:", lager_indizes)
-```
-
-Im realen Maschinenbau unterscheidet man zwischen **Festlagern** (beide
-Freiheitsgrade $u_x$ und $u_y$ gesperrt) und **Loslagern** (nur ein
-Freiheitsgrad gesperrt, z. B. ein Rollenlager, das nur $u_y$ fixiert).
-In diesem Kapitel nehmen wir vereinfachend an, dass alle Lagerknoten in
-beiden Richtungen festgehalten sind (Festlager). Kapitel 4.2 zeigt,
-wie diese Randbedingung in der Lösung umgesetzt wird.
-
-```{admonition} Mini-Übung
-:class: tip
-
-1. `knoten_pos` hat die Form `(3, 2)`. Was bedeuten die beiden Dimensionen
-   konkret? Was liefert `knoten_pos.shape[0]`, was `knoten_pos.shape[1]`?
-
-2. Wie greifen Sie auf die $y$-Koordinate von Knoten 1 zu?
-   Und wie erhalten Sie alle $x$-Koordinaten auf einmal (als 1D-Array)?
-   Beantworten Sie die Fragen zunächst im Kopf, dann überprüfen Sie mit Code.
-```
-
-```{code-cell} python
-# Code-Zelle
-```
-
-````{admonition} Lösung
-:class: tip
-:class: dropdown
-```python
-print(knoten_pos.shape)            # (3, 2)
-print("Anzahl Knoten:      ", knoten_pos.shape[0])   # 3
-print("Anzahl Koordinaten: ", knoten_pos.shape[1])   # 2
-
-# y-Koordinate von Knoten 1: Zeile 1, Spalte 1
-print("y-Koordinate Knoten 1:", knoten_pos[1, 1])    # 1.0
-
-# Alle x-Koordinaten: alle Zeilen, Spalte 0
-print("Alle x-Koordinaten:  ", knoten_pos[:, 0])     # [0. 1. 2.]
-```
-
-`shape[0]` gibt die Anzahl der Knoten (Zeilen), `shape[1]` die Anzahl der
-Koordinatenrichtungen (Spalten, hier immer 2 für ein ebenes Fachwerk).
-Die $y$-Koordinate von Knoten $n$ steht in `knoten_pos[n, 1]`,
-alle $x$-Koordinaten erhält man mit `knoten_pos[:, 0]`.
-````
-
-### Stäbe als Konnektivitätsmatrix
-
-Nun beschreiben wir die Konnektivität, also welche Knoten mit einem Stab
-verbunden sind. Zuerst listen wir die Konnektivität tabellarisch:
-
-| | Knoten 0 | Knoten 1 | Knoten 2 |
-| --- | --- | --- | --- |
-| **Knoten 0** | — | verbunden | — |
-| **Knoten 1** | verbunden | — | verbunden |
-| **Knoten 2** | — | verbunden | — |
-
-Das setzen wir nun in Python um, indem wir die Tabelle als Matrix codieren. Die
-**Konnektivitätsmatrix** `verbindung` ist das Herzstück der
-Fachwerkbeschreibung. Eine 1 an Position `[i, j]` bedeutet: zwischen Knoten $i$
-und Knoten $j$ existiert ein Stab. Die Matrix ist symmetrisch, weil ein Stab von
-$i$ nach $j$ dasselbe ist wie von $j$ nach $i$.
-
-Hinweis: Diese Matrix entspricht in der Graphentheorie einer **Adjazenzmatrix**.
-In der FEM-Literatur wird die Konnektivität häufig als **Elementliste**
-gespeichert (Tabelle: Stab $e$ verbindet Knoten $i$ mit Knoten $j$). Die hier
-verwendete Matrixform ist für kleine Fachwerke übersichtlich; für große Netze
-mit vielen Knoten wäre eine Elementliste speichereffizienter.
-
-```{code-cell} python
-# --- Konnektivitätsmatrix: verbindung[i, j] = 1 wenn Stab i-j existiert ---
-# Stab 0-1: linkes Lager  -> freier Knoten
-# Stab 1-2: freier Knoten -> rechtes Lager
-verbindung = np.zeros((anzahl_knoten, anzahl_knoten))
-verbindung[0, 1] = 1
-verbindung[1, 2] = 1
-verbindung = verbindung + verbindung.T   # symmetrisch machen
-
-# Ausgabe
-print("Konnektivitätsmatrix:")
-print(verbindung.astype(int))
-```
-
-```{admonition} Mini-Übung
-:class: tip
-
-1. Vor der Zeile `verbindung = verbindung + verbindung.T` enthält die Matrix
-   bereits `verbindung[0, 1] = 1`, aber `verbindung[1, 0]` ist noch 0.
-   Warum addieren wir die transponierte Matrix? Was bedeutet
-   `verbindung[1, 0] = 1` physikalisch?
-
-2. Was würde es geometrisch bedeuten, wenn wir zusätzlich
-   `verbindung[0, 2] = 1` setzen würden?
-   Beschreiben Sie in einem Satz, ohne Code auszuführen.
-```
-
-```{admonition} Lösung
-:class: tip
-:class: dropdown
-Frage 1: Ein Stab zwischen Knoten $i$ und Knoten $j$ ist ungerichtet: er
-verbindet $i$ mit $j$ genauso wie $j$ mit $i$. Wir tragen zunächst nur die
-obere Dreiecksmatrix ein (`verbindung[0, 1] = 1`) und spiegeln sie dann durch
-Addition der Transponierten. `verbindung[1, 0] = 1` bedeutet physikalisch
-dasselbe wie `verbindung[0, 1] = 1`: Es gibt einen Stab zwischen Knoten 1
-und Knoten 0.
-
-Frage 2: `verbindung[0, 2] = 1` würde einen dritten Stab einfügen, der
-das linke Lager (Knoten 0) direkt mit dem rechten Lager (Knoten 2) verbindet
-und so den Kranausleger zur Basis hin zu einem Dreieck schließt.
-```
-
-### Kräfte
-
-Zuletzt beschreiben wir noch die Kräfte. Wir verwenden dieselbe Konvention wie
-bei `knoten_pos`: Knoten $n$ steht in Zeile $n$, die Spalten entsprechen den
-$x$- und $y$-Richtungen.
-
-```{code-cell} python
-# --- Kraftmatrix: kraft_knoten[n, :] = [Fx_n, Fy_n] in N ---
-# Knoten in den Zeilen (wie knoten_pos), Richtungen (x, y) in den Spalten.
-kraft_knoten = np.zeros((anzahl_knoten, 2))
-kraft_knoten[1, 1] = -5000.   # 5000 N nach unten an Knoten 1
-
-# kraft_vektor fasst alle Knotenkräfte als 1D-Array zusammen:
-# [Fx_0, Fy_0, Fx_1, Fy_1, Fx_2, Fy_2]
-kraft_vektor = kraft_knoten.flatten()
-
-# Ausgabe
-print("Kraftvektor:", kraft_vektor, "N")
-```
-
-Der Kraftvektor hat $2 \cdot n_\text{Knoten}$ Einträge, weil jeder Knoten
-zwei Freiheitsgrade hat. Der Eintrag an Index $2n$ ist die Kraft in
-$x$-Richtung, der Eintrag an Index $2n+1$ die Kraft in $y$-Richtung
-an Knoten $n$.
-
-Der Verschiebungsvektor $\vec{u}$ ist später **analog aufgebaut**:
-\[
-\vec{u} = [u_{x,0},\; u_{y,0},\; u_{x,1},\; u_{y,1},\; \dots]^T,
-\]
-also Index $2n$ = Verschiebung in $x$-Richtung an Knoten $n$ und Index
-$2n+1$ = Verschiebung in $y$-Richtung an Knoten $n$. Die zweidimensionale
-Form `kraft_knoten` und das eindimensionale Array `kraft_vektor` enthalten
-dieselben Daten; `.flatten()` legt die Zeilen hintereinander.
-
-```{admonition} Mini-Übung
-:class: tip
-
-1. `kraft_knoten` hat die Form `(3, 2)`, `kraft_vektor` hat die Form `(6,)`.
-   Was macht `.flatten()` konkret? Beschreiben Sie in einem Satz,
-   ohne Code auszuführen.
-
-2. Welchen Wert hat `kraft_vektor[3]`? Beantworten Sie die Frage
-   zuerst im Kopf mithilfe der Formel $2n+1$, dann überprüfen Sie mit Code.
-   Was bedeutet dieser Wert physikalisch?
-
-3. Wir wollen zusätzlich eine horizontale Kraft von $1000\,\text{N}$
-   nach rechts an Knoten 1 anlegen. Welchen Eintrag in `kraft_knoten`
-   müssen Sie ändern, und auf welchen Wert?
-   Überprüfen Sie anschließend, ob `kraft_vektor` nach einem erneuten
-   Aufruf von `.flatten()` den richtigen Wert an der richtigen Stelle enthält.
-```
-
-```{code-cell} python
-# Code-Zelle
-```
-
-````{admonition} Lösung
-:class: tip
-:class: dropdown
-```python
-# Frage 2: Index für Fy an Knoten 1 = 2*1 + 1 = 3
-print(kraft_vektor[3])   # -5000.0
-
-# Frage 3: Horizontale Kraft (x-Richtung) an Knoten 1 = Spalte 0
-kraft_knoten[1, 0] = 1000.
-kraft_vektor = kraft_knoten.flatten()
-print(kraft_vektor)
-# -> [0. 0. 1000. -5000. 0. 0.]
-
-# Zurücksetzen für den weiteren Verlauf
-kraft_knoten[1, 0] = 0.
-kraft_vektor = kraft_knoten.flatten()
-```
-
-`.flatten()` legt die Zeilen von `kraft_knoten` hintereinander in ein
-eindimensionales Array: erst `[Fx_0, Fy_0]`, dann `[Fx_1, Fy_1]`, dann
-`[Fx_2, Fy_2]`. Das Ergebnis hat $2 \cdot 3 = 6$ Einträge.
-
-`kraft_vektor[3]` ist die $y$-Kraft an Knoten 1: $-5000\,\text{N}$, also
-$5000\,\text{N}$ nach unten. Die horizontale Kraft an Knoten 1 gehört in
-`kraft_knoten[1, 0]`, weil Spalte 0 der $x$-Richtung entspricht.
-````
-
-## Das Fachwerk visualisieren
-
-Bevor wir rechnen, überprüfen wir die Geometrie visuell. Die Funktion
-`zeichne_geometrie` zeichnet die Ausgangslage des Fachwerks: Stäbe, Knoten und
-Lager. Sie ist bewusst einfach gehalten — keine Verformung, keine Stabkräfte.
-Es ist gute Ingenieurspraxis, Eingabedaten stets zu visualisieren, *bevor* man
-rechnet: Tippfehler in den Koordinaten oder falsche Verbindungen fallen sofort
-auf. Die Darstellung der **verformten Lage** und der **Stabkräfte** kommt in
-Kapitel 4.3, wenn die nötigen Ergebnisse vorliegen.
-
-```{code-cell} python
 import matplotlib.pyplot as plt
 
-def zeichne_geometrie(titel=''):
-    """Zeichnet die Ausgangslage des Fachwerks: Stäbe, Knoten und Lager.
+# Knotenkoordinaten in m: Zeile n enthält [x, y] von Knoten n
+knoten_pos = np.array([
+    [0.0, 0.0],   # Knoten 0: linkes Lager
+    [1.0, 1.0],   # Knoten 1: Spitze, hier hängt die Last
+    [2.0, 0.0],   # Knoten 2: rechtes Lager
+])
+anzahl_knoten = len(knoten_pos)
 
-    Hinweis: Zur Vereinfachung greift diese Funktion auf globale Variablen
-    (knoten_pos, verbindung, lager_indizes, anzahl_knoten) zu. In größerer
-    Software würde man diese Werte als Funktionsargumente übergeben.
+# Lagerknoten: diese Knoten können sich nicht bewegen
+lager_indizes = [0, 2]
 
-    Parameters
-    ----------
-    titel : str
-        Diagrammtitel.
-    """
-    fig, ax = plt.subplots(figsize=(7, 4))
+# Stabliste: Zeile s enthält die Nummern der beiden Knoten von Stab s
+staebe = np.array([
+    [0, 1],   # Stab 0 verbindet Knoten 0 und Knoten 1
+    [1, 2],   # Stab 1 verbindet Knoten 1 und Knoten 2
+])
 
-    # Stäbe
-    for i in range(anzahl_knoten):
-        for j in range(i + 1, anzahl_knoten):
-            if verbindung[i, j]:
-                ax.plot([knoten_pos[i, 0], knoten_pos[j, 0]],
-                        [knoten_pos[i, 1], knoten_pos[j, 1]],
-                        color='tab:blue', linewidth=2.5)
+# Kraftvektor in N: [Fx_0, Fy_0, Fx_1, Fy_1, Fx_2, Fy_2]
+kraft_vektor = np.zeros(2 * anzahl_knoten)
+kraft_vektor[3] = -5000.0   # Fy an Knoten 1: 5000 N nach unten
 
-    # Knoten
-    ax.scatter(knoten_pos[:, 0], knoten_pos[:, 1],
-               c='tab:red', s=80, zorder=5)
-    for n in range(anzahl_knoten):
-        ax.text(knoten_pos[n, 0] + 0.04, knoten_pos[n, 1] + 0.04,
-                f'K{n}', fontsize=9)
-
-    # Lager als grüne Dreiecke
-    h, b = 0.12, 0.12
-    for n in lager_indizes:
-        x_dreieck = [knoten_pos[n, 0],
-                     knoten_pos[n, 0] - b / 2,
-                     knoten_pos[n, 0] + b / 2]
-        y_dreieck = [knoten_pos[n, 1],
-                     knoten_pos[n, 1] - h,
-                     knoten_pos[n, 1] - h]
-        ax.fill(x_dreieck, y_dreieck, color='tab:green', alpha=0.7)
-
-    ax.set_title(titel)
-    ax.set_aspect('equal')
-    ax.grid(True)
-    plt.tight_layout()
-    plt.show()
-
-zeichne_geometrie(titel='Kranausleger in Ausgangslage')
+print('Anzahl Knoten:', anzahl_knoten)
+print('Anzahl Stäbe: ', len(staebe))
+print('Kraftvektor:  ', kraft_vektor)
 ```
 
-````{admonition} Mini-Übung
+Die Knotenkoordinaten stehen in einem 2D-Array mit einer Zeile pro Knoten.
+Mit `knoten_pos[1]` erhalten wir die ganze Zeile, also beide Koordinaten von
+Knoten 1. Die **Stabliste** `staebe` funktioniert genauso: Jede Zeile ist ein
+Stab und enthält die Nummern der beiden Knoten, die er verbindet.
+
+Beim Kraftvektor müssen wir genauer hinschauen. Jeder Knoten kann sich in
+$x$- und in $y$-Richtung bewegen. Diese beiden Bewegungsmöglichkeiten heißen
+**Freiheitsgrade**. Drei Knoten haben also sechs Freiheitsgrade, und der
+Kraftvektor hat sechs Einträge. Sie sind knotenweise sortiert: erst $x$ und
+$y$ von Knoten 0, dann von Knoten 1 und so weiter. Allgemein gilt:
+
+- Index $2n$ gehört zur $x$-Richtung von Knoten $n$,
+- Index $2n+1$ gehört zur $y$-Richtung von Knoten $n$.
+
+Die Last an Knoten 1 in $y$-Richtung steht deshalb an Index $2 \cdot 1 + 1 = 3$.
+Das Minuszeichen bedeutet: Die Kraft zeigt nach unten, also gegen die
+$y$-Achse.
+
+Bevor wir rechnen, zeichnen wir das Fachwerk. So fallen Tippfehler in den
+Koordinaten oder in der Stabliste sofort auf. Die Zeichenfunktion ist
+vorgegeben. Wir führen die Zelle einfach aus und müssen den Code nicht im
+Detail verstehen.
+
+```{code-cell} python
+:tags: [hide-input]
+# Vorgegebene Zeichenfunktion: einfach ausführen, sie muss nicht verstanden werden.
+def zeichne_fachwerk(knoten_pos, staebe, lager_indizes, loslager_indizes=None,
+                     kraft_vektor=None, verschiebung=None, skalierung=1.0,
+                     stabkraefte=None, titel=''):
+    """Zeichnet ein ebenes Fachwerk.
+
+    knoten_pos: Knotenkoordinaten in m, Zeile n = [x_n, y_n]
+    staebe: Stabliste, Zeile s = [i, j]
+    lager_indizes: Liste der Knoten mit Festlager
+    loslager_indizes: Liste der Knoten mit Loslager (optional)
+    kraft_vektor: äußere Knotenkräfte in N, als Pfeile (optional)
+    verschiebung: Verschiebungsvektor in m, zeichnet die verformte Lage (optional)
+    skalierung: Überhöhungsfaktor für die Verschiebungen
+    stabkraefte: Stabkräfte in N, blau = Zug, rot = Druck, grau = kraftlos (optional)
+    titel: Diagrammtitel
+    """
+    blau, rot, orange, grau = '#005A94', '#E60000', '#E87846', '#484949'
+    anzahl_knoten = len(knoten_pos)
+    spannweite = np.max(knoten_pos) - np.min(knoten_pos)
+    fig, ax = plt.subplots(figsize=(8, 4.5))
+
+    # Knotenpositionen: Ausgangslage oder überhöht verformte Lage
+    pos = knoten_pos.copy()
+    if verschiebung is not None:
+        pos = knoten_pos + skalierung * verschiebung.reshape(anzahl_knoten, 2)
+        for i, j in staebe:
+            ax.plot(knoten_pos[[i, j], 0], knoten_pos[[i, j], 1],
+                    color=grau, linestyle='--', linewidth=1)
+
+    # Stäbe, bei Stabkräften eingefärbt und beschriftet
+    for s in range(len(staebe)):
+        i, j = staebe[s]
+        farbe = blau
+        if stabkraefte is not None:
+            farbe = blau if stabkraefte[s] >= 0 else rot
+            if abs(stabkraefte[s]) < 1e-6 * np.max(np.abs(stabkraefte)):
+                farbe = '#A6A6A6'   # hellgrau: Stab ohne Kraft (Rundungsfehler ignorieren)
+            mitte = 0.5 * (pos[i] + pos[j])
+            ax.text(mitte[0], mitte[1], f' {stabkraefte[s] / 1000:.2f} kN',
+                    color=farbe, fontsize=9)
+        ax.plot(pos[[i, j], 0], pos[[i, j], 1], color=farbe, linewidth=3)
+
+    # Lager als Dreiecke unter den Knoten, Loslager mit zusätzlichem Strich
+    if loslager_indizes is None:
+        loslager_indizes = []
+    h = 0.06 * spannweite
+    for n in list(lager_indizes) + list(loslager_indizes):
+        x, y = knoten_pos[n]
+        ax.fill([x, x - h, x + h], [y, y - 1.5 * h, y - 1.5 * h],
+                color='#CCDEE9', edgecolor=grau, zorder=2)
+        if n in loslager_indizes:
+            ax.plot([x - h, x + h], [y - 2 * h, y - 2 * h], color=grau, linewidth=2)
+
+    # Knoten mit Nummern
+    ax.scatter(pos[:, 0], pos[:, 1], color=orange, s=60, zorder=3)
+    for n in range(anzahl_knoten):
+        ax.text(pos[n, 0], pos[n, 1], f'  K{n}', color=blau,
+                fontsize=10, va='bottom')
+
+    # äußere Kräfte als Pfeile, die auf den Knoten zeigen
+    if kraft_vektor is not None:
+        kraefte = kraft_vektor.reshape(anzahl_knoten, 2)
+        for n in range(anzahl_knoten):
+            betrag = np.sqrt(kraefte[n, 0]**2 + kraefte[n, 1]**2)
+            if betrag > 0:
+                richtung = kraefte[n] / betrag
+                start = pos[n] - 0.15 * spannweite * richtung
+                ax.annotate('', xy=pos[n], xytext=start,
+                            arrowprops=dict(color=grau, width=2, headwidth=8))
+                ax.text(start[0], start[1], f' {betrag:.0f} N', color=grau,
+                        fontsize=9)
+                ax.plot(start[0], start[1], alpha=0)   # Pfeil im Bildbereich halten
+
+    if stabkraefte is not None:
+        ax.plot([], [], color=blau, linewidth=3, label='Zug')
+        ax.plot([], [], color=rot, linewidth=3, label='Druck')
+        ax.legend(loc='upper right')
+
+    ax.set_title(titel)
+    ax.set_xlabel('x in m')
+    ax.set_ylabel('y in m')
+    ax.set_aspect('equal')
+    ax.margins(0.15)
+    ax.grid(True)
+    plt.show()
+```
+
+```{code-cell} python
+zeichne_fachwerk(knoten_pos, staebe, lager_indizes, kraft_vektor=kraft_vektor,
+                 titel='Kranausleger')
+```
+
+Der Plot stimmt mit der Skizze überein: zwei Stäbe, zwei Lager, eine Last
+nach unten an Knoten 1. Wir vereinfachen dabei wie folgt: Beide Lager sind
+**Festlager** wie das Lager A in Kapitel 3.2, sie halten den Knoten in $x$-
+und in $y$-Richtung fest.
+
+```{admonition} Mini-Übung (✩)
 :class: tip
-
-1. Verändern Sie die $y$-Koordinate von Knoten 1 von 1.0 auf 0.5 m und
-   rufen Sie `zeichne_geometrie` erneut auf. Beschreiben Sie in einem Satz,
-   wie sich die Geometrie des Fachwerks dadurch ändert. Setzen Sie den Wert
-   danach wieder auf 1.0 m zurück.
-
-2. Warum ist es sinnvoll, die Geometrie bereits hier zu visualisieren, bevor
-   wir überhaupt anfangen zu rechnen?
-````
+1. Beantworten Sie ohne Code: Was liefert `knoten_pos[2]`, und was liefert
+   `staebe[1]`? Was bedeuten die Werte am Fachwerk?
+2. Beantworten Sie ohne Code: An welchem Index von `kraft_vektor` steht die
+   Kraft in $x$-Richtung an Knoten 2?
+3. Legen Sie einen neuen Kraftvektor `kraft_vektor_neu` an, bei dem an Knoten 1
+   zusätzlich eine Kraft von $1000\,\text{N}$ nach rechts wirkt. Zeichnen Sie
+   das Fachwerk mit diesem Kraftvektor.
+```
 
 ```{code-cell} python
 # Code-Zelle
@@ -384,33 +221,359 @@ zeichne_geometrie(titel='Kranausleger in Ausgangslage')
 :class: tip
 :class: dropdown
 ```python
-# Frage 1: y-Koordinate von Knoten 1 auf 0.5 m absenken
-knoten_pos[1, 1] = 0.5
-zeichne_geometrie(titel='Fachwerk mit abgesenktem Knoten 1')
-knoten_pos[1, 1] = 1.0   # zurücksetzen
+# Teilaufgabe 3: Seitenkraft zusätzlich zur Last an Knoten 1
+kraft_vektor_neu = np.zeros(2 * anzahl_knoten)
+kraft_vektor_neu[2] = 1000.0    # Fx an Knoten 1: Index 2 * 1 = 2
+kraft_vektor_neu[3] = -5000.0   # Fy an Knoten 1: Index 2 * 1 + 1 = 3
+print('Neuer Kraftvektor:', kraft_vektor_neu)
+
+zeichne_fachwerk(knoten_pos, staebe, lager_indizes,
+                 kraft_vektor=kraft_vektor_neu, titel='Kranausleger mit Seitenkraft')
+```
+`knoten_pos[2]` liefert `[2. 0.]`, also die Koordinaten von Knoten 2:
+$x = 2\,\text{m}$, $y = 0\,\text{m}$. `staebe[1]` liefert `[1 2]`: Stab 1
+verbindet Knoten 1 mit Knoten 2. Die $x$-Kraft an Knoten 2 steht an Index
+$2 \cdot 2 = 4$. Die Seitenkraft an Knoten 1 gehört an Index $2 \cdot 1 = 2$.
+Im Plot zeigt der Kraftpfeil jetzt schräg nach rechts unten, denn er stellt
+die Summe beider Kräfte dar. Die Beschriftung nennt deshalb den Betrag
+$\sqrt{1000^2 + 5000^2}\,\text{N} \approx 5099\,\text{N}$.
+````
+
+## Ein Stab wirkt wie eine Feder
+
+Jetzt brauchen wir das Material. Die Stäbe sind aus Stahl und haben einen
+runden Querschnitt mit $1\,\text{cm}$ Durchmesser. Wir greifen uns Stab 0
+heraus und berechnen seine Länge und seine Steifigkeit.
+
+```{code-cell} python
+# Material und Querschnitt, für alle Stäbe gleich
+elastizitaetsmodul = 2.1e11                      # Stahl in N/m²
+durchmesser = 0.01                               # in m
+querschnitt = np.pi * durchmesser**2 / 4         # Kreisfläche in m²
+
+# Stab 0: Knotennummern aus der Stabliste holen
+i, j = staebe[0]
+
+# Differenzvektor von Knoten i nach Knoten j und Stablänge (Pythagoras)
+differenz = knoten_pos[j] - knoten_pos[i]
+stablaenge = np.sqrt(differenz[0]**2 + differenz[1]**2)
+
+# Stabsteifigkeit k = E * A / L
+k = elastizitaetsmodul * querschnitt / stablaenge
+
+print(f'Stab 0 verbindet Knoten {i} und {j}')
+print(f'Differenzvektor: {differenz} m')
+print(f'Stablänge:       {stablaenge:.4f} m')
+print(f'Steifigkeit k:   {k:.4e} N/m = {k * 1e-6:.2f} kN/mm')
 ```
 
-Mit `knoten_pos[1, 1] = 0.5` wird das Dreieck flacher: Die Stäbe verlaufen
-weniger steil, der freie Knoten liegt nur noch halb so hoch.
+Die Zeile `i, j = staebe[0]` entpackt die beiden Knotennummern in zwei
+Variablen, so wie wir in Kapitel 3.3 die Lösung in `T_AB, T_BC, Q` entpackt
+haben.
 
-Frage 2: Tippfehler in den Koordinaten oder vertauschte Verbindungen fallen
-sofort im Plot auf, noch bevor ein falsches Ergebnis berechnet wird. Das
-spart Zeit und verhindert schwer zu findende Fehler in späteren Schritten.
+Warum heißt $k$ Steifigkeit? Ein Stab verhält sich unter Zug oder Druck wie
+eine Feder. Aus dem Hookeschen Gesetz $\sigma = E\,\varepsilon$ mit der
+Spannung $\sigma = F/A$ und der Dehnung $\varepsilon = \Delta L/L$ folgt
+
+$$F = \frac{E\,A}{L} \cdot \Delta L = k \cdot \Delta L.$$
+
+Die **Stabsteifigkeit** $k = EA/L$ ist also die Federkonstante des Stabs. Ein
+dicker, kurzer Stab aus einem steifen Material ist eine harte Feder. Unser
+Stahlstab hat $k \approx 11.66\,\text{kN/mm}$: Um ihn um einen Millimeter zu
+dehnen, brauchen wir eine Kraft von rund $11.7\,\text{kN}$.
+
+```{figure} pics/chap04_federanalogie.svg
+:alt: Ein Stab mit Länge L, Querschnitt A und Elastizitätsmodul E neben einer Feder mit Federkonstante k gleich EA durch L
+:align: center
+
+Ein Stab unter Zug oder Druck verhält sich wie eine lineare Feder mit der
+Federkonstanten $k = EA/L$.
+(Quelle: eigene Abbildung; Lizenz [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0))
+```
+
+Anders als eine Feder auf dem Tisch liegt unser Stab schräg im Raum. Er
+überträgt nur Kräfte in Richtung seiner Achse. Diese Richtung beschreiben wir
+durch den **Einheitsvektor** $\vec{e}$, den Differenzvektor geteilt durch die
+Stablänge. Was passiert, wenn sich Knoten 1 um $1\,\text{mm}$ nach unten
+verschiebt?
+
+```{code-cell} python
+# Einheitsvektor in Richtung der Stabachse (Länge 1)
+e = differenz / stablaenge
+
+# Knoten 1 verschiebt sich um 1 mm nach unten, Knoten 0 bleibt stehen
+verschiebung_knoten1 = np.array([0.0, -0.001])   # in m
+
+# Längenänderung: nur der Anteil der Verschiebung in Stabrichtung zählt
+delta_l = e[0] * verschiebung_knoten1[0] + e[1] * verschiebung_knoten1[1]
+
+# Kraft an Knoten 1, die diese Verschiebung erzeugt: Betrag k * delta_l, Richtung e
+kraft_knoten1 = k * delta_l * e
+
+print(f'Einheitsvektor e:  {e}')
+print(f'Längenänderung:    {delta_l * 1000:.4f} mm')
+print(f'Kraft an Knoten 1: {kraft_knoten1} N')
+```
+
+Der Stab wird nur um rund $0.71\,\text{mm}$ kürzer, nicht um den vollen
+Millimeter. Der Grund: Die Verschiebung zeigt senkrecht nach unten, der Stab
+aber schräg nach oben. Nur der Anteil der Verschiebung in Stabrichtung ändert
+die Länge. Die Kraft zeigt wieder in Stabrichtung, und zwar nach links unten:
+Sie drückt den Stab zusammen. Deshalb hat sie auch eine $x$-Komponente, obwohl
+sich der Knoten gar nicht seitlich bewegt.
+
+```{figure} pics/chap04_stabgeometrie.svg
+:alt: Stab 0 des Kranauslegers mit Länge L, Winkel phi und den Komponenten Delta x und Delta y
+:align: center
+
+Der Differenzvektor von Knoten 0 nach Knoten 1 hat die Komponenten $\Delta x$
+und $\Delta y$, die Stablänge $L$ und den Winkel $\varphi$ zur $x$-Achse.
+(Quelle: eigene Abbildung; Lizenz [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0))
+```
+
+Diese Rechnung können wir für jede beliebige Verschiebung wiederholen.
+Einfacher geht es mit einer $2 \times 2$-Matrix, die den ganzen Zusammenhang
+auf einmal enthält.
+
+```{code-cell} python
+# Steifigkeitsblock des Stabs: rechnet eine Verschiebung in eine Kraft um
+block = k * np.array([
+    [e[0] * e[0], e[0] * e[1]],
+    [e[1] * e[0], e[1] * e[1]],
+])
+
+print('Steifigkeitsblock in kN/mm:')
+print(np.round(block * 1e-6, 2))
+print('block @ verschiebung:', block @ verschiebung_knoten1, 'N')
+```
+
+Das Produkt `block @ verschiebung_knoten1` liefert genau die Kraft von oben.
+Wir nennen diese Matrix den **Steifigkeitsblock** des Stabs. Mit
+$\vec{e} = (\cos\varphi, \sin\varphi)^\top$ lautet er
+
+$$\mathbf{b} = k \begin{pmatrix}
+\cos^2\varphi & \cos\varphi\,\sin\varphi \\
+\cos\varphi\,\sin\varphi & \sin^2\varphi
+\end{pmatrix}.$$
+
+Für unseren Stab mit $\varphi = 45°$ sind alle vier Einträge gleich, nämlich
+$k/2 \approx 5.83\,\text{kN/mm}$. Den Winkel selbst müssen wir nie ausrechnen,
+denn die Einträge von `e` sind bereits $\cos\varphi$ und $\sin\varphi$.
+
+```{admonition} Mini-Übung (✩)
+:class: tip
+1. Berechnen Sie Länge, Steifigkeit $k$ und Steifigkeitsblock für Stab 1.
+2. Beantworten Sie ohne Code: Warum hat der Block von Stab 1 auf der
+   Nebendiagonalen ein anderes Vorzeichen als der Block von Stab 0?
+3. Beantworten Sie ohne Code: Ein waagerechter Stab hat den Einheitsvektor
+   $\vec{e} = (1, 0)^\top$. Welche Einträge seines Steifigkeitsblocks sind
+   null? Was bedeutet das für eine Verschiebung senkrecht zum Stab?
+```
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+# Teilaufgabe 1: Länge, Steifigkeit und Steifigkeitsblock von Stab 1
+i1, j1 = staebe[1]
+differenz1 = knoten_pos[j1] - knoten_pos[i1]
+stablaenge1 = np.sqrt(differenz1[0]**2 + differenz1[1]**2)
+k1 = elastizitaetsmodul * querschnitt / stablaenge1
+e1 = differenz1 / stablaenge1
+
+block1 = k1 * np.array([
+    [e1[0] * e1[0], e1[0] * e1[1]],
+    [e1[1] * e1[0], e1[1] * e1[1]],
+])
+
+print(f'Stablänge:     {stablaenge1:.4f} m')
+print(f'Steifigkeit k: {k1 * 1e-6:.2f} kN/mm')
+print(f'Einheitsvektor: {e1}')
+print('Steifigkeitsblock in kN/mm:')
+print(np.round(block1 * 1e-6, 2))
+```
+Stab 1 ist genauso lang wie Stab 0 und hat deshalb dieselbe Steifigkeit.
+Er zeigt aber von Knoten 1 schräg nach rechts unten, also ist
+$\vec{e} = (0.71, -0.71)^\top$. Das Produkt $e_x e_y$ auf der Nebendiagonalen
+wird dadurch negativ, die Diagonale bleibt positiv, weil dort Quadrate stehen.
+
+Beim waagerechten Stab ist $e_y = 0$. Damit sind alle Einträge null bis auf
+den oberen linken, der Block lautet $k \begin{pmatrix} 1 & 0 \\ 0 & 0
+\end{pmatrix}$. Eine kleine Verschiebung senkrecht zum Stab ändert seine Länge
+nicht und erzeugt deshalb keine Kraft.
+````
+
+## Aus Stäben wird die Steifigkeitsmatrix
+
+Jeder Stab liefert einen Steifigkeitsblock. Jetzt fügen wir alle Blöcke zu
+einer großen Matrix zusammen, die das ganze Fachwerk beschreibt. Da wir das
+für jedes Fachwerk brauchen, schreiben wir gleich eine Funktion. Im Inneren
+steht eine Schleife über die Stabliste, und in der Schleife rechnen wir genau
+das, was wir eben für Stab 0 von Hand gemacht haben.
+
+```{code-cell} python
+def baue_steifigkeitsmatrix(knoten_pos, staebe, elastizitaetsmodul, querschnitt):
+    """Setzt die Steifigkeitsmatrix eines ebenen Fachwerks zusammen.
+
+    knoten_pos: Knotenkoordinaten in m, Zeile n = [x_n, y_n]
+    staebe: Stabliste, Zeile s = [i, j]
+    elastizitaetsmodul: E in N/m², für alle Stäbe gleich
+    querschnitt: A in m², für alle Stäbe gleich
+    Rückgabe: Steifigkeitsmatrix K in N/m, Form (2 * Knotenanzahl, 2 * Knotenanzahl)
+    """
+    anzahl_freiheitsgrade = 2 * len(knoten_pos)
+    K = np.zeros((anzahl_freiheitsgrade, anzahl_freiheitsgrade))
+
+    for i, j in staebe:
+        # Geometrie und Steifigkeit des Stabs
+        differenz = knoten_pos[j] - knoten_pos[i]
+        stablaenge = np.sqrt(differenz[0]**2 + differenz[1]**2)
+        k = elastizitaetsmodul * querschnitt / stablaenge
+        e = differenz / stablaenge
+
+        # Steifigkeitsblock des Stabs
+        block = k * np.array([
+            [e[0] * e[0], e[0] * e[1]],
+            [e[1] * e[0], e[1] * e[1]],
+        ])
+
+        # Block in K eintragen: +block bei i-i und j-j, -block bei i-j und j-i
+        K[2*i : 2*i + 2, 2*i : 2*i + 2] += block
+        K[2*j : 2*j + 2, 2*j : 2*j + 2] += block
+        K[2*i : 2*i + 2, 2*j : 2*j + 2] -= block
+        K[2*j : 2*j + 2, 2*i : 2*i + 2] -= block
+
+    return K
+
+K = baue_steifigkeitsmatrix(knoten_pos, staebe, elastizitaetsmodul, querschnitt)
+
+print('Steifigkeitsmatrix K in kN/mm:')
+print(np.round(K * 1e-6, 2))
+```
+
+Die **Steifigkeitsmatrix** $\mathbf{K}$ hat eine Zeile und eine Spalte für
+jeden Freiheitsgrad, hier also $6 \times 6$ Einträge. Sie verknüpft die
+Verschiebungen aller Knoten mit den Kräften an allen Knoten:
+
+$$\mathbf{K} \cdot \vec{u} = \vec{F}.$$
+
+Die Einträge schreibt die Funktion mit **Slicing** in die Matrix. Der
+Ausdruck `K[2:4, 2:4]` wählt die Zeilen 2 und 3 und die Spalten 2 und 3 aus.
+Wie bei `range` gehört die obere Grenze nicht mehr dazu. Für Knoten $i$ sind
+das die Zeilen und Spalten $2i$ und $2i+1$, also genau seine beiden
+Freiheitsgrade.
+
+```{code-cell} python
+# Der 2x2-Block von Knoten 1: Zeilen 2 und 3, Spalten 2 und 3
+print('K[2:4, 2:4] in kN/mm:')
+print(np.round(K[2:4, 2:4] * 1e-6, 2))
+```
+
+Im Block von Knoten 1 addieren sich die Beiträge beider Stäbe. Die
+Nebendiagonalen heben sich auf, weil die beiden Stäbe spiegelbildlich
+liegen. Übrig bleibt eine Steifigkeit von $11.66\,\text{kN/mm}$ in $x$- und in
+$y$-Richtung.
+
+Woher kommen die Vorzeichen? Die Kraft in einem Stab hängt nur davon ab, wie
+weit sich seine beiden Endknoten *gegeneinander* verschieben. Für die Kräfte
+an den Knoten $i$ und $j$ gilt deshalb
+
+$$\vec{F}_i = \mathbf{b}\,(\vec{u}_i - \vec{u}_j), \qquad
+\vec{F}_j = \mathbf{b}\,(\vec{u}_j - \vec{u}_i).$$
+
+Daraus entsteht das Muster in der Funktion: $+\mathbf{b}$ auf den beiden
+**Diagonalblöcken** und $-\mathbf{b}$ auf den beiden **Nebendiagonalblöcken**.
+Wo kein Stab zwei Knoten verbindet, bleibt ein Nullblock stehen.
+
+```{figure} pics/chap04_blockstruktur.svg
+:alt: Die Steifigkeitsmatrix als 3 mal 3 Raster aus 2 mal 2 Blöcken mit Diagonalblöcken, Nebendiagonalblöcken und zwei Nullblöcken
+:align: center
+
+Blockstruktur der Steifigkeitsmatrix des Kranauslegers: Zwischen Knoten 0 und
+Knoten 2 gibt es keinen Stab, deshalb sind diese Blöcke null.
+(Quelle: eigene Abbildung; Lizenz [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0))
+```
+
+Können wir $\mathbf{K} \cdot \vec{u} = \vec{F}$ jetzt einfach mit
+`np.linalg.solve` lösen? Wir prüfen die Lösbarkeit wie in Kapitel 3.1 mit der
+Determinante. Außerdem schieben wir das ganze Fachwerk probeweise um
+$1\,\text{mm}$ nach rechts.
+
+```{code-cell} python
+print(f'Determinante von K: {np.linalg.det(K):.4e}')
+
+# Alle drei Knoten verschieben sich um 1 mm nach rechts
+u_starr = np.array([0.001, 0.0, 0.001, 0.0, 0.001, 0.0])
+print('K @ u_starr:', K @ u_starr, 'N')
+```
+
+Die Determinante ist null oder im Rahmen der Rundungsfehler winzig. Die Matrix
+ist also **singulär**. Die zweite Rechnung zeigt den Grund: Verschieben wir
+das ganze Fachwerk, ändert sich keine Stablänge, und es entsteht keine Kraft.
+Die ausgegebenen Werte in der Größenordnung von $10^{-13}\,\text{N}$ sind
+Rundungsfehler, physikalisch ist das null.
+Ohne Lager könnte das Fachwerk wegrutschen, und zu einer Last gäbe es keine
+eindeutige Verschiebung. Die Lager fehlen in $\mathbf{K}$ noch. Wir bauen sie
+in Kapitel 4.3 ein.
+
+```{admonition} Mini-Übung (✩)
+:class: tip
+1. Beantworten Sie ohne Code: Warum ist der Block `K[0:2, 4:6]` null?
+2. Beantworten Sie ohne Code: Warum stimmt der Block `K[0:2, 0:2]` genau mit
+   dem Steifigkeitsblock von Stab 0 überein?
+3. Wir schließen das Dreieck mit einem dritten Stab zwischen Knoten 0 und
+   Knoten 2. Legen Sie dafür eine neue Stabliste `staebe_neu` an, bauen Sie
+   die Steifigkeitsmatrix neu auf und geben Sie `K_neu[0:2, 4:6]` aus. Was
+   hat sich geändert?
+```
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+# Teilaufgabe 3: dritter Stab zwischen Knoten 0 und Knoten 2
+staebe_neu = np.array([
+    [0, 1],
+    [1, 2],
+    [0, 2],   # neuer Stab zwischen den beiden Lagerknoten
+])
+K_neu = baue_steifigkeitsmatrix(knoten_pos, staebe_neu,
+                                elastizitaetsmodul, querschnitt)
+
+print('K_neu[0:2, 4:6] in kN/mm:')
+print(np.round(K_neu[0:2, 4:6] * 1e-6, 2))
+```
+Der Block `K[0:2, 4:6]` verknüpft die Freiheitsgrade von Knoten 0 mit denen
+von Knoten 2. Zwischen diesen Knoten gibt es im Kranausleger keinen Stab,
+deshalb trägt die Funktion dort nichts ein. An Knoten 0 hängt nur Stab 0,
+deshalb enthält sein Diagonalblock nur dessen Steifigkeitsblock.
+
+Mit dem neuen Stab ist `K_neu[0:2, 4:6]` nicht mehr null. Der Stab ist
+waagerecht und $2\,\text{m}$ lang, seine Steifigkeit beträgt
+$k = 8.25\,\text{kN/mm}$. Im Block steht deshalb nur links oben ein Eintrag,
+nämlich $-8.25\,\text{kN/mm}$. Das Minuszeichen stammt vom
+Nebendiagonalblock.
 ````
 
 ## Zusammenfassung und Ausblick
 
-Ein ebenes Fachwerk wird geometrisch und topologisch durch vier Datenstrukturen
-beschrieben: die Knotenkoordinaten `knoten_pos` (Form `(n, 2)`, Knoten in
-Zeilen), die Lagerknoten `lager_indizes`, die Konnektivitätsmatrix `verbindung`
-(welche Stäbe existieren) und den Kraftvektor `kraft_vektor` (welche Lasten wo
-angreifen). Der Kraftvektor hat $2 \cdot n_\text{Knoten}$ Einträge, weil jeder
-Knoten einen $x$- und einen $y$-Freiheitsgrad besitzt. Der Verschiebungsvektor
-$\vec{u}$ wird in derselben Reihenfolge aufgebaut, sodass die Gleichung
-$\mathbf{K} \cdot \vec{u} = \vec{F}$ komponentenweise sinnvoll interpretiert
-werden kann.
+Ein ebenes Fachwerk beschreiben wir durch vier Datenstrukturen: die
+Knotenkoordinaten, die Lagerknoten, die Stabliste und den Kraftvektor. Jeder
+Knoten hat zwei Freiheitsgrade, Knoten $n$ belegt die Indizes $2n$ und $2n+1$.
+Jeder Stab wirkt wie eine Feder mit der Steifigkeit $k = EA/L$ und liefert
+einen $2 \times 2$-Steifigkeitsblock. Die Funktion `baue_steifigkeitsmatrix`
+setzt alle Blöcke zur Steifigkeitsmatrix $\mathbf{K}$ zusammen. Ohne Lager ist
+$\mathbf{K}$ singulär, weil das Fachwerk als Ganzes verschoben werden könnte.
 
-Für die eigentliche Berechnung fehlen noch die **Materialeigenschaften** der
-Stäbe: der Elastizitätsmodul $E$ und die Querschnittsfläche $A$. Erst mit
-diesen Größen lässt sich die globale Steifigkeitsmatrix $\mathbf{K}$
-aufstellen. Das ist das Thema von Kapitel 4.2.
+Im nächsten Kapitel wenden wir die Funktion in Partnerarbeit auf ein größeres
+Fachwerk an, eine Wandkonsole für eine Rohrleitung. In Kapitel 4.3 bauen wir anschließend die Lager ein,
+lösen das Gleichungssystem und berechnen, wie weit sich die Spitze des
+Kranauslegers absenkt.

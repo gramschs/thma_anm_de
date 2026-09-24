@@ -48,7 +48,6 @@ project:
       - file: chapter04/chapter04_sec03.md
       - file: chapter04/chapter04_sec04.md
       - file: chapter04/chapter04_sec05.md
-      - file: chapter04/chapter04_sec06.md
     - title: 5. Koordinatentransformation I
       children:
       - file: chapter05/chapter05_sec01.md
