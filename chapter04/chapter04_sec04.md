@@ -81,7 +81,7 @@ def zeichne_fachwerk(knoten_pos, staebe, lager_indizes, loslager_indizes=None,
     """
     blau, rot, orange, grau = '#005A94', '#E60000', '#E87846', '#484949'
     anzahl_knoten = len(knoten_pos)
-    spannweite = np.max(knoten_pos) - np.min(knoten_pos)
+    spannweite = np.max(np.ptp(knoten_pos, axis=0))   # größere Ausdehnung in x oder y
     fig, ax = plt.subplots(figsize=(8, 4.5))
 
     # Knotenpositionen: Ausgangslage oder überhöht verformte Lage
@@ -98,7 +98,7 @@ def zeichne_fachwerk(knoten_pos, staebe, lager_indizes, loslager_indizes=None,
         farbe = blau
         if stabkraefte is not None:
             farbe = blau if stabkraefte[s] >= 0 else rot
-            if abs(stabkraefte[s]) < 1e-6 * np.max(np.abs(stabkraefte)):
+            if abs(stabkraefte[s]) <= 1e-6 * np.max(np.abs(stabkraefte)):
                 farbe = '#A6A6A6'   # hellgrau: Stab ohne Kraft (Rundungsfehler ignorieren)
             mitte = 0.5 * (pos[i] + pos[j])
             ax.text(mitte[0], mitte[1], f' {stabkraefte[s] / 1000:.2f} kN',
@@ -139,6 +139,7 @@ def zeichne_fachwerk(knoten_pos, staebe, lager_indizes, loslager_indizes=None,
     if stabkraefte is not None:
         ax.plot([], [], color=blau, linewidth=3, label='Zug')
         ax.plot([], [], color=rot, linewidth=3, label='Druck')
+        ax.plot([], [], color='#A6A6A6', linewidth=3, label='kraftlos')
         ax.legend(loc='upper right')
 
     ax.set_title(titel)
@@ -190,15 +191,17 @@ def baue_steifigkeitsmatrix(knoten_pos, staebe, elastizitaetsmodul, querschnitt)
 
 
 # Funktion aus Kapitel 4.3, erweitert um Loslager
-def berechne_verschiebungen(K, kraft_vektor, lager_indizes, loslager_indizes=[]):
+def berechne_verschiebungen(K, kraft_vektor, lager_indizes, loslager_indizes=None):
     """Löst K * u = F für ein Fachwerk mit Fest- und Loslagern.
 
     K: Steifigkeitsmatrix in N/m
     kraft_vektor: äußere Knotenkräfte in N
     lager_indizes: Liste der Knoten mit Festlager, dort gilt ux = uy = 0
-    loslager_indizes: Liste der Knoten mit Loslager, dort gilt nur uy = 0
+    loslager_indizes: Liste der Knoten mit Loslager, dort gilt nur uy = 0 (optional)
     Rückgabe: Verschiebungsvektor u in m
     """
+    if loslager_indizes is None:
+        loslager_indizes = []
     K_lager = K.copy()
     kraft_lager = kraft_vektor.copy()
     for n in lager_indizes:
@@ -331,7 +334,12 @@ stabkraefte = berechne_stabkraefte(knoten_pos, staebe, elastizitaetsmodul,
                                    querschnitt, u)
 
 for s in range(len(staebe)):
-    art = 'Zug' if stabkraefte[s] > 0 else 'Druck'
+    if abs(stabkraefte[s]) < 1e-6:   # unter 1 µN: nur Rundungsfehler
+        art = 'kraftlos'
+    elif stabkraefte[s] > 0:
+        art = 'Zug'
+    else:
+        art = 'Druck'
     print(f'Stab {s:2d}: N = {stabkraefte[s]:8.1f} N  ({art})')
 print(f'Absenkung des Firsts: {u[11] * 1000:.3f} mm')
 
@@ -493,11 +501,12 @@ nicht seitlich ausweichen, Knicken ist nur bei Druck möglich.
 Eine Abhilfe ist ein zusätzlicher Knoten in der Mitte der Stäbe 3 und 6, der
 über weitere Stäbe mit dem Untergurt verbunden ist. Dann halbiert sich die
 Knicklänge, und die Knicklast vervierfacht sich. Alternativ nehmen wir für den
-Obergurt dickere Stäbe oder Rohre. Ein Rohr hat bei gleichem Material ein viel
-größeres Flächenträgheitsmoment $I$ als ein Vollstab.
+Obergurt dickere Stäbe oder Rohre. Ein Rohr hat bei gleicher Querschnittsfläche
+ein viel größeres Flächenträgheitsmoment $I$ als ein Vollstab, weil das
+Material weiter außen liegt.
 ````
 
-```{admonition} Zusatzaufgabe: Warum braucht der Binder ein Loslager? (✩✩✩)
+```{admonition} Zusatzaufgabe: Warum ist ein Loslager sinnvoll? (✩✩✩)
 :class: tip
 Wir ersetzen das Loslager an Knoten 3 durch ein zweites Festlager, also
 `lager_indizes = [0, 3]` und keine Loslager. Berechnen Sie Verschiebungen,
@@ -547,9 +556,9 @@ Knoten 3: Fx =  -4166.7 N,  Fy =   3000.0 N
 Mit zwei Festlagern ist der Untergurt fast kraftlos, der mittlere Stab steht
 sogar leicht unter Druck. Die Aufgabe des Zugbands übernehmen jetzt die
 beiden Lager: Sie drücken mit rund $4200\,\text{N}$ waagerecht gegeneinander.
-Umgekehrt drückt der Binder die beiden Hallenwände mit dieser Kraft nach
-außen. Mauerwerk verträgt solche Schubkräfte schlecht. Außerdem würde jede
-Temperaturänderung zusätzliche Zwangskräfte erzeugen, weil sich der Binder
-nicht mehr frei ausdehnen kann. Deshalb liegt ein Binder auf einer Seite auf
-einem Loslager.
+Umgekehrt drückt der Binder die Wände oder Stützen der Halle mit dieser Kraft
+nach außen, und sie müssten diese Kraft zusätzlich aufnehmen. Außerdem würde
+jede Temperaturänderung zusätzliche Zwangskräfte erzeugen, weil sich der
+Binder nicht mehr frei ausdehnen kann. Deshalb liegt ein Binder meist auf
+einer Seite auf einem Loslager.
 ````

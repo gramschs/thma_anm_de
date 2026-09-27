@@ -38,7 +38,7 @@ def zeichne_fachwerk(knoten_pos, staebe, lager_indizes, loslager_indizes=None,
     """
     blau, rot, orange, grau = '#005A94', '#E60000', '#E87846', '#484949'
     anzahl_knoten = len(knoten_pos)
-    spannweite = np.max(knoten_pos) - np.min(knoten_pos)
+    spannweite = np.max(np.ptp(knoten_pos, axis=0))   # größere Ausdehnung in x oder y
     fig, ax = plt.subplots(figsize=(8, 4.5))
 
     # Knotenpositionen: Ausgangslage oder überhöht verformte Lage
@@ -55,7 +55,7 @@ def zeichne_fachwerk(knoten_pos, staebe, lager_indizes, loslager_indizes=None,
         farbe = blau
         if stabkraefte is not None:
             farbe = blau if stabkraefte[s] >= 0 else rot
-            if abs(stabkraefte[s]) < 1e-6 * np.max(np.abs(stabkraefte)):
+            if abs(stabkraefte[s]) <= 1e-6 * np.max(np.abs(stabkraefte)):
                 farbe = '#A6A6A6'   # hellgrau: Stab ohne Kraft (Rundungsfehler ignorieren)
             mitte = 0.5 * (pos[i] + pos[j])
             ax.text(mitte[0], mitte[1], f' {stabkraefte[s] / 1000:.2f} kN',
@@ -96,6 +96,7 @@ def zeichne_fachwerk(knoten_pos, staebe, lager_indizes, loslager_indizes=None,
     if stabkraefte is not None:
         ax.plot([], [], color=blau, linewidth=3, label='Zug')
         ax.plot([], [], color=rot, linewidth=3, label='Druck')
+        ax.plot([], [], color='#A6A6A6', linewidth=3, label='kraftlos')
         ax.legend(loc='upper right')
 
     ax.set_title(titel)
@@ -147,15 +148,17 @@ def baue_steifigkeitsmatrix(knoten_pos, staebe, elastizitaetsmodul, querschnitt)
 
 
 # Funktion aus Kapitel 4.4, mit Loslager
-def berechne_verschiebungen(K, kraft_vektor, lager_indizes, loslager_indizes=[]):
+def berechne_verschiebungen(K, kraft_vektor, lager_indizes, loslager_indizes=None):
     """Löst K * u = F für ein Fachwerk mit Fest- und Loslagern.
 
     K: Steifigkeitsmatrix in N/m
     kraft_vektor: äußere Knotenkräfte in N
     lager_indizes: Liste der Knoten mit Festlager, dort gilt ux = uy = 0
-    loslager_indizes: Liste der Knoten mit Loslager, dort gilt nur uy = 0
+    loslager_indizes: Liste der Knoten mit Loslager, dort gilt nur uy = 0 (optional)
     Rückgabe: Verschiebungsvektor u in m
     """
+    if loslager_indizes is None:
+        loslager_indizes = []
     K_lager = K.copy()
     kraft_lager = kraft_vektor.copy()
     for n in lager_indizes:
@@ -519,7 +522,7 @@ der Länge. Der doppelt so lange Stab hat deshalb nur ein Viertel der
 Knicklast, rund $980\,\text{N}$. Stab 1 hält, denn seine Knicklast liegt über
 der Druckkraft. Stab 2 knickt, obwohl er dieselbe Kraft trägt wie Stab 1,
 weil er doppelt so lang ist. Stab 3 ist ebenso lang, trägt aber nur
-$800\,\text{N}$ und hält knapp.
+$800\,\text{N}$ und besteht den vereinfachten Nachweis nur knapp.
 ````
 
 ```{admonition} Aufgabe 4.5 (✩✩)
@@ -584,7 +587,12 @@ for n in lager_indizes:
     print(f'Lager an Knoten {n}: Fx = {knotenkraefte[2*n]:7.1f} N, '
           f'Fy = {knotenkraefte[2*n + 1]:7.1f} N')
 for s in range(len(staebe)):
-    art = 'Zug' if stabkraefte[s] > 0 else 'Druck'
+    if abs(stabkraefte[s]) < 1e-6:   # unter 1 µN: nur Rundungsfehler
+        art = 'kraftlos'
+    elif stabkraefte[s] > 0:
+        art = 'Zug'
+    else:
+        art = 'Druck'
     print(f'Stab {s}: N = {stabkraefte[s]:7.1f} N  ({art})')
 ```
 Ausgabe:
@@ -619,7 +627,8 @@ Beides stimmt mit der Rechnung überein.
 
 ```{admonition} Aufgabe 4.6 (✩✩)
 :class: tip
-Wie hoch sollte die Spitze des Kranauslegers aus Kapitel 4.1 liegen? Die
+Bei welcher Höhe senkt sich die Spitze des Kranauslegers aus Kapitel 4.1 am
+wenigsten ab? Die
 Lager bleiben bei $(0, 0)$ und $(2\,\text{m}, 0)$, die Spitze liegt bei
 $(1\,\text{m}, h)$. Last $5000\,\text{N}$ nach unten, Stahl mit
 $1\,\text{cm}$ Durchmesser.
@@ -857,13 +866,16 @@ Der kleinste Durchmesser, bei dem alle Nachweise erfüllt sind, ist
 $16\,\text{mm}$. Weil die Knicklast mit $d^4$ wächst, reicht schon dieser
 kleine Schritt: $(16/12)^4 \approx 3.2$.
 
-**Abschlussfrage:** Am mittleren Knoten 5 greift keine Last an. Die beiden
-Obergurtstäbe 3 und 4 liegen dort auf einer waagerechten Linie. Eine Kraft in
-einer der beiden Diagonalen hätte eine senkrechte Komponente, die an Knoten 5
-niemand ausgleichen könnte. Deshalb müssen beide Diagonalen kraftlos sein.
-Aus der Technischen Mechanik kennen Sie solche Stäbe als Nullstäbe. Die
-Ausgabe `-0.` ist dabei nur ein Rundungsfehler, im Plot sind die beiden
-Stäbe grau.
+**Abschlussfrage:** Am mittleren Knoten 5 greift keine Last an, und die
+Obergurtstäbe 3 und 4 sind waagerecht. Im Gleichgewicht in $y$-Richtung
+bleiben deshalb nur die beiden Diagonalen übrig. Ihre senkrechten Komponenten
+müssen sich aufheben: Eine Diagonale müsste auf Zug stehen, die andere gleich
+stark auf Druck. Fachwerk und Last sind aber spiegelbildlich, deshalb tragen
+beide Diagonalen dieselbe Kraft. Beides passt nur zusammen, wenn beide Kräfte
+null sind. Aus der Technischen Mechanik kennen Sie solche Stäbe als
+Nullstäbe. Die Ausgabe `-0.` ist dabei nur ein Rundungsfehler, im Plot sind
+die beiden Stäbe grau. Steht nur ein Monteur auf Knoten 1, tragen die
+Diagonalen dagegen Kräfte.
 
 Die Stabkräfte hängen nicht vom Durchmesser ab, weil das Fachwerk statisch
 bestimmt ist: Die Gleichgewichtsbedingungen an den Knoten legen alle Kräfte

@@ -70,7 +70,7 @@ def zeichne_fachwerk(knoten_pos, staebe, lager_indizes, loslager_indizes=None,
     """
     blau, rot, orange, grau = '#005A94', '#E60000', '#E87846', '#484949'
     anzahl_knoten = len(knoten_pos)
-    spannweite = np.max(knoten_pos) - np.min(knoten_pos)
+    spannweite = np.max(np.ptp(knoten_pos, axis=0))   # größere Ausdehnung in x oder y
     fig, ax = plt.subplots(figsize=(8, 4.5))
 
     # Knotenpositionen: Ausgangslage oder überhöht verformte Lage
@@ -87,7 +87,7 @@ def zeichne_fachwerk(knoten_pos, staebe, lager_indizes, loslager_indizes=None,
         farbe = blau
         if stabkraefte is not None:
             farbe = blau if stabkraefte[s] >= 0 else rot
-            if abs(stabkraefte[s]) < 1e-6 * np.max(np.abs(stabkraefte)):
+            if abs(stabkraefte[s]) <= 1e-6 * np.max(np.abs(stabkraefte)):
                 farbe = '#A6A6A6'   # hellgrau: Stab ohne Kraft (Rundungsfehler ignorieren)
             mitte = 0.5 * (pos[i] + pos[j])
             ax.text(mitte[0], mitte[1], f' {stabkraefte[s] / 1000:.2f} kN',
@@ -128,6 +128,7 @@ def zeichne_fachwerk(knoten_pos, staebe, lager_indizes, loslager_indizes=None,
     if stabkraefte is not None:
         ax.plot([], [], color=blau, linewidth=3, label='Zug')
         ax.plot([], [], color=rot, linewidth=3, label='Druck')
+        ax.plot([], [], color='#A6A6A6', linewidth=3, label='kraftlos')
         ax.legend(loc='upper right')
 
     ax.set_title(titel)
@@ -185,8 +186,9 @@ Halten Sie bei der Stabliste die Reihenfolge aus der Tabelle ein. Zeichnen Sie
 das Fachwerk mit `zeichne_fachwerk` und vergleichen Sie den Plot mit der
 Skizze.
 
-Beantworten Sie außerdem: Wie viele Freiheitsgrade hat die Konsole, und an
-welchem Index von `kraft_vektor` steht die Last?
+Beantworten Sie außerdem: Wie viele Freiheitsgrade hat die Konsole, wenn wir
+die Lager zunächst weglassen, und an welchem Index von `kraft_vektor` steht die
+Last?
 ```
 
 ```{code-cell} python
@@ -228,8 +230,9 @@ zeichne_fachwerk(knoten_pos, staebe, lager_indizes, kraft_vektor=kraft_vektor,
                  titel='Wandkonsole')
 ```
 Die Konsole hat fünf Knoten mit je zwei Freiheitsgraden, also zehn
-Freiheitsgrade. Die Last wirkt an Knoten 4 in $y$-Richtung und steht deshalb
-an Index $2 \cdot 4 + 1 = 9$. Das Minuszeichen bedeutet, dass die Kraft nach
+Freiheitsgrade. Die beiden Festlager sperren davon vier, es bleiben sechs
+freie Freiheitsgrade. Das brauchen wir in Kapitel 4.3. Die Last wirkt an
+Knoten 4 in $y$-Richtung und steht deshalb an Index $2 \cdot 4 + 1 = 9$. Das Minuszeichen bedeutet, dass die Kraft nach
 unten zeigt.
 ````
 
@@ -393,8 +396,13 @@ an der Wand befestigt. Eine solche freie Konsole können wir als Ganzes nach
 rechts oder links schieben, nach oben oder unten schieben oder ein kleines
 Stück drehen. Bei all diesen Bewegungen ändert sich keine Stablänge, also
 entsteht auch keine Kraft. Zu einer gegebenen Last gibt es dann keine
-eindeutige Verschiebung, und genau das zeigt die Determinante null an. In
-Kapitel 4.3 bauen wir die Lager in das Gleichungssystem ein.
+eindeutige Verschiebung, und genau das zeigt die Determinante null an.
+
+Bei dieser Konsole gibt es noch eine vierte Bewegung. An Knoten 0 hängt nur
+der waagerechte Stab 0, deshalb kann sich Knoten 0 ein kleines Stück
+senkrecht bewegen, ohne dass sich eine Stablänge ändert. Das Festlager an
+Knoten 0 verhindert das später. In Kapitel 4.3 bauen wir die Lager in das
+Gleichungssystem ein.
 ````
 
 ```{admonition} Zusatzaufgabe: Drehen, ohne dass eine Kraft entsteht (✩✩✩)
@@ -447,8 +455,9 @@ negativer Rundungsfehler, der auf null gerundet wurde. Bei der
 Verschiebung von Knoten 4 entstehen dagegen Kräfte von mehreren tausend
 Newton an den Knoten 3 und 4. Der Grund: Bei der Drehung verschieben sich die
 beiden Enden jedes Stabs gegeneinander nur senkrecht zur Stabachse. Deshalb
-bleiben alle Stablängen gleich, und kein Stab wird gedehnt oder gestaucht. Die Drehung ist neben den beiden Verschiebungen in $x$ und $y$ die
-dritte Bewegung, die ein ebenes Fachwerk ohne Lager kraftfrei ausführen kann.
-Im Plot sieht man außerdem, wie sich die Konsole von ihren Lagern löst: Die
-Matrix `K` weiß noch nichts von der Wand.
+bleiben alle Stablängen gleich, und kein Stab wird gedehnt oder gestaucht.
+Die Drehung ist neben den beiden Verschiebungen in $x$ und $y$ die dritte
+Bewegung, die ein ebenes Fachwerk ohne Lager als Ganzes kraftfrei ausführen
+kann. Im Plot sehen wir außerdem, wie sich die Konsole von ihren Lagern löst:
+Die Matrix `K` weiß noch nichts von der Wand.
 ````

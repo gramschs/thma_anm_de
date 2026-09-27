@@ -8,9 +8,10 @@ kernelspec:
 
 In Kapitel 4.1 haben wir die Steifigkeitsmatrix des Kranauslegers aufgebaut,
 in Kapitel 4.2 die einer Wandkonsole. Beide Male war die Matrix singulär,
-weil die Lager noch fehlten. In diesem Kapitel bauen wir die Lager ein und
-lösen das Gleichungssystem. *Wie weit senkt sich die Spitze des Kranauslegers
-unter der Last ab, und hält die Konstruktion die Last überhaupt aus?*
+weil die Lager im Gleichungssystem noch fehlten. In diesem Kapitel bauen wir
+die Lager ein und lösen das Gleichungssystem. *Wie weit senkt sich die Spitze
+des Kranauslegers unter der Last ab, und hält die Konstruktion die Last
+überhaupt aus?*
 
 ## Lernziele
 
@@ -52,7 +53,7 @@ def zeichne_fachwerk(knoten_pos, staebe, lager_indizes, loslager_indizes=None,
     """
     blau, rot, orange, grau = '#005A94', '#E60000', '#E87846', '#484949'
     anzahl_knoten = len(knoten_pos)
-    spannweite = np.max(knoten_pos) - np.min(knoten_pos)
+    spannweite = np.max(np.ptp(knoten_pos, axis=0))   # größere Ausdehnung in x oder y
     fig, ax = plt.subplots(figsize=(8, 4.5))
 
     # Knotenpositionen: Ausgangslage oder überhöht verformte Lage
@@ -69,7 +70,7 @@ def zeichne_fachwerk(knoten_pos, staebe, lager_indizes, loslager_indizes=None,
         farbe = blau
         if stabkraefte is not None:
             farbe = blau if stabkraefte[s] >= 0 else rot
-            if abs(stabkraefte[s]) < 1e-6 * np.max(np.abs(stabkraefte)):
+            if abs(stabkraefte[s]) <= 1e-6 * np.max(np.abs(stabkraefte)):
                 farbe = '#A6A6A6'   # hellgrau: Stab ohne Kraft (Rundungsfehler ignorieren)
             mitte = 0.5 * (pos[i] + pos[j])
             ax.text(mitte[0], mitte[1], f' {stabkraefte[s] / 1000:.2f} kN',
@@ -110,6 +111,7 @@ def zeichne_fachwerk(knoten_pos, staebe, lager_indizes, loslager_indizes=None,
     if stabkraefte is not None:
         ax.plot([], [], color=blau, linewidth=3, label='Zug')
         ax.plot([], [], color=rot, linewidth=3, label='Druck')
+        ax.plot([], [], color='#A6A6A6', linewidth=3, label='kraftlos')
         ax.legend(loc='upper right')
 
     ax.set_title(titel)
@@ -210,7 +212,10 @@ In `K_lager` sind die Zeilen 0, 1, 4 und 5 ersetzt. Jede dieser Zeilen
 enthält nur noch eine Eins auf der Diagonalen, auf der rechten Seite steht
 eine Null. Die Zeile sagt also schlicht $u_d = 0$. In der umgerechneten Matrix
 erscheinen die Einsen als `0.`, weil wir alle Einträge mit $10^{-6}$
-multiplizieren. Die letzte Ausgabe zeigt Zeile 0 ohne Umrechnung. Die Determinante ist jetzt nicht mehr null, das System ist lösbar.
+multiplizieren. Die letzte Ausgabe zeigt Zeile 0 ohne Umrechnung. Die
+Determinante ist jetzt nicht mehr null, das System ist lösbar. Weil wir nur
+Zeilen ersetzt haben, ist `K_lager` nicht mehr symmetrisch. Für
+`np.linalg.solve` spielt das keine Rolle.
 
 Die Methode `.copy()` ist wichtig. Ohne sie würden `K_lager` und `K`
 dasselbe Array bezeichnen, und wir würden die ursprüngliche
@@ -300,8 +305,8 @@ einfach durch dieselbe Steifigkeit geteilt.
 ## Welche Kräfte wirken in den Lagern und in den Stäben?
 
 Die Verschiebungen kennen wir jetzt. Setzen wir sie in die ursprüngliche
-Gleichung $\vec{F} = \mathbf{K} \cdot \vec{u}$ ein, erhalten wir die Kräfte an
-allen Knoten.
+Gleichung $\vec{F} = \mathbf{K} \cdot \vec{u}$ ein, erhalten wir die äußeren
+Kräfte an allen Knoten.
 
 ```{code-cell} python
 # Knotenkräfte aus der ursprünglichen Steifigkeitsmatrix
@@ -370,7 +375,12 @@ stabkraefte = berechne_stabkraefte(knoten_pos, staebe, elastizitaetsmodul,
                                    querschnitt, u)
 
 for s in range(len(staebe)):
-    art = 'Zug' if stabkraefte[s] > 0 else 'Druck'
+    if abs(stabkraefte[s]) < 1e-6:   # unter 1 µN: nur Rundungsfehler
+        art = 'kraftlos'
+    elif stabkraefte[s] > 0:
+        art = 'Zug'
+    else:
+        art = 'Druck'
     print(f'Stab {s}: N = {stabkraefte[s]:8.1f} N  ({art})')
 ```
 
@@ -535,7 +545,8 @@ Mit `skalierung=1` liegen verformte und unverformte Lage praktisch
 Mit $2\,\text{cm}$ Durchmesser sinkt die Spannung auf rund
 $11\,\text{N/mm}^2$, und die Knicklast steigt auf rund $8139\,\text{N}$. Sie
 liegt jetzt deutlich über der Druckkraft von $3536\,\text{N}$, der
-Kranausleger hält.
+Kranausleger hält nach diesem vereinfachten Nachweis. Eine Bemessung nach
+Norm berücksichtigt zusätzlich Sicherheitsbeiwerte und Imperfektionen.
 
 Der doppelte Durchmesser vervierfacht den Querschnitt und damit die
 Steifigkeit $k = EA/L$. Deshalb sinkt die Absenkung auf ein Viertel. Die

@@ -123,7 +123,7 @@ def zeichne_fachwerk(knoten_pos, staebe, lager_indizes, loslager_indizes=None,
     """
     blau, rot, orange, grau = '#005A94', '#E60000', '#E87846', '#484949'
     anzahl_knoten = len(knoten_pos)
-    spannweite = np.max(knoten_pos) - np.min(knoten_pos)
+    spannweite = np.max(np.ptp(knoten_pos, axis=0))   # größere Ausdehnung in x oder y
     fig, ax = plt.subplots(figsize=(8, 4.5))
 
     # Knotenpositionen: Ausgangslage oder überhöht verformte Lage
@@ -140,7 +140,7 @@ def zeichne_fachwerk(knoten_pos, staebe, lager_indizes, loslager_indizes=None,
         farbe = blau
         if stabkraefte is not None:
             farbe = blau if stabkraefte[s] >= 0 else rot
-            if abs(stabkraefte[s]) < 1e-6 * np.max(np.abs(stabkraefte)):
+            if abs(stabkraefte[s]) <= 1e-6 * np.max(np.abs(stabkraefte)):
                 farbe = '#A6A6A6'   # hellgrau: Stab ohne Kraft (Rundungsfehler ignorieren)
             mitte = 0.5 * (pos[i] + pos[j])
             ax.text(mitte[0], mitte[1], f' {stabkraefte[s] / 1000:.2f} kN',
@@ -181,6 +181,7 @@ def zeichne_fachwerk(knoten_pos, staebe, lager_indizes, loslager_indizes=None,
     if stabkraefte is not None:
         ax.plot([], [], color=blau, linewidth=3, label='Zug')
         ax.plot([], [], color=rot, linewidth=3, label='Druck')
+        ax.plot([], [], color='#A6A6A6', linewidth=3, label='kraftlos')
         ax.legend(loc='upper right')
 
     ax.set_title(titel)
@@ -291,7 +292,7 @@ Federkonstanten $k = EA/L$.
 (Quelle: eigene Abbildung; Lizenz [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0))
 ```
 
-Anders als eine Feder auf dem Tisch liegt unser Stab schräg im Raum. Er
+Anders als eine Feder auf dem Tisch liegt unser Stab schräg in der Ebene. Er
 überträgt nur Kräfte in Richtung seiner Achse. Diese Richtung beschreiben wir
 durch den **Einheitsvektor** $\vec{e}$, den Differenzvektor geteilt durch die
 Stablänge. Was passiert, wenn sich Knoten 1 um $1\,\text{mm}$ nach unten
@@ -307,12 +308,12 @@ verschiebung_knoten1 = np.array([0.0, -0.001])   # in m
 # Längenänderung: nur der Anteil der Verschiebung in Stabrichtung zählt
 delta_l = e[0] * verschiebung_knoten1[0] + e[1] * verschiebung_knoten1[1]
 
-# Kraft an Knoten 1, die diese Verschiebung erzeugt: Betrag k * delta_l, Richtung e
+# äußere Kraft an Knoten 1, die diese Verschiebung erzeugt: Betrag k * delta_l, Richtung e
 kraft_knoten1 = k * delta_l * e
 
-print(f'Einheitsvektor e:  {e}')
-print(f'Längenänderung:    {delta_l * 1000:.4f} mm')
-print(f'Kraft an Knoten 1: {kraft_knoten1} N')
+print(f'Einheitsvektor e:          {e}')
+print(f'Längenänderung:            {delta_l * 1000:.4f} mm')
+print(f'äußere Kraft an Knoten 1:  {kraft_knoten1} N')
 ```
 
 Der Stab wird nur um rund $0.71\,\text{mm}$ kürzer, nicht um den vollen
@@ -320,7 +321,9 @@ Millimeter. Der Grund: Die Verschiebung zeigt senkrecht nach unten, der Stab
 aber schräg nach oben. Nur der Anteil der Verschiebung in Stabrichtung ändert
 die Länge. Die Kraft zeigt wieder in Stabrichtung, und zwar nach links unten:
 Sie drückt den Stab zusammen. Deshalb hat sie auch eine $x$-Komponente, obwohl
-sich der Knoten gar nicht seitlich bewegt.
+sich der Knoten gar nicht seitlich bewegt. Das ist die äußere Kraft, die nötig
+ist, um Knoten 1 so zu verschieben. Der Stab übt auf den Knoten die gleich
+große, entgegengesetzte Kraft aus.
 
 ```{figure} pics/chap04_stabgeometrie.svg
 :alt: Stab 0 des Kranauslegers mit Länge L, Winkel phi und den Komponenten Delta x und Delta y
@@ -512,13 +515,15 @@ print('K @ u_starr:', K @ u_starr, 'N')
 ```
 
 Die Determinante ist null oder im Rahmen der Rundungsfehler winzig. Die Matrix
-ist also **singulär**. Die zweite Rechnung zeigt den Grund: Verschieben wir
+ist also **singulär**. Die zweite Rechnung zeigt einen Grund: Verschieben wir
 das ganze Fachwerk, ändert sich keine Stablänge, und es entsteht keine Kraft.
 Die ausgegebenen Werte in der Größenordnung von $10^{-13}\,\text{N}$ sind
-Rundungsfehler, physikalisch ist das null.
+Rundungsfehler, physikalisch ist das null. Das Verschieben nach rechts ist
+nicht die einzige solche Bewegung. In Kapitel 4.2 lernen wir weitere kennen.
 Ohne Lager könnte das Fachwerk wegrutschen, und zu einer Last gäbe es keine
-eindeutige Verschiebung. Die Lager fehlen in $\mathbf{K}$ noch. Wir bauen sie
-in Kapitel 4.3 ein.
+eindeutige Verschiebung. Die Lager sind im Gleichungssystem noch nicht
+berücksichtigt. In Kapitel 4.3 geben wir an den Lagerknoten die Verschiebung
+null vor.
 
 ```{admonition} Mini-Übung (✩)
 :class: tip
@@ -571,9 +576,10 @@ Knoten hat zwei Freiheitsgrade, Knoten $n$ belegt die Indizes $2n$ und $2n+1$.
 Jeder Stab wirkt wie eine Feder mit der Steifigkeit $k = EA/L$ und liefert
 einen $2 \times 2$-Steifigkeitsblock. Die Funktion `baue_steifigkeitsmatrix`
 setzt alle Blöcke zur Steifigkeitsmatrix $\mathbf{K}$ zusammen. Ohne Lager ist
-$\mathbf{K}$ singulär, weil das Fachwerk als Ganzes verschoben werden könnte.
+$\mathbf{K}$ singulär, weil sich das Fachwerk bewegen kann, ohne dass eine
+Kraft entsteht.
 
 Im nächsten Kapitel wenden wir die Funktion in Partnerarbeit auf ein größeres
-Fachwerk an, eine Wandkonsole für eine Rohrleitung. In Kapitel 4.3 bauen wir anschließend die Lager ein,
-lösen das Gleichungssystem und berechnen, wie weit sich die Spitze des
-Kranauslegers absenkt.
+Fachwerk an, eine Wandkonsole für eine Rohrleitung. In Kapitel 4.3 bauen wir
+anschließend die Lager ein, lösen das Gleichungssystem und berechnen, wie weit
+sich die Spitze des Kranauslegers absenkt.
