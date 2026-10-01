@@ -111,7 +111,7 @@ print('eindeutig lösbar:', not np.isclose(det_A, 0.0))
 ```
 Die Determinante ist 4.0 und damit ungleich null. Das System hat genau eine
 Lösung. Der Träger ist **statisch bestimmt**: Er hat genau so viele
-Auflagerreaktionen, wie zur Fesselung nötig sind.
+Auflagerreaktionen, wie zur Festlegung nötig sind.
 ````
 
 ```{admonition} Teil 3: Lösen und Probe
@@ -184,7 +184,7 @@ setzt also stillschweigend voraus, dass das Festlager Kräfte in beide
 Richtungen aufnehmen kann.
 ````
 
-````{admonition} Zusatzaufgabe: Ein Träger ohne waagerechte Fesselung (✩✩✩)
+````{admonition} Zusatzaufgabe: Ein Träger ohne waagerechte Abstützung (✩✩✩)
 :class: tip
 Jetzt sind **beide** Lager Loslager, die nur senkrechte Kräfte aufnehmen. Es
 gibt daher nur noch zwei unbekannte Auflagerkräfte, $A_y$ und $B_y$, aber
@@ -234,10 +234,9 @@ Die erste Gleichung lautet $0 \cdot A_y + 0 \cdot B_y = -6$, also $0 = -6$.
 Das ist ein Widerspruch, keine Wahl von $A_y$ und $B_y$ kann ihn erfüllen. Das
 System hat **keine Lösung**.
 
-Physikalisch heißt das: Auf den Träger wirkt mit der waagerechten
-Seilkomponente eine Kraft von $6\,\text{kN}$ nach rechts, aber keines der
-beiden Loslager kann eine waagerechte Gegenkraft aufbringen. Der Träger würde
-nach rechts wegrutschen, er ist ein **verschiebliches System** und nicht im
-Gleichgewicht. Für die statische Berechnung brauchen wir mindestens ein Lager,
-das waagerechte Kräfte aufnimmt.
+Physikalisch heißt das: Auf den Träger wirkt mit der waagerechten Seilkomponente
+eine Kraft von $6\,\text{kN}$ nach rechts, aber keines der beiden Loslager kann
+eine waagerechte Gegenkraft aufbringen. Der Träger würde nach rechts
+wegrutschen, er ist nicht im Gleichgewicht. Für die statische Berechnung
+brauchen wir mindestens ein Lager, das waagerechte Kräfte aufnimmt.
 ````
