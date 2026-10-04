@@ -245,8 +245,8 @@ eine Lösung. Miete kostet 1080 Euro im Monat, Strom und Internet je 880 Euro.
 ```{admonition} Aufgabe 3.5 (✩✩)
 :class: tip
 Ein waagerechter Träger der Länge $L = 6\,\text{m}$ ist links in A durch ein
-Festlager, rechts in B durch ein Loslager gelagert. Das Festlager nimmt $A_x$
-(waagerecht) und $A_y$ (senkrecht) auf, das Loslager nur $B_y$. Auf den Träger
+Festlager, rechts in B durch ein Loslager gelagert. Das Festlager nimmt $F_{Ax}$
+(waagerecht) und $F_{Ay}$ (senkrecht) auf, das Loslager nur $F_{By}$. Auf den Träger
 wirken:
 
 * eine waagerechte Kraft $H = 3\,\text{kN}$ nach rechts auf Höhe der
@@ -260,10 +260,10 @@ wirken:
    $\sum F_y = 0$, $\sum M_A = 0$; Kräfte nach rechts und oben positiv, Momente
    gegen den Uhrzeigersinn positiv).
 2. Schreiben Sie sie als $\mathbf{A} \cdot \vec{x} = \vec{b}$ mit
-   $\vec{x} = (A_x,\ A_y,\ B_y)^\top$, prüfen Sie die Determinante und lösen
+   $\vec{x} = (F_{Ax},\ F_{Ay},\ F_{By})^\top$, prüfen Sie die Determinante und lösen
    Sie das System.
 3. Geben Sie die drei Auflagerkräfte aus und deuten Sie das Vorzeichen von
-   $A_x$.
+   $F_{Ax}$.
 
 Strukturieren Sie Ihren Code mit EVA-Kommentaren.
 ```
@@ -279,9 +279,9 @@ Strukturieren Sie Ihren Code mit EVA-Kommentaren.
 import numpy as np
 
 # Eingabe
-# Summe Fx:  A_x + 3 = 0
-# Summe Fy:  A_y + B_y - 6 - 3 = 0   ->   A_y + B_y = 9
-# Summe M_A: 6*B_y - 6*2 - 3*4 = 0   ->   6*B_y = 24
+# Summe Fx:  F_Ax + 3 = 0
+# Summe Fy:  F_Ay + F_By - 6 - 3 = 0   ->   F_Ay + F_By = 9
+# Summe M_A: 6*F_By - 6*2 - 3*4 = 0   ->   6*F_By = 24
 A = np.array([
     [1.0, 0.0, 0.0],
     [0.0, 1.0, 1.0],
@@ -295,21 +295,21 @@ x = np.linalg.solve(A, b)
 
 # Ausgabe
 print(f'Determinante: {det_A:.1f}')
-print(f'A_x = {x[0]:.1f} kN')
-print(f'A_y = {x[1]:.1f} kN')
-print(f'B_y = {x[2]:.1f} kN')
+print(f'F_Ax = {x[0]:.1f} kN')
+print(f'F_Ay = {x[1]:.1f} kN')
+print(f'F_By = {x[2]:.1f} kN')
 print('Probe bestanden:', np.allclose(A @ x, b))
 ```
 Ausgabe:
 ```
 Determinante: 6.0
-A_x = -3.0 kN
-A_y = 5.0 kN
-B_y = 4.0 kN
+F_Ax = -3.0 kN
+F_Ay = 5.0 kN
+F_By = 4.0 kN
 Probe bestanden: True
 ```
 Die Determinante ist 6.0, das System ist eindeutig lösbar. Das negative
-Vorzeichen von $A_x$ bedeutet, dass die waagerechte Auflagerkraft mit
+Vorzeichen von $F_{Ax}$ bedeutet, dass die waagerechte Auflagerkraft mit
 $3\,\text{kN}$ nach links zeigt, entgegen der angesetzten Richtung. Sie hält
 der waagerechten Kraft $H$ das Gleichgewicht.
 ````

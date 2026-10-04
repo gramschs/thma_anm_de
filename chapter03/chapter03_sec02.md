@@ -26,8 +26,8 @@ Träger mit Fest- und Loslager, Seilkraft und Last $F$.
 :class: tip
 Ein waagerechter Träger der Länge $L = 4\,\text{m}$ ist links im Punkt A durch
 ein **Festlager** und rechts im Punkt B durch ein **Loslager** gelagert. Das
-Festlager kann eine waagerechte Kraft $A_x$ und eine senkrechte Kraft $A_y$
-aufnehmen, das Loslager nur eine senkrechte Kraft $B_y$. Die x-Achse zeigt nach
+Festlager kann eine waagerechte Kraft $F_{Ax}$ und eine senkrechte Kraft $F_{Ay}$
+aufnehmen, das Loslager nur eine senkrechte Kraft $F_{By}$. Die x-Achse zeigt nach
 rechts, die y-Achse nach oben, der Ursprung liegt in A.
 
 Auf den Träger wirken:
@@ -37,7 +37,7 @@ Auf den Träger wirken:
 * eine **Last** $F = 12\,\text{kN}$ senkrecht nach unten im Abstand
   $3\,\text{m}$ von A.
 
-Gesucht sind die drei Auflagerkräfte $A_x$, $A_y$ und $B_y$.
+Gesucht sind die drei Auflagerkräfte $F_{Ax}$, $F_{Ay}$ und $F_{By}$.
 ```
 
 ```{admonition} Teil 1: Gleichgewichtsbedingungen aufstellen
@@ -62,15 +62,15 @@ um A.
 :class: dropdown
 Summe der waagerechten Kräfte:
 
-$$A_x + 6 = 0$$
+$$F_{Ax} + 6 = 0$$
 
 Summe der senkrechten Kräfte:
 
-$$A_y + B_y + 8 - 12 = 0 \quad\Longrightarrow\quad A_y + B_y = 4$$
+$$F_{Ay} + F_{By} + 8 - 12 = 0 \quad\Longrightarrow\quad F_{Ay} + F_{By} = 4$$
 
 Summe der Momente um A (Hebelarm mal Kraft, gegen den Uhrzeigersinn positiv):
 
-$$4 \cdot B_y + 1 \cdot 8 - 3 \cdot 12 = 0 \quad\Longrightarrow\quad 4\,B_y = 28$$
+$$4 \cdot F_{By} + 1 \cdot 8 - 3 \cdot 12 = 0 \quad\Longrightarrow\quad 4\,F_{By} = 28$$
 
 Die senkrechte Seilkomponente ($8\,\text{kN}$ nach oben im Abstand $1\,\text{m}$)
 erzeugt ein positives Moment, die Last ($12\,\text{kN}$ nach unten im Abstand
@@ -81,7 +81,7 @@ $3\,\text{m}$) ein negatives.
 :class: tip
 Fassen Sie die drei Gleichungen aus Teil 1 zur Matrixgleichung
 $\mathbf{A} \cdot \vec{x} = \vec{b}$ zusammen, mit dem Unbekanntenvektor
-$\vec{x} = (A_x,\ A_y,\ B_y)^\top$. Legen Sie `A` als zweidimensionales Array
+$\vec{x} = (F_{Ax},\ F_{Ay},\ F_{By})^\top$. Legen Sie `A` als zweidimensionales Array
 und `b` als eindimensionales Array an und prüfen Sie mit der Determinante, ob
 das System eine eindeutige Lösung hat.
 ```
@@ -96,11 +96,11 @@ das System eine eindeutige Lösung hat.
 ```python
 import numpy as np
 
-# Unbekannte: x = [A_x, A_y, B_y]
+# Unbekannte: x = [F_Ax, F_Ay, F_By]
 A = np.array([
-    [1, 0, 0],   # Summe Fx:  1*A_x + 0*A_y + 0*B_y = -6
-    [0, 1, 1],   # Summe Fy:  0*A_x + 1*A_y + 1*B_y =  4
-    [0, 0, 4],   # Summe M_A: 0*A_x + 0*A_y + 4*B_y = 28
+    [1, 0, 0],   # Summe Fx:  1*F_Ax + 0*F_Ay + 0*F_By = -6
+    [0, 1, 1],   # Summe Fy:  0*F_Ax + 1*F_Ay + 1*F_By =  4
+    [0, 0, 4],   # Summe M_A: 0*F_Ax + 0*F_Ay + 4*F_By = 28
 ], dtype=float)
 
 b = np.array([-6.0, 4.0, 28.0])
@@ -130,34 +130,34 @@ einer Probe ab. Geben Sie die drei Auflagerkräfte in kN aus.
 ```python
 x = np.linalg.solve(A, b)
 
-print(f'A_x = {x[0]:.1f} kN')
-print(f'A_y = {x[1]:.1f} kN')
-print(f'B_y = {x[2]:.1f} kN')
+print(f'F_Ax = {x[0]:.1f} kN')
+print(f'F_Ay = {x[1]:.1f} kN')
+print(f'F_By = {x[2]:.1f} kN')
 
 print('Probe bestanden:', np.allclose(A @ x, b))
 ```
-Die Lösung lautet $A_x = -6.0\,\text{kN}$, $A_y = -3.0\,\text{kN}$,
-$B_y = 7.0\,\text{kN}$. Die Probe ist bestanden.
+Die Lösung lautet $F_{Ax} = -6.0\,\text{kN}$, $F_{Ay} = -3.0\,\text{kN}$,
+$F_{By} = 7.0\,\text{kN}$. Die Probe ist bestanden.
 ````
 
 ```{admonition} Teil 4: Ergebnis interpretieren
 :class: tip
 Beantworten Sie in eigenen Worten:
 
-1. Was bedeutet das negative Vorzeichen von $A_x$ für die Richtung der
+1. Was bedeutet das negative Vorzeichen von $F_{Ax}$ für die Richtung der
    waagerechten Auflagerkraft?
-2. Auch $A_y$ ist negativ. In welche Richtung zeigt die senkrechte
+2. Auch $F_{Ay}$ ist negativ. In welche Richtung zeigt die senkrechte
    Auflagerkraft am Festlager, und wie passt das zur angreifenden Seilkraft?
 ```
 
 ````{admonition} Lösung Teil 4
 :class: tip
 :class: dropdown
-1. Wir hatten $A_x$ als Kraft nach rechts angesetzt. Das Ergebnis
-   $A_x = -6\,\text{kN}$ bedeutet, dass die tatsächliche Auflagerkraft mit
+1. Wir hatten $F_{Ax}$ als Kraft nach rechts angesetzt. Das Ergebnis
+   $F_{Ax} = -6\,\text{kN}$ bedeutet, dass die tatsächliche Auflagerkraft mit
    $6\,\text{kN}$ nach links zeigt. Sie hält der waagerechten Seilkomponente
    das Gleichgewicht.
-2. $A_y = -3\,\text{kN}$ bedeutet, dass die senkrechte Auflagerkraft am
+2. $F_{Ay} = -3\,\text{kN}$ bedeutet, dass die senkrechte Auflagerkraft am
    Festlager nach unten zeigt. Das Festlager hält den Träger an dieser Stelle
    also fest. Der Grund ist die Seilkraft: Sie zieht mit $8\,\text{kN}$ nach
    oben, das ist in der Nähe von A mehr, als zum Gleichgewicht nötig wäre, und
@@ -176,7 +176,7 @@ Teil 3.
 :class: tip
 :class: dropdown
 Aus Teil 3 wissen wir, dass die senkrechte Auflagerkraft bei A nach unten
-zeigt ($A_y = -3\,\text{kN}$). Ein Loslager, das nur drücken kann, ist dazu
+zeigt ($F_{Ay} = -3\,\text{kN}$). Ein Loslager, das nur drücken kann, ist dazu
 nicht in der Lage. Der Träger würde bei A abheben und sich um das Lager B
 drehen, bis er an einem anderen Bauteil anschlägt oder herunterfällt. Er wäre
 nicht mehr im Gleichgewicht. Das rechnerische Modell mit drei Unbekannten
@@ -187,7 +187,7 @@ Richtungen aufnehmen kann.
 ````{admonition} Zusatzaufgabe: Ein Träger ohne waagerechte Abstützung (✩✩✩)
 :class: tip
 Jetzt sind **beide** Lager Loslager, die nur senkrechte Kräfte aufnehmen. Es
-gibt daher nur noch zwei unbekannte Auflagerkräfte, $A_y$ und $B_y$, aber
+gibt daher nur noch zwei unbekannte Auflagerkräfte, $F_{Ay}$ und $F_{By}$, aber
 weiterhin drei Gleichgewichtsbedingungen. Die Belastung bleibt unverändert.
 
 1. Schreiben Sie die drei Gleichungen mit den zwei Unbekannten als
@@ -211,11 +211,11 @@ weiterhin drei Gleichgewichtsbedingungen. Die Belastung bleibt unverändert.
 ```python
 import numpy as np
 
-# Unbekannte: x = [A_y, B_y]
+# Unbekannte: x = [F_Ay, F_By]
 A = np.array([
-    [0, 0],   # Summe Fx:  0*A_y + 0*B_y = -6
-    [1, 1],   # Summe Fy:  1*A_y + 1*B_y =  4
-    [0, 4],   # Summe M_A: 0*A_y + 4*B_y = 28
+    [0, 0],   # Summe Fx:  0*F_Ay + 0*F_By = -6
+    [1, 1],   # Summe Fy:  1*F_Ay + 1*F_By =  4
+    [0, 4],   # Summe M_A: 0*F_Ay + 4*F_By = 28
 ], dtype=float)
 
 b = np.array([-6.0, 4.0, 28.0])
@@ -230,8 +230,8 @@ except np.linalg.LinAlgError as fehler:
 `np.linalg.solve` verlangt eine quadratische Matrix und bricht bei der
 Form `(3, 2)` mit einem `LinAlgError` ab.
 
-Die erste Gleichung lautet $0 \cdot A_y + 0 \cdot B_y = -6$, also $0 = -6$.
-Das ist ein Widerspruch, keine Wahl von $A_y$ und $B_y$ kann ihn erfüllen. Das
+Die erste Gleichung lautet $0 \cdot F_{Ay} + 0 \cdot F_{By} = -6$, also $0 = -6$.
+Das ist ein Widerspruch, keine Wahl von $F_{Ay}$ und $F_{By}$ kann ihn erfüllen. Das
 System hat **keine Lösung**.
 
 Physikalisch heißt das: Auf den Träger wirkt mit der waagerechten Seilkomponente
