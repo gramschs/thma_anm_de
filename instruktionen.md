@@ -648,7 +648,7 @@ SVG-Dateien werden im Unterordner `pics/` abgelegt und mit der
 :align: center
 
 Darstellung von [was die Abbildung zeigt].
-(Quelle: eigene Abbildung; Lizenz [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0))
+(Quelle: eigene Abbildung; Lizenz [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0))
 ```
 ````
 

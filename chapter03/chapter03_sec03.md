@@ -44,8 +44,8 @@ Temperaturprofil einer Mehrschichtwand im stationären Zustand (schematische
 Darstellung bei gleicher geometrischer Schichtdicke). Da der Wärmestrom durch
 alle Schichten gleich ist, ist die Steigung des Temperaturprofils proportional
 zum thermischen Widerstand der jeweiligen Schicht, in Schicht C am steilsten, in
-Schicht B am flachsten. (Quelle: eigene Abbildung; Lizenz [CC BY-SA
-4.0](https://creativecommons.org/licenses/by-sa/4.0))
+Schicht B am flachsten. (Quelle: eigene Abbildung; Lizenz [CC BY-NC-SA
+4.0](https://creativecommons.org/licenses/by-nc-sa/4.0))
 ```
 
 Im **stationären Zustand** ist der Wärmestrom $Q$ durch alle Schichten gleich

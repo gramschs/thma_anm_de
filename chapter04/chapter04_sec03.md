@@ -6,12 +6,12 @@ kernelspec:
 
 # 4.3 Verschiebungen und Kräfte im Fachwerk
 
-In Kapitel 4.1 haben wir die Steifigkeitsmatrix des Kranauslegers aufgebaut,
-in Kapitel 4.2 die einer Wandkonsole. Beide Male war die Matrix singulär,
-weil die Lager im Gleichungssystem noch fehlten. In diesem Kapitel bauen wir
-die Lager ein und lösen das Gleichungssystem. *Wie weit senkt sich die Spitze
-des Kranauslegers unter der Last ab, und hält die Konstruktion die Last
-überhaupt aus?*
+In Kapitel 4.1 haben wir die Steifigkeitsmatrix des Schaukelgestells
+aufgebaut, in Kapitel 4.2 die einer Wandkonsole. Beide Male war die Matrix
+singulär, weil die Lager im Gleichungssystem noch fehlten. In diesem Kapitel
+bauen wir die Lager ein und lösen das Gleichungssystem. *Wie weit senkt sich
+die Spitze des Schaukelgestells unter der Last ab, und hält die Konstruktion
+die Last überhaupt aus?*
 
 ## Lernziele
 
@@ -29,7 +29,7 @@ des Kranauslegers unter der Last ab, und hält die Konstruktion die Last
 
 ## Lager einbauen und das Gleichungssystem lösen
 
-Wir übernehmen den Kranausleger und die Funktion `baue_steifigkeitsmatrix`
+Wir übernehmen das Schaukelgestell und die Funktion `baue_steifigkeitsmatrix`
 aus Kapitel 4.1. Die erste Zelle enthält wieder die vorgegebene
 Zeichenfunktion.
 
@@ -163,11 +163,11 @@ def baue_steifigkeitsmatrix(knoten_pos, staebe, elastizitaetsmodul, querschnitt)
 ```
 
 ```{code-cell} python
-# Kranausleger aus Kapitel 4.1
+# Schaukelgestell aus Kapitel 4.1
 knoten_pos = np.array([
-    [0.0, 0.0],   # Knoten 0: linkes Lager
-    [1.0, 1.0],   # Knoten 1: Spitze, hier hängt die Last
-    [2.0, 0.0],   # Knoten 2: rechtes Lager
+    [0.0, 0.0],   # Knoten 0: linker Fuß
+    [1.0, 2.0],   # Knoten 1: Spitze, hier liegt die Querstange auf
+    [2.0, 0.0],   # Knoten 2: rechter Fuß
 ])
 anzahl_knoten = len(knoten_pos)
 lager_indizes = [0, 2]
@@ -176,7 +176,7 @@ staebe = np.array([
     [1, 2],   # Stab 1
 ])
 kraft_vektor = np.zeros(2 * anzahl_knoten)
-kraft_vektor[3] = -5000.0   # Fy an Knoten 1: 5000 N nach unten
+kraft_vektor[3] = -2000.0   # Fy an Knoten 1: 2000 N nach unten
 
 elastizitaetsmodul = 2.1e11                  # Stahl in N/m²
 durchmesser = 0.01                           # in m
@@ -230,12 +230,13 @@ for n in range(anzahl_knoten):
     print(f'  Knoten {n}: ux = {u[2*n] * 1000:8.4f} mm,  uy = {u[2*n + 1] * 1000:8.4f} mm')
 ```
 
-Die Spitze senkt sich um $0.43\,\text{mm}$ ab und bewegt sich nicht zur Seite.
+Die Spitze senkt sich um $0.17\,\text{mm}$ ab und bewegt sich nicht zur Seite.
 Das passt zur Symmetrie: Beide Stäbe sind gleich und liegen spiegelbildlich,
 die Last zeigt genau nach unten. Den Wert können wir sogar von Hand prüfen.
-In Kapitel 4.1 haben wir gesehen, dass Knoten 1 in beiden Richtungen die
-Steifigkeit $11.66\,\text{kN/mm}$ hat. Also gilt
-$u_y = -5\,\text{kN} / 11.66\,\text{kN/mm} = -0.43\,\text{mm}$.
+In Kapitel 4.1 haben wir gesehen, dass der Block von Knoten 1 nur auf der
+Diagonalen Einträge hat. In $y$-Richtung hat die Spitze die Steifigkeit
+$11.80\,\text{kN/mm}$. Also gilt
+$u_y = -2\,\text{kN} / 11.80\,\text{kN/mm} = -0.17\,\text{mm}$.
 
 Diese Schritte brauchen wir für jedes Fachwerk wieder. Deshalb fassen wir sie
 in einer Funktion zusammen.
@@ -266,13 +267,12 @@ print('Verschiebungsvektor in mm:', np.round(u * 1000, 4))
 :class: tip
 1. Beantworten Sie ohne Code: Welche Zeilen von `K_lager` würden ersetzt,
    wenn nur Knoten 0 gelagert wäre?
-2. An der Spitze greift zusätzlich zur Last eine Seitenkraft von
-   $1000\,\text{N}$ nach rechts an. Legen Sie einen neuen Kraftvektor
+2. Beim Schaukeln greift an der Spitze zusätzlich zur Last eine Seitenkraft
+   von $1200\,\text{N}$ nach rechts an. Legen Sie einen neuen Kraftvektor
    `kraft_vektor_seite` an und berechnen Sie die Verschiebungen mit
    `berechne_verschiebungen`.
-3. Beantworten Sie ohne Code: Die Verschiebungen der Spitze stehen im selben
-   Verhältnis zueinander wie die Kräfte, nämlich $1 : (-5)$. Warum ist das
-   bei diesem Fachwerk so?
+3. Beantworten Sie ohne Code: Die Spitze verschiebt sich weiter zur Seite als
+   nach unten, obwohl die Seitenkraft kleiner ist als die Last. Warum?
 ```
 
 ```{code-cell} python
@@ -285,21 +285,24 @@ print('Verschiebungsvektor in mm:', np.round(u * 1000, 4))
 ```python
 # Teilaufgabe 2: Last und Seitenkraft an Knoten 1
 kraft_vektor_seite = np.zeros(2 * anzahl_knoten)
-kraft_vektor_seite[2] = 1000.0    # Fx an Knoten 1
-kraft_vektor_seite[3] = -5000.0   # Fy an Knoten 1
+kraft_vektor_seite[2] = 1200.0    # Fx an Knoten 1
+kraft_vektor_seite[3] = -2000.0   # Fy an Knoten 1
 
 u_seite = berechne_verschiebungen(K, kraft_vektor_seite, lager_indizes)
 print(f'ux an Knoten 1: {u_seite[2] * 1000:.4f} mm')
 print(f'uy an Knoten 1: {u_seite[3] * 1000:.4f} mm')
 ```
 Wäre nur Knoten 0 gelagert, würden nur die Zeilen 0 und 1 ersetzt. Mit der
-Seitenkraft bewegt sich die Spitze um $0.0857\,\text{mm}$ nach rechts und wie
-bisher um $0.4287\,\text{mm}$ nach unten. Das Verhältnis ist dasselbe wie bei
-den Kräften, weil der Block von Knoten 1 die Form
-$11.66\,\text{kN/mm} \cdot \begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix}$ hat.
-Die Spitze ist in beiden Richtungen gleich steif, und die beiden Richtungen
-beeinflussen sich nicht gegenseitig. Jede Kraftkomponente wird deshalb
-einfach durch dieselbe Steifigkeit geteilt.
+Seitenkraft bewegt sich die Spitze um rund $0.41\,\text{mm}$ nach rechts und
+wie bisher um $0.17\,\text{mm}$ nach unten. Der Block von Knoten 1 lautet
+$\begin{pmatrix} 2.95 & 0 \\ 0 & 11.80 \end{pmatrix}\,\text{kN/mm}$.
+Waagerecht ist die Spitze also viermal weicher als senkrecht. Die Stäbe
+stehen steil, eine waagerechte Verschiebung liegt deshalb fast quer zu ihnen
+und ändert ihre Länge kaum. Weil außerhalb der Diagonalen Nullen stehen,
+beeinflussen sich die beiden Richtungen nicht gegenseitig. Jede
+Kraftkomponente wird durch ihre eigene Steifigkeit geteilt:
+$1.2\,\text{kN} / 2.95\,\text{kN/mm} \approx 0.41\,\text{mm}$ und
+$2\,\text{kN} / 11.80\,\text{kN/mm} \approx 0.17\,\text{mm}$.
 ````
 
 ## Welche Kräfte wirken in den Lagern und in den Stäben?
@@ -324,24 +327,18 @@ An Knoten 1 kommt genau die Last heraus, die wir vorgegeben haben. Das ist
 unsere Probe. An den Lagerknoten 0 und 2 stehen die **Lagerkräfte**, also die
 Kräfte, mit denen die Lager das Fachwerk festhalten. Jedes Lager trägt die
 Hälfte der Last nach oben. Zusätzlich drückt das linke Lager mit
-$2500\,\text{N}$ nach rechts und das rechte mit $2500\,\text{N}$ nach links.
+$500\,\text{N}$ nach rechts und das rechte mit $500\,\text{N}$ nach links.
 Alle Kräfte zusammen ergeben null, das Fachwerk ist im Gleichgewicht wie der
 Träger in Kapitel 3.2. Der Ausdruck `knotenkraefte[0::2]` wählt jeden zweiten
 Eintrag ab Index 0, also alle $x$-Kräfte.
 
 Für die Bemessung wollen wir wissen, wie stark jeder einzelne Stab belastet
 wird. Die **Stabkraft** $N$ folgt direkt aus der Federgleichung von
-Kapitel 4.1: $N = k \cdot \Delta L$. Die Längenänderung $\Delta L$ ist der
-Anteil der Verschiebungen in Stabrichtung, diesmal mit beiden Stabenden.
-
-```{figure} pics/chap04_projektion.svg
-:alt: Stab mit der Verschiebung des Endknotens, zerlegt in einen Anteil entlang der Stabachse und einen Anteil senkrecht dazu
-:align: center
-
-Nur der Anteil $u^{\parallel}$ der Verschiebung entlang der Stabachse
-$\vec{e}$ ändert die Stablänge und erzeugt eine Stabkraft.
-(Quelle: eigene Abbildung; Lizenz [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0))
-```
+Kapitel 4.1: $N = k \cdot \Delta L$. Die Längenänderung $\Delta L$ ist wie in
+der [Abbildung zur Zerlegung der Verschiebung](#fig_chap04_projektion) aus
+Kapitel 4.1 der Anteil der Verschiebung in Stabrichtung. Diesmal können sich
+aber beide Stabenden bewegen. Es zählt deshalb die Verschiebung von Knoten $j$
+gegenüber Knoten $i$, also $\vec{u}_j - \vec{u}_i$.
 
 ```{code-cell} python
 def berechne_stabkraefte(knoten_pos, staebe, elastizitaetsmodul, querschnitt, u):
@@ -384,24 +381,27 @@ for s in range(len(staebe)):
     print(f'Stab {s}: N = {stabkraefte[s]:8.1f} N  ({art})')
 ```
 
-Beide Stäbe tragen $3536\,\text{N}$ auf **Druck**. Eine positive Stabkraft
+Beide Stäbe tragen $1118\,\text{N}$ auf **Druck**. Eine positive Stabkraft
 bedeutet Zug, der Stab wird länger. Eine negative Stabkraft bedeutet Druck,
 der Stab wird kürzer. Das Ergebnis ist plausibel: Die Last drückt die Spitze
 nach unten, die Spitze rückt näher an die beiden Lager heran, und beide Stäbe
 werden gestaucht. Dass die Stabkraft größer ist als die halbe Last, liegt an
-der Schräglage. Jeder Stab muss $2500\,\text{N}$ in senkrechter Richtung
-tragen, und bei $45°$ ist die Kraft entlang des Stabs um den Faktor
-$\sqrt{2}$ größer: $2500\,\text{N} \cdot \sqrt{2} \approx 3536\,\text{N}$.
+der Schräglage. Jeder Stab muss $1000\,\text{N}$ in senkrechter Richtung
+tragen. Von seiner Kraft zeigt aber nur der Anteil
+$\sin\varphi = 2/\sqrt{5} \approx 0.894$ nach oben. Die Stabkraft ist deshalb
+größer: $1000\,\text{N} / 0.894 \approx 1118\,\text{N}$.
 
 ```{admonition} Mini-Übung (✩)
 :class: tip
 1. Beantworten Sie ohne Code: Warum drückt das linke Lager nach rechts und
    nicht nach links?
 2. Berechnen Sie die Stabkräfte für den Kraftvektor mit Seitenkraft aus der
-   letzten Mini-Übung (Last $5000\,\text{N}$ nach unten und $1000\,\text{N}$
-   nach rechts an Knoten 1). Welcher Stab wird stärker belastet?
-3. Beantworten Sie ohne Code: Wie groß ist in diesem Fall die Summe der
-   waagerechten Lagerkräfte?
+   letzten Mini-Übung (Last $2000\,\text{N}$ nach unten und $1200\,\text{N}$
+   nach rechts an Knoten 1). Welcher Stab wird stärker belastet? Was fällt
+   bei Stab 0 auf?
+3. Berechnen Sie für diesen Fall auch die Lagerkräfte. Welche senkrechte
+   Kraft überträgt das linke Lager? Was bedeutet das für das
+   Schaukelgestell?
 ```
 
 ```{code-cell} python
@@ -414,40 +414,49 @@ $\sqrt{2}$ größer: $2500\,\text{N} \cdot \sqrt{2} \approx 3536\,\text{N}$.
 ```python
 # Teilaufgabe 2: Stabkräfte mit Seitenkraft
 kraft_vektor_seite = np.zeros(2 * anzahl_knoten)
-kraft_vektor_seite[2] = 1000.0
-kraft_vektor_seite[3] = -5000.0
+kraft_vektor_seite[2] = 1200.0
+kraft_vektor_seite[3] = -2000.0
 
 u_seite = berechne_verschiebungen(K, kraft_vektor_seite, lager_indizes)
 stabkraefte_seite = berechne_stabkraefte(knoten_pos, staebe, elastizitaetsmodul,
                                          querschnitt, u_seite)
 for s in range(len(staebe)):
     print(f'Stab {s}: N = {stabkraefte_seite[s]:8.1f} N')
+
+# Teilaufgabe 3: Lagerkräfte mit Seitenkraft
+knotenkraefte_seite = K @ u_seite
+for n in lager_indizes:
+    print(f'Lager an Knoten {n}: Fx = {knotenkraefte_seite[2*n]:7.1f} N, '
+          f'Fy = {knotenkraefte_seite[2*n + 1]:7.1f} N')
 ```
 Stab 0 drückt Knoten 0 schräg nach links unten in das Lager. Damit Knoten 0
 an seinem Platz bleibt, muss das Lager nach rechts oben dagegenhalten.
 
-Mit der Seitenkraft trägt Stab 1 rund $4243\,\text{N}$ Druck, Stab 0 nur noch
-rund $2828\,\text{N}$. Die Seitenkraft schiebt die Spitze nach rechts, also
-in Richtung von Stab 1. Dieser Stab wird dadurch stärker gestaucht, Stab 0
-wird etwas entlastet.
+Mit der Seitenkraft trägt Stab 1 rund $2460\,\text{N}$ Druck, mehr als
+doppelt so viel wie vorher. Die Seitenkraft schiebt die Spitze nach rechts,
+also in Richtung von Stab 1, und staucht ihn zusätzlich. Stab 0 wird dagegen
+so stark entlastet, dass er sogar unter Zug gerät, mit rund $224\,\text{N}$.
 
-Die Summe der waagerechten Lagerkräfte beträgt $-1000\,\text{N}$. Die Lager
-müssen die Seitenkraft von $1000\,\text{N}$ nach rechts genau ausgleichen,
-damit alle waagerechten Kräfte zusammen null ergeben.
+Das linke Lager überträgt senkrecht rund $-200\,\text{N}$, also eine Kraft
+nach unten. Es muss den Fuß am Boden festhalten, sonst würde er beim
+Schaukeln abheben. Das kennen wir vom Festlager des Trägers in Kapitel 3.2,
+das den Träger nach unten zieht. Ein Schaukelgestell braucht deshalb
+Bodenanker. Zusammen gleichen die beiden Lager waagerecht genau die
+Seitenkraft von $1200\,\text{N}$ aus.
 ````
 
-## Hält der Kranausleger?
+## Hält das Schaukelgestell?
 
 Zuerst stellen wir das Ergebnis grafisch dar. Die Verschiebungen sind mit
-weniger als einem Millimeter viel kleiner als die Stäbe, die einen Meter und
-mehr lang sind. Damit wir überhaupt etwas sehen, vergrößern wir die
-Verschiebungen in der Zeichnung um einen **Überhöhungsfaktor**, hier 500.
-Die Rechnung selbst ändert sich dadurch nicht.
+weniger als einem Millimeter viel kleiner als die Stäbe, die über zwei Meter
+lang sind. Damit wir überhaupt etwas sehen, vergrößern wir die Verschiebungen
+in der Zeichnung um einen **Überhöhungsfaktor**, hier 2000. Die Rechnung
+selbst ändert sich dadurch nicht.
 
 ```{code-cell} python
 zeichne_fachwerk(knoten_pos, staebe, lager_indizes, kraft_vektor=kraft_vektor,
-                 verschiebung=u, skalierung=500, stabkraefte=stabkraefte,
-                 titel='Kranausleger, Verschiebungen 500-fach überhöht')
+                 verschiebung=u, skalierung=2000, stabkraefte=stabkraefte,
+                 titel='Schaukelgestell, Verschiebungen 2000-fach überhöht')
 ```
 
 Gestrichelt ist die Ausgangslage, durchgezogen die überhöhte verformte Lage.
@@ -469,8 +478,8 @@ for s in range(len(staebe)):
           f'Auslastung {auslastung * 100:4.1f} %')
 ```
 
-Die Spannung beträgt nur rund $45\,\text{N/mm}^2$, also knapp ein Fünftel
-der Streckgrenze. Ist der Kranausleger damit sicher? *Nein, denn bei
+Die Spannung beträgt nur rund $14\,\text{N/mm}^2$, also rund 6 % der
+Streckgrenze. Ist das Schaukelgestell damit sicher? *Nein, denn bei
 Druckstäben reicht die Spannung als Nachweis nicht aus.* Ein schlanker Stab
 unter Druck kann seitlich ausweichen, er **knickt**, lange bevor der Stahl
 zu fließen beginnt. Aus der Festigkeitslehre kennen wir dafür die
@@ -487,15 +496,15 @@ für einen Kreisquerschnitt.
 traegheitsmoment = np.pi * durchmesser**4 / 64
 
 # Euler-Knicklast für Stab 0 (beide Stäbe sind gleich lang)
-stablaenge = np.sqrt(2.0)
+stablaenge = np.sqrt(1.0**2 + 2.0**2)   # Pythagoras mit dx = 1 m, dy = 2 m
 knicklast = np.pi**2 * elastizitaetsmodul * traegheitsmoment / stablaenge**2
 
 print(f'Euler-Knicklast:       {knicklast:8.1f} N')
 print(f'Druckkraft im Stab:    {abs(stabkraefte[0]):8.1f} N')
 ```
 
-Die Knicklast beträgt nur rund $509\,\text{N}$, die Druckkraft ist fast
-siebenmal so groß. Die Stäbe mit $1\,\text{cm}$ Durchmesser würden also
+Die Knicklast beträgt nur rund $203\,\text{N}$, die Druckkraft ist mehr als
+fünfmal so groß. Die Stäbe mit $1\,\text{cm}$ Durchmesser würden also
 knicken, obwohl die Spannung weit unter der Streckgrenze liegt. Für die
 Bemessung eines Fachwerks gehören deshalb immer beide Nachweise dazu: die
 Spannung für alle Stäbe und das Knicken für alle Druckstäbe.
@@ -506,8 +515,8 @@ Spannung für alle Stäbe und das Knicken für alle Druckstäbe.
    `skalierung=1` wählen?
 2. Wir verwenden Stäbe mit $2\,\text{cm}$ Durchmesser. Berechnen Sie mit den
    drei Funktionen neu: Steifigkeitsmatrix, Verschiebungen und Stabkräfte.
-   Berechnen Sie außerdem die Spannung und die Knicklast. Hält der
-   Kranausleger jetzt?
+   Berechnen Sie außerdem die Spannung und die Knicklast. Hält das
+   Schaukelgestell jetzt?
 3. Beantworten Sie ohne Code: Die Absenkung der Spitze ist auf ein Viertel
    gesunken, die Stabkräfte sind aber gleich geblieben. Warum?
 ```
@@ -531,7 +540,7 @@ stabkraefte_neu = berechne_stabkraefte(knoten_pos, staebe, elastizitaetsmodul,
 
 spannung_neu = stabkraefte_neu[0] / querschnitt_neu * 1e-6
 traegheitsmoment_neu = np.pi * durchmesser_neu**4 / 64
-knicklast_neu = np.pi**2 * elastizitaetsmodul * traegheitsmoment_neu / np.sqrt(2.0)**2
+knicklast_neu = np.pi**2 * elastizitaetsmodul * traegheitsmoment_neu / stablaenge**2
 
 print(f'Absenkung der Spitze: {u_neu[3] * 1000:.4f} mm')
 print(f'Stabkräfte:           {np.round(stabkraefte_neu, 1)} N')
@@ -539,14 +548,16 @@ print(f'Spannung:             {spannung_neu:.1f} N/mm²')
 print(f'Knicklast:            {knicklast_neu:.1f} N')
 ```
 Mit `skalierung=1` liegen verformte und unverformte Lage praktisch
-übereinander. Eine Verschiebung von $0.43\,\text{mm}$ ist bei Stäben von
-über einem Meter Länge nicht zu erkennen.
+übereinander. Eine Verschiebung von $0.17\,\text{mm}$ ist bei Stäben von
+über zwei Metern Länge nicht zu erkennen.
 
 Mit $2\,\text{cm}$ Durchmesser sinkt die Spannung auf rund
-$11\,\text{N/mm}^2$, und die Knicklast steigt auf rund $8139\,\text{N}$. Sie
-liegt jetzt deutlich über der Druckkraft von $3536\,\text{N}$, der
-Kranausleger hält nach diesem vereinfachten Nachweis. Eine Bemessung nach
-Norm berücksichtigt zusätzlich Sicherheitsbeiwerte und Imperfektionen.
+$3.6\,\text{N/mm}^2$, und die Knicklast steigt auf rund $3256\,\text{N}$. Sie
+liegt jetzt deutlich über der Druckkraft von $1118\,\text{N}$, das
+Schaukelgestell hält nach diesem vereinfachten Nachweis. Auch die
+$2460\,\text{N}$, die Stab 1 beim Schaukeln trägt, liegen noch darunter.
+Eine Bemessung nach Norm berücksichtigt zusätzlich Sicherheitsbeiwerte und
+Imperfektionen.
 
 Der doppelte Durchmesser vervierfacht den Querschnitt und damit die
 Steifigkeit $k = EA/L$. Deshalb sinkt die Absenkung auf ein Viertel. Die

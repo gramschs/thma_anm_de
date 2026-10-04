@@ -627,11 +627,10 @@ Beides stimmt mit der Rechnung überein.
 
 ```{admonition} Aufgabe 4.6 (✩✩)
 :class: tip
-Bei welcher Höhe senkt sich die Spitze des Kranauslegers aus Kapitel 4.1 am
-wenigsten ab? Die
-Lager bleiben bei $(0, 0)$ und $(2\,\text{m}, 0)$, die Spitze liegt bei
-$(1\,\text{m}, h)$. Last $5000\,\text{N}$ nach unten, Stahl mit
-$1\,\text{cm}$ Durchmesser.
+Bei welcher Höhe senkt sich die Spitze des Schaukelgestells aus Kapitel 4.1
+am wenigsten ab? Die Füße bleiben bei $(0, 0)$ und $(2\,\text{m}, 0)$, die
+Spitze liegt bei $(1\,\text{m}, h)$. Last $2000\,\text{N}$ nach unten, Stahl
+mit $1\,\text{cm}$ Durchmesser.
 
 1. Legen Sie mit `np.linspace` zwölf Höhen von $0.25\,\text{m}$ bis
    $3.0\,\text{m}$ an. Berechnen Sie in einer Schleife für jede Höhe die
@@ -641,6 +640,8 @@ $1\,\text{cm}$ Durchmesser.
    `np.argmin`.
 4. Warum wird die Stabkraft für kleine Höhen so groß? Warum wird die
    Absenkung für große Höhen wieder größer, obwohl die Stabkraft weiter sinkt?
+5. Unser Schaukelgestell ist $2\,\text{m}$ hoch und damit nicht am
+   steifsten. Warum bauen wir es trotzdem so hoch?
 
 Strukturieren Sie Ihren Code mit EVA-Kommentaren.
 ```
@@ -658,7 +659,7 @@ hoehen = np.linspace(0.25, 3.0, 12)   # in m
 staebe = np.array([[0, 1], [1, 2]])
 lager_indizes = [0, 2]
 kraft_vektor = np.zeros(6)
-kraft_vektor[3] = -5000.0
+kraft_vektor[3] = -2000.0
 elastizitaetsmodul = 2.1e11
 querschnitt = np.pi * 0.01**2 / 4
 
@@ -696,22 +697,27 @@ plt.show()
 Ausgabe:
 
 ```text
-Kleinste Absenkung 0.395 mm bei h = 1.50 m
-Stabkraft bei h = 0.25 m: -10308 N
-Stabkraft bei h = 3.00 m: -2635 N
+Kleinste Absenkung 0.158 mm bei h = 1.50 m
+Stabkraft bei h = 0.25 m: -4123 N
+Stabkraft bei h = 3.00 m: -1054 N
 ```
 
-Bei flachen Auslegern liegen die Stäbe fast waagerecht. Um die senkrechte
-Last von $2500\,\text{N}$ pro Stab zu tragen, braucht ein fast waagerechter
+Bei flachen Gestellen liegen die Stäbe fast waagerecht. Um die senkrechte
+Last von $1000\,\text{N}$ pro Stab zu tragen, braucht ein fast waagerechter
 Stab eine riesige Längskraft, denn nur ein kleiner Teil davon zeigt nach
-oben. Bei $h = 0.25\,\text{m}$ sind es über $10\,\text{kN}$ Druck pro Stab.
+oben. Bei $h = 0.25\,\text{m}$ sind es über $4\,\text{kN}$ Druck pro Stab.
 Mit wachsender Höhe nähert sich die Stabkraft der halben Last von
-$2500\,\text{N}$. Gleichzeitig
-werden die Stäbe aber immer länger und damit weicher, denn $k = EA/L$. Ab
-einer bestimmten Höhe überwiegt dieser Effekt, und die Absenkung steigt
-wieder. Die kleinste Absenkung liegt in unserem Raster bei
-$h = 1.50\,\text{m}$. Eine genauere Rechnung ergibt $h = \sqrt{2}\,\text{m}
-\approx 1.41\,\text{m}$.
+$1000\,\text{N}$. Gleichzeitig werden die Stäbe aber immer länger und damit
+weicher, denn $k = EA/L$. Ab einer bestimmten Höhe überwiegt dieser Effekt,
+und die Absenkung steigt wieder. Die kleinste Absenkung liegt in unserem
+Raster bei $h = 1.50\,\text{m}$. Eine genauere Rechnung ergibt
+$h = \sqrt{2}\,\text{m} \approx 1.41\,\text{m}$.
+
+Bei $h = 2\,\text{m}$ senkt sich die Spitze um $0.169\,\text{mm}$ ab, also nur
+rund 7 % mehr als bei der steifsten Höhe. Die Höhe des Schaukelgestells gibt
+die Nutzung vor, nicht die Steifigkeit: Die Schaukel braucht lange Seile,
+damit sie weit schwingen kann. Den kleinen Verlust an Steifigkeit nehmen wir
+dafür in Kauf.
 ````
 
 ````{admonition} Aufgabe 4.7 (✩✩✩) Mini-Projekt: Wartungssteg in einer Werkhalle
@@ -879,6 +885,6 @@ Diagonalen dagegen Kräfte.
 
 Die Stabkräfte hängen nicht vom Durchmesser ab, weil das Fachwerk statisch
 bestimmt ist: Die Gleichgewichtsbedingungen an den Knoten legen alle Kräfte
-eindeutig fest, genau wie beim Kranausleger in Kapitel 4.3. Der Durchmesser
+eindeutig fest, genau wie beim Schaukelgestell in Kapitel 4.3. Der Durchmesser
 ändert nur, wie stark sich das Fachwerk dabei verformt.
 ````

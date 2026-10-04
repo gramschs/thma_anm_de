@@ -6,7 +6,7 @@ kernelspec:
 
 # 4.2 Steifigkeitsmatrix einer Wandkonsole
 
-In Kapitel 4.1 haben wir den Kranausleger im Rechner beschrieben und seine
+In Kapitel 4.1 haben wir das Schaukelgestell im Rechner beschrieben und seine
 Steifigkeitsmatrix aufgebaut. In diesem Kapitel wenden wir dasselbe Vorgehen
 auf ein größeres Fachwerk mit fünf Knoten und sechs Stäben an. Bearbeiten Sie
 die Teilaufgaben möglichst zu zweit und der Reihe nach.
@@ -22,7 +22,7 @@ Knoten an der Wand sind Festlager.
 :align: center
 
 Die Wandkonsole mit Knotennummern, Stabnummern und der Last an Knoten 4.
-(Quelle: eigene Abbildung; Lizenz [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0))
+(Quelle: eigene Abbildung; Lizenz [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0))
 ```
 
 | Knoten | $x$ in m | $y$ in m | Bemerkung |
@@ -411,7 +411,7 @@ Wir drehen die freie Konsole um einen kleinen Winkel $\alpha = 0.001$ um
 Knoten 0. Für eine kleine Drehung verschiebt sich Knoten $n$ mit den
 Koordinaten $(x_n, y_n)$ um
 
-$$u_{x,n} = -\alpha\, y_n, \qquad u_{y,n} = \alpha\, x_n.$$
+$$u_{nx} = -\alpha\, y_n, \qquad u_{ny} = \alpha\, x_n.$$
 
 1. Legen Sie mit einer Schleife über alle Knoten den Verschiebungsvektor
    `u_drehung` an. Berechnen Sie `K @ u_drehung`.

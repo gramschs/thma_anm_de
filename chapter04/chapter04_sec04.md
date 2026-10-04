@@ -7,7 +7,7 @@ kernelspec:
 # 4.4 Dachbinder einer Stahlhalle unter Schneelast
 
 In Kapitel 4.3 haben wir die Lager eingebaut, Verschiebungen, Lagerkräfte und
-Stabkräfte berechnet und den Kranausleger auf Spannung und Knicken geprüft.
+Stabkräfte berechnet und das Schaukelgestell auf Spannung und Knicken geprüft.
 In diesem Kapitel setzen wir die drei Funktionen ein, um einen Dachbinder zu
 berechnen und zu bewerten. Bearbeiten Sie die Teilaufgaben möglichst zu
 zweit und der Reihe nach.
@@ -25,7 +25,7 @@ Träger in Kapitel 3.2.
 :align: center
 
 Der Dachbinder mit Knotennummern, Stabnummern und der Schneelast.
-(Quelle: eigene Abbildung; Lizenz [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0))
+(Quelle: eigene Abbildung; Lizenz [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0))
 ```
 
 | Knoten | $x$ in m | $y$ in m | Bemerkung |

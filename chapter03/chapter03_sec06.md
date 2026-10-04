@@ -44,7 +44,7 @@ erzeugt einen messbaren Strom.
 Wheatstone-Brücke mit den vier Widerständen $R_1, R_2, R_3, R_4$, dem
 Brückenwiderstand $R_B$ und der Spannungsquelle $U_0$. Die Pfeile geben die
 angenommenen Zählrichtungen der sechs Ströme an.
-(Quelle: eigene Abbildung; Lizenz [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0))
+(Quelle: eigene Abbildung; Lizenz [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0))
 ```
 
 Die Brücke hat sechs unbekannte Ströme:
