@@ -50,9 +50,9 @@ anzahl_messungen = len(geschwindigkeiten_kmh)
 print(f'Anzahl Messungen: {anzahl_messungen}')
 ```
 
-Auf einzelne Elemente greifen wir über den **Index** zu. Python beginnt die
-Zählung bei 0. Mit dem Index `-1` greifen wir bequem auf das letzte Element
-zu.
+Auf einzelne Elemente greifen wir über den **Index** in eckigen Klammern zu.
+Python beginnt die Zählung bei 0. Mit dem Index `-1` greifen wir bequem auf
+das letzte Element zu.
 
 ```{code-cell} python
 erste_messung = geschwindigkeiten_kmh[0]
@@ -62,7 +62,8 @@ print(f'Letzte Messung: {letzte_messung} km/h')
 ```
 
 Um eine neue Messung am Ende der Liste zu ergänzen, verwenden wir die
-Methode `append()`.
+Methode `append()`, die wir mit einem Punkt direkt hinter den Listennamen
+schreiben.
 
 ```{code-cell} python
 geschwindigkeiten_kmh.append(75)
@@ -210,6 +211,12 @@ Umrechnung in m/s mehrfach von Hand hingeschrieben. Mit einer eigenen
 **Funktion** kapseln wir diese Berechnung, sodass wir sie nur einmal
 definieren und beliebig oft wiederverwenden können.
 
+Eine Funktion beginnt mit dem Schlüsselwort `def`, gefolgt vom Funktionsnamen
+und den **Parametern** in runden Klammern. Auch hier schließt die Kopfzeile
+mit einem Doppelpunkt `:` ab und der Funktionskörper ist eingerückt. Das
+Schlüsselwort `return` legt fest, welcher Wert an die aufrufende Stelle
+zurückgegeben wird.
+
 ```{code-cell} python
 def kmh_zu_ms(geschwindigkeit_kmh):
     geschwindigkeit_ms = geschwindigkeit_kmh / 3.6
@@ -219,13 +226,9 @@ geschwindigkeit_ms = kmh_zu_ms(95)
 print(geschwindigkeit_ms)
 ```
 
-Eine Funktion beginnt mit dem Schlüsselwort `def`, gefolgt vom Funktionsnamen
-und den **Parametern** in runden Klammern. Auch hier schließt die Kopfzeile
-mit einem Doppelpunkt `:` ab und der Funktionskörper ist eingerückt. Das
-Schlüsselwort `return` legt fest, welcher Wert an die aufrufende Stelle
-zurückgegeben wird. Sobald die Funktion definiert ist, rufen wir sie beliebig
-oft mit unterschiedlichen Argumenten auf, zum Beispiel für jeden Messwert
-unserer Liste.
+Sobald die Funktion definiert ist, rufen wir sie beliebig oft mit
+unterschiedlichen Argumenten auf, zum Beispiel für jeden Messwert unserer
+Liste.
 
 ```{code-cell} python
 for geschwindigkeit in geschwindigkeiten_kmh:
@@ -235,7 +238,8 @@ for geschwindigkeit in geschwindigkeiten_kmh:
 Eine Funktion kann mehrere Parameter besitzen. Schreiben wir hinter einen
 Parameter ein `=` mit einem Wert, ist das ein **Default-Wert**: Rufen wir die
 Funktion ohne dieses Argument auf, verwendet Python automatisch den
-Default-Wert.
+Default-Wert. Wollen wir einen anderen Wert, übergeben wir ihn wie jedes
+andere Argument oder über den Namen mit `parameter=wert`.
 
 ```{code-cell} python
 def kinetische_energie(geschwindigkeit_ms, masse=1200):

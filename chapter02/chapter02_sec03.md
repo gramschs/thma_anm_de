@@ -39,7 +39,8 @@ stellen sie Schritt für Schritt dar.
 Wir starten direkt mit einem Beispiel. Aus der Drehzahl berechnen wir das
 Drehmoment des Motors. Ein einfaches Modell nimmt an, dass das Drehmoment
 linear mit der Drehzahl abnimmt: Bei Stillstand ist es am größten, bei
-Leerlaufdrehzahl fällt es auf null.
+Leerlaufdrehzahl fällt es auf null. Die Kurve zeichnen wir mit `ax.plot()`,
+das die x-Werte als erstes und die y-Werte als zweites Argument erwartet.
 
 ```{code-cell} python
 import numpy as np
@@ -70,11 +71,13 @@ Zeichenbereich darin, mit x-Achse, y-Achse und allen Kurven. Das Muster
 
 `ax.plot(drehzahl, drehmoment)` zeichnet eine Linie durch die Punkte
 `(drehzahl[0], drehmoment[0])`, `(drehzahl[1], drehmoment[1])` und so weiter.
-Das erste Argument ist immer die x-Achse, das zweite die y-Achse. `plt.show()`
-zeigt das fertige Diagramm an.
+`plt.show()` zeigt das fertige Diagramm an.
 
 Ein Diagramm ohne beschriftete Achsen ist in der Ingenieurpraxis wertlos. Wir
 ergänzen daher Achsenbeschriftungen mit Einheiten, einen Titel und ein Gitter.
+Wie `plot()` rufen wir diese Methoden über `ax` auf: `set_xlabel()` und
+`set_ylabel()` beschriften die Achsen, `set_title()` setzt einen Titel und
+`grid(True)` legt ein Gitter über den Zeichenbereich.
 
 ```{code-cell} python
 fig, ax = plt.subplots(figsize=(7, 4))
@@ -89,14 +92,13 @@ ax.grid(True)
 plt.show()
 ```
 
-`figsize=(7, 4)` legt Breite und Höhe der Figure in Zoll fest. `set_xlabel()`
-und `set_ylabel()` beschriften die Achsen, `set_title()` setzt einen Titel und
-`grid(True)` legt ein Gitter über den Zeichenbereich.
+`figsize=(7, 4)` legt Breite und Höhe der Figure in Zoll fest.
 
 Oft wollen wir mehrere Kurven vergleichen. Dazu rufen wir `ax.plot()` einfach
 mehrfach auf. Wir vergleichen unseren Motor mit einer schwächeren Variante, die
 bei Stillstand nur 6 Nm liefert. Jede Kurve bekommt ein `label`, das
-anschließend in der Legende erscheint.
+anschließend in der Legende erscheint. Der Aufruf `ax.legend()` ohne Argumente
+sammelt alle `label`-Einträge ein und zeigt sie als Legende an.
 
 ```{code-cell} python
 drehmoment_schwach = 6.0 * (1 - drehzahl / leerlaufdrehzahl)
@@ -118,10 +120,9 @@ plt.show()
 
 Matplotlib gibt jeder Kurve automatisch eine eigene Farbe. Mit `linestyle`
 ändern wir den Linienstil, mögliche Werte sind `'solid'`, `'dashed'`,
-`'dotted'` und `'dashdot'`. Der Aufruf `ax.legend()` ohne Argumente sammelt
-alle `label`-Einträge ein und zeigt sie als Legende an. Das ist sauberer, als
-eine Liste von Texten an `ax.legend()` zu übergeben, weil die Beschriftung
-direkt beim jeweiligen `ax.plot()`-Aufruf steht.
+`'dotted'` und `'dashdot'`. Das `label` direkt beim jeweiligen
+`ax.plot()`-Aufruf anzugeben ist sauberer, als eine Liste von Texten an
+`ax.legend()` zu übergeben.
 
 In der Praxis wollen wir ein Diagramm nicht nur ansehen, sondern auch in einen
 Bericht einfügen. `fig.savefig()` speichert die Figure als Datei. Wir rufen es
@@ -208,6 +209,18 @@ Drehmoment und Wirkungsgrad als flache Linien am unteren Rand nicht mehr
 erkennbar. Die Lösung sind **Subplots**: mehrere Zeichenbereiche in einer
 gemeinsamen Figure.
 
+`plt.subplots(nrows=3, ncols=1)` erzeugt drei Zeichenbereiche untereinander und
+gibt sie als Array `ax` zurück. Wir sprechen den obersten mit `ax[0]` an, den
+mittleren mit `ax[1]` und den untersten mit `ax[2]`, genau wie bei einem
+NumPy-Array.
+
+Für die x-Achsenbeschriftung und das Gitter schreiben wir eine `for`-Schleife
+über `ax`, denn diese beiden Einstellungen sind für alle drei Subplots gleich.
+Die Schleifenvariable `einzelachse` ist bei jedem Durchlauf einer der drei
+Zeichenbereiche. Alles, was sich zwischen den Subplots unterscheidet, also die
+y-Beschriftung und der Titel, setzen wir einzeln über `ax[0]`, `ax[1]` und
+`ax[2]`.
+
 ```{code-cell} python
 fig, ax = plt.subplots(nrows=3, ncols=1, figsize=(7, 8))
 
@@ -229,18 +242,6 @@ ax[0].set_title('Kennlinienfeld des Elektromotors')
 plt.tight_layout()
 plt.show()
 ```
-
-`plt.subplots(nrows=3, ncols=1)` erzeugt drei Zeichenbereiche untereinander und
-gibt sie als Array `ax` zurück. Wir sprechen den obersten mit `ax[0]` an, den
-mittleren mit `ax[1]` und den untersten mit `ax[2]`, genau wie bei einem
-NumPy-Array.
-
-Für die x-Achsenbeschriftung und das Gitter schreiben wir eine `for`-Schleife
-über `ax`, denn diese beiden Einstellungen sind für alle drei Subplots gleich.
-Die Schleifenvariable `einzelachse` ist bei jedem Durchlauf einer der drei
-Zeichenbereiche. Alles, was sich zwischen den Subplots unterscheidet, also die
-y-Beschriftung und der Titel, setzen wir einzeln über `ax[0]`, `ax[1]` und
-`ax[2]`.
 
 `plt.tight_layout()` vergrößert die Abstände zwischen den Subplots so, dass sich
 Beschriftungen nicht überlappen. Wir rufen es immer direkt vor `plt.show()`
@@ -344,7 +345,11 @@ zwischen den Messpunkten kein durchgehender Verlauf gemessen wurde.
 
 Jeder Messpunkt ist der Mittelwert aus mehreren Wiederholungsmessungen und hat
 eine Unsicherheit. Diese stellen wir mit **Fehlerbalken** dar. Die passende
-Funktion ist `ax.errorbar()`.
+Funktion ist `ax.errorbar()`, die wie `ax.scatter()` zuerst die x-Werte, dann
+die y-Werte erwartet. `yerr` übergibt die Unsicherheit in y-Richtung als
+Array. `fmt='o'` zeichnet die Messpunkte als Kreise, `capsize=4` gibt den
+Querstrichen an den Enden der Fehlerbalken eine Breite von 4 Punkten, damit
+sie besser ablesbar sind.
 
 ```{code-cell} python
 messunsicherheit = np.array([0.02, 0.02, 0.03, 0.03, 0.04, 0.03, 0.02, 0.03, 0.05])
@@ -361,10 +366,6 @@ ax.grid(True)
 
 plt.show()
 ```
-
-`yerr` übergibt die Unsicherheit in y-Richtung als Array. `fmt='o'` zeichnet die
-Messpunkte als Kreise, `capsize=4` gibt den Querstrichen an den Enden der
-Fehlerbalken eine Breite von 4 Punkten, damit sie besser ablesbar sind.
 
 Zum Schluss vergleichen wir die Messung mit unserem Modell aus dem letzten
 Abschnitt. Wir zeichnen die Messpunkte mit Fehlerbalken und die Modellkurve in

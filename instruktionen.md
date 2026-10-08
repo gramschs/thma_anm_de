@@ -46,7 +46,8 @@ Aufbau:
    H2-Überschrift "Lernziele"
 3. **Möglichst drei inhaltliche H2-Abschnitte**. Jeder Abschnitt:
    - ist so bemessen, dass seine Präsentation im Code-Along ca. 10 min dauert
-   - folgt dem roten Faden Code-Beispiel → Erklärung und Verallgemeinerung
+   - folgt dem roten Faden Werkzeug → Code-Beispiel → Deutung und
+     Verallgemeinerung (siehe Abschnitt "Didaktik")
    - erhält später ein eigenes Erklärvideo von ca. 10 min
    - **endet mit einer Mini-Übung (✩)** (siehe Abschnitt "Mini-Übungen")
 4. **Zusammenfassung und Ausblick** mit explizitem Vorgriff auf das nächste
@@ -84,12 +85,15 @@ Motivation, keine Lernziele, keine Zusammenfassung.
 - Fachbegriffe werden beim ersten Auftreten **fett** markiert und sofort erklärt
 - Kein Lehrbuch-Jargon, sondern pragmatische Erklärungen
 
-## Didaktik: Code zuerst
+## Didaktik: Werkzeug, Code, Deutung
 
-- Erst ein konkretes, lauffähiges Code-Beispiel zeigen
-- Dann das Konzept dahinter erklären und verallgemeinern ("Wir sehen, dass… Das
-  nennt man…")
-- Niemals erst die Theorie, dann den Code
+- Vor jeder Code-Zelle nennen wir in wenigen Sätzen das Modell und die
+  Werkzeuge (Funktionen, Methoden, Parameter), die der Code verwendet.
+- Dann folgt ein konkretes, lauffähiges Code-Beispiel.
+- Nach der Code-Zelle deuten wir das Ergebnis, sprechen Stolperstellen an und
+  verallgemeinern das Konzept ("Wir sehen, dass… Das nennt man…").
+- Ausnahme: Wenn ein Überraschungsmoment der Lernzweck ist (zum Beispiel
+  `x = x + 1`), darf der Code vor der Erklärung stehen.
 
 ## Mini-Übungen
 
@@ -413,7 +417,8 @@ beantwortet.
 - [ ] Wir-Perspektive im übrigen Fließtext?
 - [ ] Möglichst drei inhaltliche H2-Abschnitte, Überschriften als Fragen oder
   natürliche Aussagen?
-- [ ] Prinzip "Erst Beispiel, dann abstrakt" in jedem H2-Abschnitt eingehalten?
+- [ ] Prinzip "Werkzeug, Code, Deutung" in jedem H2-Abschnitt eingehalten,
+  also jedes im Code verwendete neue Werkzeug vor der Code-Zelle genannt?
 - [ ] Mindestens eine kursiv gesetzte rhetorische Frage im Fließtext?
 - [ ] Wo inhaltlich sinnvoll ein Rückverweis auf ein früheres Kapitel, immer
   ein konkreter Vorwärtsverweis?

@@ -22,16 +22,22 @@ stößt `np.linalg.solve` an seine Grenzen?*
   messen.
 * [ ] Sie können die Rechenzeit über der Systemgröße in einem log-log-Diagramm
   darstellen und den Skalierungsexponenten mit `np.polyfit` schätzen.
-* [ ] Sie können die beobachtete $O(n^3)$-Skalierung erklären und ihre
-  Konsequenzen für große Systeme abschätzen.
+* [ ] Sie können die theoretische $O(n^3)$-Skalierung erklären, mit der
+  Messung vergleichen und ihre Konsequenzen für große Systeme abschätzen.
 ```
 
 ## Zufällige Testsysteme erzeugen
 
 Für die Zeitmessung brauchen wir Testprobleme: Matrizen und rechte Seiten
-beliebiger Größe, die ein eindeutig lösbares System bilden. Eine zufällige
-Matrix ist fast immer lösbar. Wir sichern das ab, indem wir die Diagonale
-verstärken.
+beliebiger Größe, die ein eindeutig lösbares System bilden. Wir füllen sie mit
+Zufallszahlen: `np.random.default_rng(seed)` erzeugt einen Zufallsgenerator,
+den wir in `zufall` speichern. Derselbe `seed` liefert immer dieselben
+Zufallszahlen. `zufall.standard_normal(form)` füllt dann ein Array der
+angegebenen Form mit normalverteilten Zufallszahlen. Eine zufällige Matrix ist
+fast immer lösbar, sie kann aber **schlecht konditioniert** sein: Kleine
+Rundungsfehler wirken sich dann stark auf die Lösung aus. Dem begegnen wir,
+indem wir die Diagonale verstärken: Wir addieren das $n$-Fache der
+Einheitsmatrix, die NumPy mit `np.eye(n)` erzeugt.
 
 ```{code-cell} python
 import numpy as np
@@ -49,7 +55,7 @@ def erzeuge_lgs(n, seed=0):
     """
     zufall = np.random.default_rng(seed)
     A = zufall.standard_normal((n, n))
-    A = A + n * np.eye(n)          # Diagonale verstärken -> immer lösbar
+    A = A + n * np.eye(n)          # Diagonale verstärken -> gut konditioniert
     b = zufall.standard_normal(n)
     return A, b
 
@@ -58,10 +64,14 @@ print('Form von A:  ', A.shape)
 print('Determinante:', round(float(np.linalg.det(A)), 1))
 ```
 
-Wir addieren $n$ mal die Einheitsmatrix, damit jedes Diagonalelement um $n$
-wächst. Der Faktor $n$ ist wichtig: Die typische Zeilensumme einer
-$n \times n$-Zufallsmatrix wächst mit $\sqrt{n}$, ein fester Zuwachs würde bei
-großen $n$ nicht mehr ausreichen, um die Diagonale dominieren zu lassen.
+Jedes Diagonalelement wächst dadurch um $n$. Der Faktor $n$ ist wichtig: Eine
+Matrix ist **diagonaldominant**, wenn in jeder Zeile der Betrag des
+Diagonalelements größer ist als die Summe der Beträge der übrigen Einträge.
+Eine solche Matrix ist immer lösbar. Bei einer $n \times n$-Zufallsmatrix
+wächst diese Summe ungefähr wie $0.8 \cdot n$. Der Zuschlag $n$ macht daher die
+meisten Zeilen dominant und die Matrix mit hoher Wahrscheinlichkeit gut
+konditioniert, garantiert aber keine Dominanz in jeder Zeile. Ein fester
+Zuschlag würde bei großen $n$ nicht ausreichen.
 
 ```{admonition} Mini-Übung (✩)
 :class: tip
@@ -84,15 +94,15 @@ A2, _ = erzeuge_lgs(5, seed=0)
 print('gleiche Matrix:', np.allclose(A1, A2))
 ```
 Beide Aufrufe liefern dieselbe Matrix, weil der `seed` den Startzustand des
-Zufallsgenerators festlegt. Für einen fairen Vergleich der Rechenzeiten
-verschiedener Systemgrößen sollen sich die Testmatrizen nur in der Größe
-unterscheiden, nicht in zufälligen Eigenschaften. Ein fester `seed` macht die
-Messung außerdem wiederholbar.
+Zufallsgenerators festlegt. Ein fester `seed` macht die Messung
+reproduzierbar: Wiederholen wir sie, auf demselben oder einem anderen Rechner,
+lösen wir genau dieselben Gleichungssysteme. Unterschiede in der Rechenzeit
+liegen dann am Rechner und nicht an anderen Matrizen.
 ````
 
 ## Rechenzeit messen und darstellen
 
-`time.perf_counter()` gibt eine Uhrzeit in Sekunden zurück. Die Differenz
+`time.perf_counter()` gibt einen Zeitstempel in Sekunden zurück. Die Differenz
 zweier Aufrufe ist die vergangene Zeit. Wir messen, wie lange `np.linalg.solve`
 für verschiedene Systemgrößen braucht.
 
@@ -116,7 +126,11 @@ Die absoluten Zeiten hängen von der Hardware ab und schwanken bei jedem
 Durchlauf etwas. Für die Frage nach der Skalierung stellen wir die Zeiten über
 der Systemgröße dar, und zwar mit `ax.loglog`: Beide Achsen sind logarithmisch.
 Ein Potenzgesetz $t \propto n^\alpha$ erscheint dann als Gerade, deren Steigung
-der Exponent $\alpha$ ist.
+der Exponent $\alpha$ ist. Mit `marker='o'` wird jeder Messpunkt zusätzlich
+mit einem Kreis markiert. Zum Vergleich zeichnen wir eine Referenzlinie, die
+genau mit $n^3$ wächst und am ersten Messpunkt beginnt.
+`grid(True, which='both')` zeichnet auch Gitterlinien zwischen den
+Zehnerpotenzen.
 
 ```{code-cell} python
 # Referenzlinie für O(n^3), an den ersten Messpunkt angepasst
@@ -133,11 +147,16 @@ ax.grid(True, which='both')
 plt.show()
 ```
 
+Die Messpunkte liegen unterhalb der Referenzlinie, weil die Linie am ersten
+Punkt beginnt, an dem ein fester Aufwand pro Aufruf die Rechenzeit noch
+dominiert. Für große $n$ verlaufen beide nahezu parallel: Dort wächst die
+Rechenzeit ungefähr mit $n^3$.
+
 ```{admonition} Mini-Übung (✩)
 :class: tip
 1. Stellen Sie dieselben Daten zusätzlich mit `ax.plot` statt `ax.loglog` dar.
-2. Beantworten Sie ohne Code: In welcher der beiden Darstellungen kann man den
-   Skalierungsexponenten leichter ablesen, und warum?
+2. Beantworten Sie ohne Code: In welcher der beiden Darstellungen können Sie
+   den Skalierungsexponenten leichter ablesen, und warum?
 ```
 
 ```{code-cell} python
@@ -158,8 +177,8 @@ plt.show()
 ```
 In der linearen Darstellung dominiert der steile Anstieg bei großen $n$ das
 ganze Bild, kleine $n$ sind zusammengedrückt und nicht unterscheidbar. In der
-log-log-Darstellung erscheint ein Potenzgesetz als Gerade, deren Steigung man
-direkt als Exponenten ablesen kann. Für die Skalierungsanalyse ist die
+log-log-Darstellung erscheint ein Potenzgesetz als Gerade, deren Steigung wir
+direkt als Exponenten ablesen können. Für die Skalierungsanalyse ist die
 log-log-Darstellung daher besser geeignet.
 ````
 
@@ -167,7 +186,9 @@ log-log-Darstellung daher besser geeignet.
 
 Im log-log-Raum gilt $\log t = \alpha \cdot \log n + \text{const}$. Der
 Exponent $\alpha$ ist also die Steigung einer Geraden durch die Punkte
-$(\log n,\ \log t)$. Diese Steigung liefert `np.polyfit`.
+$(\log n,\ \log t)$. Diese Steigung liefert `np.polyfit`. Um nur die obere
+Hälfte der Punkte zu verwenden, berechnen wir den mittleren Index mit der
+Ganzzahldivision `//`, die das Ergebnis auf eine ganze Zahl abrundet.
 
 ```{code-cell} python
 log_n = np.log(n_werte)
@@ -176,6 +197,7 @@ log_t = np.log(t_werte)
 # np.polyfit(x, y, 1) legt eine Gerade durch die Punkte und gibt
 # [Steigung, Achsenabschnitt] zurück. Wir nehmen nur die obere Hälfte
 # der Messpunkte, da bei kleinen n der feste Aufwand die Messung verfälscht.
+# log_n[mitte:] wählt die Einträge ab dem Index mitte bis zum Ende aus.
 mitte = len(n_werte) // 2
 steigung = np.polyfit(log_n[mitte:], log_t[mitte:], 1)[0]
 
@@ -183,12 +205,17 @@ print(f'geschätzter Exponent: {steigung:.2f}')
 print('theoretischer Wert:   3.00')
 ```
 
-Der gemessene Exponent liegt in der Nähe von 3, die genaue Zahl schwankt von
-Messung zu Messung. Das bestätigt die theoretische $O(n^3)$-Komplexität:
-`np.linalg.solve` zerlegt die Matrix intern in ein
-Produkt zweier Dreiecksmatrizen (LU-Zerlegung), und dieser Schritt kostet in
-der Größenordnung $n^3$ Rechenoperationen. Verdoppelt man die Systemgröße,
-steigt die Rechenzeit um den Faktor $2^3 = 8$.
+Der gemessene Exponent liegt typischerweise zwischen etwa 2.5 und 3, die genaue
+Zahl schwankt von Messung zu Messung. Die Theorie sagt $O(n^3)$ voraus:
+`np.linalg.solve` zerlegt die Matrix intern in ein Produkt zweier
+Dreiecksmatrizen (LU-Zerlegung), und dieser Schritt kostet in der Größenordnung
+$n^3$ Rechenoperationen. Dass der gemessene Wert oft etwas unter 3 liegt, hat
+einen praktischen Grund: Bei mittelgroßen Systemen schafft die Bibliothek umso
+mehr Rechenoperationen pro Sekunde, je größer die Matrix ist, weil sie mehrere
+Prozessorkerne und den Zwischenspeicher (Cache) des Prozessors besser
+ausnutzt. Erst
+bei sehr großen $n$ zeigt sich das $n^3$-Wachstum voll. Verdoppeln wir dann die
+Systemgröße, steigt die Rechenzeit um den Faktor $2^3 = 8$.
 
 ```{admonition} Mini-Übung (✩)
 :class: tip
@@ -225,10 +252,11 @@ Einträge speichern und deutlich weniger Rechenoperationen brauchen.
 
 ## Zusammenfassung
 
-Die Rechenzeit von `np.linalg.solve` wächst mit der dritten Potenz der
-Systemgröße, $O(n^3)$, weil intern eine LU-Zerlegung durchgeführt wird. Für
+Theoretisch wächst die Rechenzeit von `np.linalg.solve` mit der dritten Potenz
+der Systemgröße, $O(n^3)$, weil intern eine LU-Zerlegung durchgeführt wird.
+Bei mittelgroßen Systemen ist der gemessene Exponent oft etwas kleiner. Für
 kleine und mittlere Systeme bis einige Tausend Unbekannte ist das kein Problem.
-Für die großen, dünnbesetzten Systeme der Ingenieurpraxis braucht man
+Für die großen, dünnbesetzten Systeme der Ingenieurpraxis brauchen wir
 spezialisierte iterative Löser.
 
 Damit endet Part 3. In Part 4 lösen wir mit demselben Werkzeug ein größeres

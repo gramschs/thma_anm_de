@@ -10,7 +10,7 @@ In Kapitel 3.1 haben wir lineare Gleichungssysteme mit NumPy gelöst, in
 Kapitel 3.2 die Auflagerkräfte eines Trägers berechnet. Beide Male haben wir
 die Gleichungen von Hand aufgestellt. Jetzt wenden wir dasselbe Werkzeug auf
 ein klassisches Maschinenbau-Problem an: eine Außenwand aus drei Schichten mit
-unterschiedlichen Wärmedurchgangswiderständen. *Wie hoch ist die Temperatur an
+unterschiedlichen thermischen Widerständen. *Wie hoch ist die Temperatur an
 den Grenzflächen, und wie groß ist der Wärmestrom?*
 
 Wir werden sehen, dass der Weg von den physikalischen Gleichungen zur Matrix
@@ -49,8 +49,8 @@ Schicht B am flachsten. (Quelle: eigene Abbildung; Lizenz [CC BY-NC-SA
 ```
 
 Im **stationären Zustand** ist der Wärmestrom $Q$ durch alle Schichten gleich
-groß. Das **Wärmeübertragungsgesetz**, analog zum Ohmschen Gesetz, lautet für
-jede Schicht
+groß. Für jede Schicht gilt das **Fouriersche Gesetz** der Wärmeleitung, hier
+in Widerstandsform analog zum Ohmschen Gesetz geschrieben:
 
 $$Q = \frac{\Delta T_i}{R_i},$$
 
@@ -102,7 +102,8 @@ das Gleichungssystem.
 
 Die drei Gleichungen enthalten die Unbekannten in Brüchen. Wir bringen alle
 Unbekannten auf die linke Seite, indem wir jede Gleichung mit $R_i$
-multiplizieren und umordnen:
+multiplizieren und umformen. Dabei schreiben wir jede Gleichung so, dass der
+Term $R_i \cdot Q$ ein positives Vorzeichen hat:
 
 $$T_{AB} + R_A \cdot Q = T_{LA} \qquad (1')$$
 
@@ -132,8 +133,9 @@ den Koeffizienten 0.
 :class: tip
 Beantworten Sie ohne Code:
 
-1. In der Koeffizientenmatrix steht in Zeile 2, Spalte 1 der Wert $-1$. Aus
-   welcher Gleichung stammt dieser Eintrag, und warum ist er negativ?
+1. In der Koeffizientenmatrix steht in Zeile 2, Spalte 1 (in Python
+   `A[1, 0]`) der Wert $-1$. Aus welcher Gleichung stammt dieser Eintrag, und
+   warum ist er negativ?
 2. Warum ist der zweite Eintrag der rechten Seite, $b[1]$, gleich null? Was
    bedeutet das physikalisch?
 ```
@@ -145,12 +147,14 @@ Beantworten Sie ohne Code:
 ````{admonition} Lösung
 :class: tip
 :class: dropdown
-1. Der Eintrag $A_{21} = -1$ stammt aus Gleichung (2'), die durch Umformen aus
-   $(T_{AB} - T_{BC}) / R_B = Q$ entsteht. Die Temperaturdifferenz über
-   Schicht B ist $T_{AB} - T_{BC}$, dort steht $T_{AB}$ mit positivem
-   Vorzeichen. Nach dem Multiplizieren mit $R_B$ und dem Sortieren aller
-   Unbekannten nach links bleibt $-T_{AB}$ stehen, der Koeffizient ist also
-   $-1$.
+1. Der Eintrag $A_{21} = -1$ stammt aus Gleichung (2'). Multiplizieren wir
+   $(T_{AB} - T_{BC}) / R_B = Q$ mit $R_B$ und bringen alle Unbekannten nach
+   links, erhalten wir zunächst $T_{AB} - T_{BC} - R_B \cdot Q = 0$.
+   Anschließend multiplizieren wir die ganze Gleichung mit $-1$, damit wie in
+   (1') und (3') der Term $R_B \cdot Q$ ein positives Vorzeichen hat. Dadurch
+   wird aus $T_{AB}$ der Term $-T_{AB}$, der Koeffizient ist also $-1$. Das
+   Vorzeichen einer ganzen Zeile ist frei wählbar: Beide Formen der Gleichung
+   haben dieselbe Lösung.
 2. $b[1] = 0$, weil in Gleichung (2') keine bekannte Temperatur auftaucht. Die
    mittlere Schicht grenzt nur an die beiden Grenzflächen, deren Temperaturen
    selbst unbekannt sind. Es gibt für diese Gleichung keine von außen
@@ -158,6 +162,10 @@ Beantworten Sie ohne Code:
 ````
 
 ## Implementierung und Lösung
+
+Wir legen $\mathbf{A}$ und $\vec{b}$ in NumPy an, prüfen die Determinante und
+lösen das System wie in Kapitel 3.1. Mit `T_AB, T_BC, Q = x` entpacken
+wir anschließend den Lösungsvektor in drei Variablen mit sprechenden Namen.
 
 ```{code-cell} python
 import numpy as np
@@ -201,7 +209,9 @@ fließt.
 Zur Kontrolle berechnen wir die Temperaturdifferenz über jede Schicht. Schicht
 C hat den größten Widerstand und sollte daher den größten Temperatursprung
 liefern, genauso wie der größte Widerstand in einem Stromkreis den größten
-Spannungsabfall erzeugt.
+Spannungsabfall erzeugt. Anders als in den Gleichungen (1) bis (3) rechnen wir
+jeweils die Temperatur rechts minus die Temperatur links der Schicht, damit
+ihre Summe $T_{CR} - T_{LA}$ ergibt.
 
 ```{code-cell} python
 delta_A = T_AB - T_LA
@@ -215,11 +225,17 @@ print(f'Summe: {delta_A + delta_B + delta_C:.2f} K '
       f'(muss T_CR - T_LA = {T_CR - T_LA:.1f} K ergeben)')
 ```
 
+Schicht C zeigt tatsächlich den größten Temperatursprung mit etwa −9.3 K,
+Schicht B mit dem kleinsten Widerstand den kleinsten mit −4.0 K. Alle
+Differenzen sind negativ, weil die Temperatur von links nach rechts sinkt, und
+zusammen ergeben sie genau −20 K.
+
 ```{admonition} Mini-Übung (✩)
 :class: tip
-Eine Kühlhauswand hält innen $T_\text{innen} = 268$ K (−5 °C), während außen
-$T_\text{außen} = 293$ K (20 °C) herrschen. Die linke Seite ist innen
-($T_{LA} = T_\text{innen}$), die rechte außen ($T_{CR} = T_\text{außen}$).
+In einem Kühlhaus herrschen innen $T_\text{innen} = 268$ K (−5 °C), außen
+$T_\text{außen} = 293$ K (20 °C). Die Kühlhauswand besteht aus drei Schichten.
+Die linke Seite ist innen ($T_{LA} = T_\text{innen}$), die rechte außen
+($T_{CR} = T_\text{außen}$).
 
 | Schicht | Material | $R$ in K/W |
 | --- | --- | --- |

@@ -198,7 +198,8 @@ print(geschwindigkeit_ms)
 Python kennt die üblichen arithmetischen Operatoren: `+` für die Addition,
 `-` für die Subtraktion, `*` für die Multiplikation, `/` für die Division
 und `**` für das Potenzieren. Mit diesen Operatoren berechnen wir
-beispielsweise die kinetische Energie eines Fahrzeugs.
+beispielsweise die kinetische Energie $E_\text{kin} = \frac{1}{2} m v^2$
+eines Fahrzeugs.
 
 ```{code-cell} python
 masse = 1200                # kg

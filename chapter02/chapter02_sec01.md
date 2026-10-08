@@ -56,7 +56,9 @@ mathematische Operationen direkt auf ganze Zahlenreihen anzuwenden, ohne
 eine einzige Schleife zu schreiben, wie wir im Folgenden sehen.
 
 Den Unterschied zwischen Liste und Array sehen wir am schnellsten an einem
-Beispiel. Ein Sensor liefert fünf Beschleunigungswerte in m/s^2:
+Beispiel. Ein Sensor liefert fünf Beschleunigungswerte in m/s^2, die wir
+einmal als Liste und einmal als Array speichern. Das Array erzeugen wir mit
+`np.array()` aus einer Liste von Zahlen.
 
 ```{code-cell} python
 # Beschleunigungen in m/s^2 als Python-Liste
@@ -107,7 +109,8 @@ müssen: aus vorhandenen Werten, als gleichmäßig verteilte Achse oder als
 Platzhalter.
 
 Bevor wir mit den erzeugten Arrays weiterrechnen, prüfen wir ihre grundlegenden
-Eigenschaften: Größe und Datentyp.
+Eigenschaften: Größe und Datentyp. Wir lesen sie mit `.shape` und `.dtype`
+aus, die wir direkt hinter den Namen des Arrays schreiben, ohne Klammern.
 
 ```{code-cell} python
 print(messwerte_array.shape)   # Anzahl der Elemente je Dimension

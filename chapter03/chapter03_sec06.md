@@ -59,12 +59,17 @@ I_1 - I_2 - I = 0 \qquad
 I_3 + I - I_4 = 0$$
 
 Die **Maschenregel** (Energieerhaltung) sagt: Entlang einer geschlossenen
-Masche ist die Summe der Spannungsabfälle $R \cdot I$ gleich der
-Quellenspannung. Die zwei äußeren Maschen und die Quermasche liefern:
+Masche ist die Summe der Spannungsabfälle $R \cdot I$ gleich der Summe der
+Quellenspannungen in dieser Masche, in einer Masche ohne Quelle also null. Ein
+Spannungsabfall zählt positiv, wenn wir den Widerstand in Zählrichtung seines
+Stroms durchlaufen, sonst negativ. In der Quermasche laufen wir zum Beispiel
+von $K_1$ über $R_1$ nach $K_2$, durch $R_B$ nach $K_3$ und über $R_3$ zurück
+nach $K_1$, also entgegen der Richtung von $I_3$. Die zwei äußeren Maschen und
+die Quermasche liefern:
 
 $$R_1 I_1 + R_2 I_2 = U_0 \qquad
 R_3 I_3 + R_4 I_4 = U_0 \qquad
-R_1 I_1 - R_3 I_3 - R_B I = 0$$
+R_1 I_1 + R_B I - R_3 I_3 = 0$$
 
 Diese sechs Gleichungen setzen wir in eine Matrix um. Wir verpacken das gleich
 in eine Funktion, damit wir $R_4$ später leicht variieren können.
@@ -90,7 +95,7 @@ def loese_bruecke(R4):
         [ 0.0,  0.0,  0.0, +1.0, -1.0, +1.0],   # Knoten 3
         [ 0.0,   R1,   R2,  0.0,  0.0,  0.0],   # Masche 1
         [ 0.0,  0.0,  0.0,   R3,   R4,  0.0],   # Masche 2
-        [ 0.0,   R1,  0.0,  -R3,  0.0,  -RB],   # Quermasche
+        [ 0.0,   R1,  0.0,  -R3,  0.0,   RB],   # Quermasche
     ])
     b = np.array([0.0, 0.0, 0.0, U0, U0, 0.0])
     return np.linalg.solve(A, b)
@@ -102,7 +107,7 @@ print(f'Gesamtstrom I0 = {I0 * 1000:.2f} mA')
 print(f'Querstrom   I  = {I * 1000:.4f} mA')
 ```
 
-Bei $R_4 = 200\,\Omega$ fließt ein Querstrom von rund −15.6 mA. Das negative
+Bei $R_4 = 200\,\Omega$ fließt ein Querstrom von rund −13.2 mA. Das negative
 Vorzeichen sagt, dass der Strom entgegen der angenommenen Zählpfeilrichtung
 fließt.
 
@@ -126,7 +131,7 @@ fließt.
 x = loese_bruecke(R4=50.0)
 print(f'Querstrom I = {x[5] * 1000:.4f} mA')
 ```
-Bei $R_4 = 50\,\Omega$ ist der Querstrom mit rund +22.7 mA positiv, bei
+Bei $R_4 = 50\,\Omega$ ist der Querstrom mit rund +17.9 mA positiv, bei
 $R_4 = 200\,\Omega$ war er negativ. Irgendwo dazwischen wechselt er das
 Vorzeichen und ist dabei null. An diesem Wert von $R_4$ ist die Brücke
 abgeglichen. Diesen Punkt bestimmen wir weiter unten genau.
@@ -136,9 +141,10 @@ abgeglichen. Diesen Punkt bestimmen wir weiter unten genau.
 
 Für die sechs unbekannten Ströme haben wir genau sechs Gleichungen genommen:
 drei Knoten und drei Maschen. *Was wäre passiert, wenn wir eine weitere
-Maschengleichung dazugenommen hätten?* Sie wäre keine neue Information gewesen,
-sondern eine Kombination der vorhandenen. Das Gleichungssystem hätte dann mehr
-Zeilen als Unbekannte gehabt, ohne besser bestimmt zu sein.
+Maschengleichung dazugenommen hätten?* Sie hätte keine neue Information
+geliefert, denn sie wäre nur eine Kombination der vorhandenen gewesen. Das
+Gleichungssystem hätte dann mehr Zeilen als Unbekannte gehabt, ohne besser
+bestimmt zu sein.
 
 Wie viele Gleichungen wirklich unabhängige Information tragen, misst der
 **Rang** einer Matrix. In Kapitel 3.1 haben wir die Lösbarkeit über die
@@ -148,7 +154,9 @@ eindeutig lösbares System *keine* oder *unendlich viele* Lösungen hat.
 
 Dafür brauchen wir neben $\mathbf{A}$ auch die **erweiterte
 Koeffizientenmatrix** $[\mathbf{A} \mid \vec{b}]$: die Matrix $\mathbf{A}$ mit
-$\vec{b}$ als zusätzlicher Spalte. In NumPy hängt `np.column_stack` sie an.
+$\vec{b}$ als zusätzlicher Spalte. In NumPy hängt `np.column_stack` sie an,
+wobei wir die zu verbindenden Arrays gemeinsam in einem zusätzlichen
+Klammerpaar übergeben. Den Rang berechnen wir mit `np.linalg.matrix_rank()`.
 
 ```{code-cell} python
 # Ein eindeutig lösbares System
@@ -167,13 +175,15 @@ print('Rang von [A | b]:', np.linalg.matrix_rank(Ab))
 print('Anzahl Unbekannte:', n)
 ```
 
-Für ein System mit $n$ Unbekannten gelten die drei Fälle:
+Beide Ränge sind 3, also so groß wie die Anzahl der Unbekannten: Das System hat
+genau eine Lösung. Allgemein gelten für ein System mit $n$ Unbekannten die drei
+Fälle:
 
-| $\text{rang}(\mathbf{A})$ | $\text{rang}([\mathbf{A} \mid \vec{b}])$ | Lösbarkeit |
-| :---: | :---: | :--- |
-| $= n$ | $= n$ | genau eine Lösung |
-| $< n$ | $= \text{rang}(\mathbf{A})$ | unendlich viele Lösungen |
-| $< n$ | $> \text{rang}(\mathbf{A})$ | keine Lösung |
+| Bedingung | Lösbarkeit |
+| :--- | :--- |
+| $\text{rang}(\mathbf{A}) = \text{rang}([\mathbf{A} \mid \vec{b}]) = n$ | genau eine Lösung |
+| $\text{rang}(\mathbf{A}) = \text{rang}([\mathbf{A} \mid \vec{b}]) < n$ | unendlich viele Lösungen |
+| $\text{rang}(\mathbf{A}) < \text{rang}([\mathbf{A} \mid \vec{b}])$ | keine Lösung |
 
 Wir sehen uns die beiden nicht eindeutigen Fälle an einer Matrix an, deren
 zweite Zeile das Doppelte der ersten ist:
@@ -200,7 +210,7 @@ $\text{rang}(\mathbf{A}) = 2$ bleibt: Das System hat **keine Lösung**, die
 Gleichungen widersprechen sich. Bei `b_vertraeglich` bleibt der Rang bei 2: Das
 System hat **unendlich viele Lösungen**, eine Unbekannte bleibt frei wählbar.
 Denselben Widerspruchsfall haben wir in der Zusatzaufgabe von Kapitel 3.2
-gesehen: ein Träger ohne waagerechte Fesselung.
+gesehen: ein Träger ohne waagerechte Abstützung.
 
 ```{admonition} Mini-Übung (✩)
 :class: tip
@@ -251,7 +261,12 @@ System hat unendlich viele Lösungen.
 
 Jetzt variieren wir $R_4$ systematisch und suchen den Wert, bei dem der
 Querstrom null wird. Für jeden $R_4$-Wert lösen wir ein eigenes
-Gleichungssystem.
+Gleichungssystem und speichern den Querstrom $I$ sowie die Verlustleistung
+$P = R_B \cdot I^2$. `enumerate()` liefert zu jedem Wert `r4` den Index `k`
+mit. Beide Größen stellen wir in zwei Subplots untereinander dar.
+`sharex=True` gibt ihnen eine gemeinsame x-Achse, und `ax[0].axhline(0)`
+zeichnet eine waagerechte Linie bei null, damit der Nulldurchgang gut zu
+erkennen ist.
 
 ```{code-cell} python
 import matplotlib.pyplot as plt
@@ -285,8 +300,10 @@ plt.show()
 ```
 
 Der Querstrom kreuzt die Nulllinie, die Verlustleistung berührt dort die
-x-Achse. Den Nulldurchgang finden wir mit `np.argmin` über den Betrag und
-vergleichen ihn mit der bekannten Abgleichbedingung
+x-Achse. Den Nulldurchgang finden wir als den Index, an dem der Betrag des
+Querstroms am kleinsten ist: `np.abs()` berechnet die Beträge elementweise,
+und `np.argmin()` liefert den Index des kleinsten Elements. Anschließend
+vergleichen wir das Ergebnis mit der bekannten Abgleichbedingung
 $R_4^\ast = R_2 \cdot R_3 / R_1$.
 
 ```{code-cell} python
@@ -319,8 +336,13 @@ Nullstelle nicht exakt trifft. Ein feineres Gitter verkleinert die Abweichung.
 :class: dropdown
 ```python
 r4_fein = np.linspace(10.0, 300.0, 2000)
-i_fein = np.array([loese_bruecke(r4)[5] for r4 in r4_fein])
-print(f'R4* mit 2000 Stützstellen: {r4_fein[np.argmin(np.abs(i_fein))]:.2f} Ohm')
+i_fein = np.zeros(2000)
+
+for k, r4 in enumerate(r4_fein):
+    i_fein[k] = loese_bruecke(r4)[5]
+
+k_null_fein = np.argmin(np.abs(i_fein))
+print(f'R4* mit 2000 Stützstellen: {r4_fein[k_null_fein]:.2f} Ohm')
 ```
 Mit mehr Stützstellen liegt der gefundene Wert näher an den analytischen
 100 Ohm. Die Verlustleistung $P = R_B \cdot I^2$ enthält den Strom im Quadrat.
