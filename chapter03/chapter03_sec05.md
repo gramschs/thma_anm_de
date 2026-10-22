@@ -27,7 +27,8 @@ A = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=float)
 b = np.array([1.0, 2.0, 3.0])
 ```
 
-Notieren Sie Ihre Vermutung, bevor Sie den Code ausführen.
+Notieren Sie Ihre Vermutung in einer Markdown-Zelle, bevor Sie den Code
+ausführen.
 
 1. Was gibt `A.shape` zurück?
 2. Was gibt `A[2, 0]` zurück?
@@ -79,7 +80,8 @@ A = np.array([[2, 1], [5, 3]], dtype=float)
 b = np.array([8.0, 19.0])
 ```
 
-Notieren Sie Ihre Vermutung, bevor Sie den Code ausführen.
+Notieren Sie Ihre Vermutung in einer Markdown-Zelle, bevor Sie den Code
+ausführen.
 
 1. Berechnen Sie die Determinante im Kopf: $\det = 2 \cdot 3 - 1 \cdot 5$. Hat
    das System eine eindeutige Lösung?
@@ -136,7 +138,8 @@ except np.linalg.LinAlgError:
     print('Matrix ist singulär.')
 ```
 
-Notieren Sie Ihre Vermutung, bevor Sie den Code ausführen.
+Notieren Sie Ihre Vermutung in einer Markdown-Zelle, bevor Sie den Code
+ausführen.
 
 1. Berechnen Sie `np.linalg.det(A)` im Kopf. Was fällt an den beiden Zeilen
    von `A` auf?

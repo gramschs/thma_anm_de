@@ -28,7 +28,8 @@ zaehler = np.array([2, 4, 6])
 messung = np.array([2, 4, 6.0])
 ```
 
-Notieren Sie Ihre Vermutung, bevor Sie den Code ausführen.
+Notieren Sie Ihre Vermutung in einer Markdown-Zelle, bevor Sie den Code
+ausführen.
 
 1. Welche Werte enthält `t` und was gibt `t.shape` zurück?
 2. Was gibt `platzhalter.dtype` zurück?
@@ -86,7 +87,8 @@ messwerte_2 = np.array([1.0, 2.0, 3.0, 4.0])
 winkel = np.array([0.0, np.pi / 2, np.pi])
 ```
 
-Notieren Sie Ihre Vermutung, bevor Sie den Code ausführen.
+Notieren Sie Ihre Vermutung in einer Markdown-Zelle, bevor Sie den Code
+ausführen.
 
 1. Was geben `messwerte_1 + messwerte_2`, `messwerte_1 * messwerte_2` und
    `messwerte_1 / messwerte_2` zurück?
@@ -198,7 +200,8 @@ plt.tight_layout()
 plt.show()
 ```
 
-Notieren Sie Ihre Vermutung, bevor Sie den Code ausführen.
+Notieren Sie Ihre Vermutung in einer Markdown-Zelle, bevor Sie den Code
+ausführen.
 
 1. Welchen Linienstil hat die obere Kurve und wie viele volle Schwingungen
    zeigt sie im dargestellten Bereich?

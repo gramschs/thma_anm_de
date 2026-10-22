@@ -500,7 +500,9 @@ nicht seitlich ausweichen, Knicken ist nur bei Druck möglich.
 
 Eine Abhilfe ist ein zusätzlicher Knoten in der Mitte der Stäbe 3 und 6, der
 über weitere Stäbe mit dem Untergurt verbunden ist. Dann halbiert sich die
-Knicklänge, und die Knicklast vervierfacht sich. Alternativ nehmen wir für den
+Knicklänge in der Ebene des Binders, und die Knicklast vervierfacht sich.
+Senkrecht zu dieser Ebene muss der neue Knoten ebenfalls gehalten werden, im
+echten Dach zum Beispiel durch eine Pfette. Alternativ nehmen wir für den
 Obergurt dickere Stäbe oder Rohre. Ein Rohr hat bei gleicher Querschnittsfläche
 ein viel größeres Flächenträgheitsmoment $I$ als ein Vollstab, weil das
 Material weiter außen liegt.
@@ -561,4 +563,16 @@ nach außen, und sie müssten diese Kraft zusätzlich aufnehmen. Außerdem würd
 jede Temperaturänderung zusätzliche Zwangskräfte erzeugen, weil sich der
 Binder nicht mehr frei ausdehnen kann. Deshalb liegt ein Binder meist auf
 einer Seite auf einem Loslager.
+
+Mit zwei Festlagern ist der Dachbinder **statisch unbestimmt** wie in
+Kapitel 4.1 beschrieben. Mit Fest- und Loslager gibt es 14 Unbekannte,
+nämlich 11 Stabkräfte und 3 Lagerkräfte, und genau 14
+Gleichgewichtsbedingungen. Das zweite Festlager bringt eine vierte Lagerkraft
+hinzu. Die waagerechte Lagerkraft von rund $4200\,\text{N}$ folgt deshalb
+nicht allein aus dem Gleichgewicht. Sie hängt auch davon ab, wie sich die
+Stäbe verformen. Weil die beiden Lager nicht auseinanderrücken können, müssen
+sich die Längenänderungen der drei Untergurtstäbe zu null addieren. Wäre zum
+Beispiel der mittlere Untergurtstab doppelt so steif, stiege die waagerechte
+Lagerkraft auf $4300\,\text{N}$. Das Steifigkeitsverfahren berücksichtigt das
+automatisch, an unseren Funktionen mussten wir nichts ändern.
 ````

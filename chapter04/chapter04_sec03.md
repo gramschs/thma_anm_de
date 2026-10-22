@@ -429,8 +429,9 @@ for n in lager_indizes:
     print(f'Lager an Knoten {n}: Fx = {knotenkraefte_seite[2*n]:7.1f} N, '
           f'Fy = {knotenkraefte_seite[2*n + 1]:7.1f} N')
 ```
-Stab 0 drückt Knoten 0 schräg nach links unten in das Lager. Damit Knoten 0
-an seinem Platz bleibt, muss das Lager nach rechts oben dagegenhalten.
+Ohne Seitenkraft steht Stab 0 unter Druck. Er drückt Knoten 0 schräg nach
+links unten in das Lager. Damit Knoten 0 an seinem Platz bleibt, muss das
+Lager nach rechts oben dagegenhalten.
 
 Mit der Seitenkraft trägt Stab 1 rund $2460\,\text{N}$ Druck, mehr als
 doppelt so viel wie vorher. Die Seitenkraft schiebt die Spitze nach rechts,

@@ -224,7 +224,8 @@ kraft_vektor = np.zeros(2 * anzahl_knoten)
 kraft_vektor[5] = -800.0
 ```
 
-Notieren Sie Ihre Vermutung, bevor Sie den Code ausführen.
+Notieren Sie Ihre Vermutung in einer Markdown-Zelle, bevor Sie den Code
+ausführen.
 
 1. Wie viele Freiheitsgrade hat das Fachwerk, und welche Form hat seine
    Steifigkeitsmatrix?
@@ -321,7 +322,8 @@ print('Block in kN/mm:')
 print(np.round(block * 1e-6, 2))
 ```
 
-Notieren Sie Ihre Vermutung, bevor Sie den Code ausführen.
+Notieren Sie Ihre Vermutung in einer Markdown-Zelle, bevor Sie den Code
+ausführen.
 
 1. Welchen Wert hat der Einheitsvektor `e`?
 2. Welche Einträge des Blocks sind null, welcher nicht?
@@ -400,7 +402,8 @@ print('K:')
 print(K)
 ```
 
-Notieren Sie Ihre Vermutung, bevor Sie den Code ausführen.
+Notieren Sie Ihre Vermutung in einer Markdown-Zelle, bevor Sie den Code
+ausführen.
 
 1. Was gibt `print(K_lager)` aus?
 2. Was gibt `print(K)` aus? Warum?
@@ -475,7 +478,8 @@ for s in range(len(stabkraefte)):
         print(f'Stab {s}: Knicklast {knicklast:6.0f} N, Druckkraft {-stabkraefte[s]:6.0f} N')
 ```
 
-Notieren Sie Ihre Vermutung, bevor Sie den Code ausführen.
+Notieren Sie Ihre Vermutung in einer Markdown-Zelle, bevor Sie den Code
+ausführen.
 
 1. Für welche Stäbe gibt die Schleife eine Zeile aus? Warum nicht für
    Stab 0?
@@ -750,9 +754,10 @@ Fachwerk mit Stabkräften und 200-fach überhöhten Verschiebungen.
 **Teil 3:** Prüfen Sie alle Stäbe auf Spannung und alle Druckstäbe auf
 Knicken. Welche Stäbe fallen durch?
 
-**Teil 4:** Rundstäbe gibt es mit 12, 16, 20 und 25 mm Durchmesser. Bestimmen
-Sie mit einer Schleife den kleinsten Durchmesser, bei dem alle Stäbe beide
-Nachweise bestehen.
+**Teil 4:** Rundstäbe gibt es mit 12, 16, 20 und 25 mm Durchmesser. Geben
+Sie mit einer Schleife für jeden Durchmesser aus, wie viele Stäbe mindestens
+einen der beiden Nachweise nicht bestehen. Bei welchem kleinsten Durchmesser
+bestehen alle Stäbe beide Nachweise?
 
 **Abschlussfrage:** Die beiden Diagonalen 7 und 8, die vom Untergurt zum
 mittleren Knoten 5 führen, tragen keine Kraft. Warum? Und warum ändern sich
@@ -868,9 +873,13 @@ null. Der Untergurt steht unter Zug, der Obergurt und die äußeren Diagonalen
 unter Druck. Mit $12\,\text{mm}$ Durchmesser liegt die Spannung weit unter der
 Streckgrenze, aber die vier Druckstäbe 3, 4, 5 und 10 knicken. Ihre Knicklast
 beträgt nur rund $2110\,\text{N}$ bei einer Druckkraft von $3464\,\text{N}$.
-Der kleinste Durchmesser, bei dem alle Nachweise erfüllt sind, ist
-$16\,\text{mm}$. Weil die Knicklast mit $d^4$ wächst, reicht schon dieser
-kleine Schritt: $(16/12)^4 \approx 3.2$.
+Nach unserem vereinfachten Nachweis ist der kleinste Durchmesser, bei dem
+alle Nachweise erfüllt sind, $16\,\text{mm}$. Weil die Knicklast mit $d^4$
+wächst, reicht schon dieser kleine Schritt: $(16/12)^4 \approx 3.2$. Die
+Knicklast ist dann aber nur rund doppelt so groß wie die Druckkraft. Eine
+Auslegung nach Norm berücksichtigt zusätzlich Sicherheitsfaktoren und
+Imperfektionen. Bei so schlanken Stäben kann dieser Abstand dann schon zu
+knapp sein.
 
 **Abschlussfrage:** Am mittleren Knoten 5 greift keine Last an, und die
 Obergurtstäbe 3 und 4 sind waagerecht. Im Gleichgewicht in $y$-Richtung

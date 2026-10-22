@@ -51,7 +51,7 @@ Aufbau:
    - erhält später ein eigenes Erklärvideo von ca. 10 min
    - **endet mit einer Mini-Übung (✩)** (siehe Abschnitt "Mini-Übungen")
 4. **Zusammenfassung und Ausblick** mit explizitem Vorgriff auf das nächste
-   Kapitel
+   Kapitel, als reiner Fließtext ohne Admonition-Boxen
 
 ### Vertiefungskapitel (sec02, sec04)
 
@@ -385,8 +385,10 @@ beantwortet.
 
 ### Inhaltliche Merkmale
 
-- ✩-Aufgaben: vorgegebener Code, Fragen zu Ausgabe und Verhalten, am Ende
-  "Führen Sie den Code aus und überprüfen Sie Ihre Vorhersagen"
+- ✩-Aufgaben: vorgegebener Code, danach der Satz "Notieren Sie Ihre Vermutung
+  in einer Markdown-Zelle, bevor Sie den Code ausführen.", dann Fragen zu
+  Ausgabe und Verhalten, am Ende "Führen Sie den Code aus und überprüfen Sie
+  Ihre Vorhersagen"
 - ✩✩-Aufgaben: eigener Code, mit Kommentaren strukturiert, oft mit Funktionen
   und Docstrings
 - ✩✩✩-Aufgaben: mehrere benannte Teile (`**Teil 1:**`, `**Teil 2:**` usw.),
@@ -430,7 +432,8 @@ beantwortet.
   sich nicht durch bloßes Ausführen beantworten lässt?
 - [ ] Fremdvideos als Dropdown am Ende des jeweiligen H2-Abschnitts, nicht
   gesammelt?
-- [ ] Zusammenfassung mit konkretem Ausblick auf das nächste Kapitel?
+- [ ] Zusammenfassung mit konkretem Ausblick auf das nächste Kapitel, ohne
+  Admonition-Boxen?
 
 ### Zusätzlich für Vertiefungskapitel (sec02, sec04)
 

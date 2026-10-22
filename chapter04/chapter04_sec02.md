@@ -375,9 +375,13 @@ die Diagonale verbunden, deshalb sind alle vier Einträge belegt.
 Im Diagonalblock von Knoten 4 addieren sich die Beiträge der Stäbe 1 und 5.
 In $x$-Richtung wirken beide: Stab 1 mit $16.49\,\text{kN/mm}$ und die Schräge
 mit $5.83\,\text{kN/mm}$. In $y$-Richtung wirkt nur die Schräge, denn der
-waagerechte Stab 1 kann keine senkrechte Kraft aufnehmen. Die Spitze gibt
-deshalb in $y$-Richtung am leichtesten nach, also genau in der Richtung, in
-der die Rohrleitung zieht.
+waagerechte Stab 1 kann keine senkrechte Kraft aufnehmen. Der Diagonalblock
+beschreibt Knoten 4 allerdings für sich allein, so als würden alle anderen
+Knoten festgehalten. Unter dieser Annahme gibt die Spitze in $y$-Richtung
+leichter nach als in $x$-Richtung, also in der Richtung, in der die
+Rohrleitung zieht. Wie weit sich die Spitze tatsächlich verschiebt, berechnen
+wir in Aufgabe 4.5. Dort sind die Lager im Gleichungssystem, und alle freien
+Knoten dürfen sich bewegen.
 ````
 
 ```{admonition} Abschlussfrage

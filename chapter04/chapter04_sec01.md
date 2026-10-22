@@ -335,15 +335,17 @@ $\vec{e}$, den Differenzvektor geteilt durch die Stablänge.
 
 Was passiert, wenn sich Knoten 1 um $1\,\text{mm}$ nach unten verschiebt? Nur
 der Anteil der Verschiebung in Stabrichtung ändert die Länge, der Anteil quer
-dazu dreht den Stab nur ein wenig. Die folgende Abbildung zeigt das allgemein
-für einen Stab von Knoten $i$ nach Knoten $j$. Knoten $i$ steht fest, Knoten
-$j$ verschiebt sich um $\vec{u}_j$ in die neue Lage $j'$. Wir zerlegen die
-Verschiebung in den Anteil $u^{\parallel}$ entlang der Stabachse und den
-Anteil $u^{\perp}$ quer dazu. Nur $u^{\parallel}$ ändert die Stablänge, er
-ist also genau die Längenänderung $\Delta L$.
+dazu dreht den Stab nur ein wenig. Die folgende Abbildung zeigt das für
+unseren Stab 0. Die Verschiebung ist dabei stark überhöht gezeichnet.
+Knoten 0 steht fest, Knoten 1 verschiebt sich um $\vec{u}_1$ in die neue
+Lage $1'$. Wir zerlegen die Verschiebung in den Anteil $u^{\parallel}$
+entlang der Stabachse und den Anteil $u^{\perp}$ quer dazu. Nur
+$u^{\parallel}$ ändert die Stablänge, er ist also genau die Längenänderung
+$\Delta L$. Hier zeigt $u^{\parallel}$ entgegen $\vec{e}$, der Stab wird
+also kürzer.
 
 ```{figure} pics/chap04_projektion.svg
-:alt: Stab mit der Verschiebung des Endknotens, zerlegt in einen Anteil entlang der Stabachse und einen Anteil senkrecht dazu
+:alt: Stab 0 des Schaukelgestells mit der Verschiebung von Knoten 1 nach unten, zerlegt in einen Anteil entlang der Stabachse und einen Anteil senkrecht dazu
 :align: center
 :label: fig_chap04_projektion
 
@@ -352,10 +354,16 @@ $\vec{e}$ ändert die Stablänge und erzeugt eine Kraft.
 (Quelle: eigene Abbildung; Lizenz [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0))
 ```
 
-Bei unserem Stab 0 ist $i = 0$ und $j = 1$. Die Kraft $\vec{F}_{ij}$ aus der
-Abbildung nennen wir deshalb kurz $\vec{F}_1$, weil sie an Knoten 1 angreift.
-Für eine Verschiebung $\vec{u}_1 = (u_x, u_y)^\top$ von Knoten 1 liefert das
-Skalarprodukt mit $\vec{e}$ den Anteil in Stabrichtung, also die
+Genau genommen verlängert auch $u^{\perp}$ den Stab ein wenig. Dieser Effekt
+wächst aber mit dem Quadrat der Verschiebung. Bei Verschiebungen von
+Bruchteilen eines Millimeters an über zwei Meter langen Stäben ist er
+vernachlässigbar. Im ganzen Kapitel treffen wir deshalb die **Annahme kleiner
+Verschiebungen**. Erst sie macht den Zusammenhang zwischen Verschiebungen und
+Kräften linear.
+
+Die Kraft $\vec{F}_1$ in der Abbildung trägt den Index 1, weil sie an
+Knoten 1 angreift. Für eine Verschiebung $\vec{u}_1 = (u_x, u_y)^\top$ von
+Knoten 1 liefert das Skalarprodukt mit $\vec{e}$ den Anteil in Stabrichtung, also die
 Längenänderung. Die Federgleichung ergibt dann die Kraft in Stabrichtung:
 
 $$\Delta L = e_x\,u_x + e_y\,u_y, \qquad \vec{F}_1 = k\,\Delta L\,\vec{e}.$$

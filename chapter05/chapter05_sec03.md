@@ -4,110 +4,224 @@ kernelspec:
   display_name: 'Python 3'
 ---
 
-# 5.3 Homogene Koordinaten
+# 5.3 Homogene Koordinaten am Roboterarm
 
-```{admonition} Warnung
-:class: warning
-Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
-```
+In Kapitel 5.1 haben wir Gelenk 2 des SCARA-Roboters in gestreckter Stellung
+festgehalten. Der Greifer erreicht dann nur Punkte auf einem Kreis mit dem
+Radius $0.7\,\text{m}$, genau wie der Schwenkarm aus Kapitel 5.2. Um ein
+Bauteil an eine beliebige Stelle der Platine zu setzen, muss sich auch Gelenk 2
+drehen. *Wo steht der Greifer, wenn sich Gelenk 1 um 30° und Gelenk 2 um 60°
+dreht?*
 
-In Abschnitt 5.1 haben wir gelernt, wie wir ein Objekt mit einer einzigen
-Matrixmultiplikation drehen. In der Praxis wollen wir ein Bauteil aber nicht
-nur drehen, sondern auch verschieben: Ein Roboterarm dreht sein Greifwerkzeug
-und bewegt es gleichzeitig an eine neue Position. Mit gewöhnlichen Matrizen
-lässt sich beides nicht in einem einzigen Schritt beschreiben. Homogene
-Koordinaten lösen dieses Problem elegant.
+Die Drehmatrix allein beantwortet diese Frage nicht, denn sie dreht nur um den
+Ursprung. Gelenk 2 sitzt aber am Ende von Arm 1. In diesem Kapitel setzen wir
+eine Drehung um einen anderen Punkt aus Verschieben und Drehen zusammen. Dann
+hängen wir an jeden Punkt eine dritte Koordinate mit dem Wert 1 an. Mit diesen
+**homogenen Koordinaten** fassen wir Drehen und Verschieben in einer einzigen
+Matrix zusammen und berechnen die Stellung des ganzen Arms.
 
 ## Lernziele
 
 ```{admonition} Lernziele
 :class: attention
-* [ ] Sie können erklären, warum Translation nicht als gewöhnliche
-  Matrixmultiplikation darstellbar ist.
-* [ ] Sie können einen Punkt in **homogene Koordinaten** umwandeln und
-  zurück.
-* [ ] Sie können die homogene Transformationsmatrix $\mathbf{T}$ aus
-  Rotation und Translation aufbauen.
-* [ ] Sie können $\mathbf{T}$ auf ein Objekt (eine Punktemenge) anwenden
-  und das Ergebnis visualisieren.
-* [ ] Sie können zwei Transformationen durch Matrizenmultiplikation
-  verketten und kennen die Bedeutung der Reihenfolge.
+* [ ] Sie können eine Drehung um einen beliebigen Punkt aus Verschieben, Drehen
+  und Zurückverschieben zusammensetzen.
+* [ ] Sie können Punkte in **homogene Koordinaten** umwandeln und eine
+  **homogene Transformationsmatrix** aus Drehung und Verschiebung aufbauen.
+* [ ] Sie können mehrere Transformationen durch Matrixmultiplikation verketten
+  und wissen, warum die Reihenfolge eine Rolle spielt.
 ```
 
-+++
+## Wie dreht sich Gelenk 2?
 
-## Warum Translation keine Matrixmultiplikation ist
+Wir übernehmen den Arm, das Bauteil und die Funktion `drehmatrix` aus
+Kapitel 5.1 und führen zuerst die beiden folgenden Zellen aus. Die erste
+enthält die vorgegebene Zeichenfunktion, die zweite die Daten aus Kapitel 5.1.
 
-Wir wollen Eckpunkt B unseres Dreiecks von $(2, 0)$ um den Vektor
-$\vec{t} = (1, 3)^\top$ verschieben. Das Ergebnis soll $(3, 3)$ sein.
-Schauen wir, ob eine $2 \times 2$-Matrix das leisten kann:
+```{code-cell} python
+:tags: [hide-input]
+# Vorgegebene Zeichenfunktion: einfach ausführen, sie muss nicht verstanden werden.
+def zeichne_roboter(arme, bauteile=None, ziele=None, bahn=None, umgebung=None,
+                    beschriftungen=None, titel='', grenze=0.8):
+    """Zeichnet einen Roboterarm in der Draufsicht.
+
+    arme: Punkte eines Arms als Array, Zeile = [x, y], vom ersten Gelenk bis
+          zum Greifer, oder eine Liste solcher Arrays für mehrere Stellungen
+    bauteile: Eckpunkte des Bauteils im Greifer als Array, oder eine Liste
+              mit einem Array pro Stellung (optional)
+    ziele: Zielpunkte als Array, Zeile = [x, y], werden als Kreuze markiert (optional)
+    bahn: Greiferpositionen als Array, Zeile = [x, y], werden als gestrichelte
+          Linie mit Punkten gezeichnet (optional)
+    umgebung: Eckpunkte von Flächen wie Förderband oder Kiste als Array oder
+              Liste von Arrays, werden grau gefüllt (optional)
+    beschriftungen: Legendentexte, einer pro Stellung (optional)
+    titel: Diagrammtitel
+    grenze: sichtbarer Bereich von -grenze bis +grenze in m
+    """
+    blau, rot, orange, grau = '#005A94', '#E60000', '#E87846', '#484949'
+    farben = [blau, rot, orange, grau]
+    if isinstance(arme, np.ndarray):
+        arme = [arme]
+    if isinstance(bauteile, np.ndarray):
+        bauteile = [bauteile]
+    if isinstance(umgebung, np.ndarray):
+        umgebung = [umgebung]
+    fig, ax = plt.subplots(figsize=(6, 6))
+
+    # Umgebung: Flächen wie Förderband oder Kiste
+    if umgebung is not None:
+        for flaeche in umgebung:
+            ax.fill(flaeche[:, 0], flaeche[:, 1], facecolor='#DDDEDE',
+                    edgecolor=grau, linewidth=1, zorder=0)
+
+    # Sockel im Ursprung
+    ax.add_patch(plt.Circle((0, 0), 0.06, facecolor='#CCDEE9', edgecolor=blau,
+                            linewidth=1.5, zorder=1))
+
+    # Greiferbahn als gestrichelte Linie mit Punkten
+    if bahn is not None:
+        ax.plot(bahn[:, 0], bahn[:, 1], color=grau, linestyle='--', linewidth=1,
+                marker='o', markersize=3, label='Greiferbahn', zorder=1)
+
+    # Arme: Gelenke als Kreise, Greifer als Quadrat, Bauteil gelb gefüllt
+    for k in range(len(arme)):
+        farbe = farben[k % len(farben)]
+        punkte = arme[k]
+        label = None if beschriftungen is None else beschriftungen[k]
+        ax.plot(punkte[:, 0], punkte[:, 1], color=farbe, linewidth=6,
+                solid_capstyle='round', label=label, zorder=2)
+        ax.scatter(punkte[:-1, 0], punkte[:-1, 1], s=50, color='white',
+                   edgecolor=farbe, linewidth=2, zorder=3)
+        ax.scatter(punkte[-1, 0], punkte[-1, 1], s=60, marker='s', color=farbe,
+                   zorder=3)
+        if bauteile is not None:
+            ecken = bauteile[k]
+            ax.fill(ecken[:, 0], ecken[:, 1], facecolor='#FFEC7F',
+                    edgecolor=farbe, linewidth=1.5, zorder=4)
+
+    # Zielpunkte als Kreuze
+    if ziele is not None:
+        ziele = np.atleast_2d(ziele)
+        ax.scatter(ziele[:, 0], ziele[:, 1], marker='x', s=80, color=grau,
+                   linewidth=2, zorder=5, label='Ziel')
+
+    if beschriftungen is not None or ziele is not None or bahn is not None:
+        ax.legend(loc='lower left')
+    ax.set_xlim(-grenze, grenze)
+    ax.set_ylim(-grenze, grenze)
+    ax.set_aspect('equal')
+    ax.grid(True)
+    ax.set_xlabel('x in m')
+    ax.set_ylabel('y in m')
+    ax.set_title(titel)
+    plt.show()
+```
 
 ```{code-cell} python
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.patches import Polygon as MplPolygon
 
-# --- Unser Dreieck aus Abschnitt 5.1 ---
-dreieck = np.array([
-    [0.0, 0.0],   # Eckpunkt A
-    [2.0, 0.0],   # Eckpunkt B
-    [1.0, 2.0],   # Eckpunkt C
+# Funktion aus Kapitel 5.1
+def drehmatrix(winkel):
+    """Drehmatrix für eine Drehung um den Ursprung, winkel in Radiant."""
+    return np.array([
+        [np.cos(winkel), -np.sin(winkel)],
+        [np.sin(winkel),  np.cos(winkel)],
+    ])
+
+# Punkte des gestreckten Arms in Grundstellung in m, Zeile = [x, y]
+arm = np.array([
+    [0.0, 0.0],   # Gelenk 1: Drehachse am Sockel
+    [0.4, 0.0],   # Gelenk 2: Ende von Arm 1
+    [0.7, 0.0],   # Greifer: Ende von Arm 2
 ])
 
-# --- Verschiebung als Addition ---
-# Eine Verschiebung um den Vektor t addiert t zu jedem Punkt.
-# Das ist KEINE Matrixmultiplikation, sondern eine Addition.
-t = np.array([1.0, 3.0])           # Verschiebungsvektor
-dreieck_verschoben = dreieck + t   # Broadcasting: t wird zu jeder Zeile addiert
-
-print("Original:")
-print(dreieck)
-print("\nVerschoben um t = (1, 3):")
-print(dreieck_verschoben)
-
-# --- Darstellung ---
-fig, ax = plt.subplots(figsize=(5, 5))
-ax.add_patch(MplPolygon(dreieck, closed=True, fill=False,
-                         edgecolor='blue', linewidth=2, label='Original'))
-ax.add_patch(MplPolygon(dreieck_verschoben, closed=True, fill=False,
-                         edgecolor='red', linewidth=2, label='Verschoben'))
-ax.set_xlim(-1, 5); ax.set_ylim(-1, 6)
-ax.set_aspect('equal'); ax.grid(True); ax.legend()
-ax.set_title('Verschiebung als Addition')
-plt.show()
+# Ecken des Bauteils im Greifer in m, Grundstellung, Zeile = [x, y]
+bauteil = np.array([
+    [0.66, -0.02],
+    [0.74, -0.02],
+    [0.74,  0.02],
+    [0.66,  0.02],
+])
 ```
 
-Die Verschiebung funktioniert als Addition. Warum ist das ein Problem?
-Weil wir Drehung und Verschiebung dann nicht kombinieren können, ohne zwei
-getrennte Operationen auszuführen: erst multiplizieren, dann addieren.
-Im Robotik- und Simulationskontext, wo Dutzende solcher Transformationen
-verkettet werden, ist das unpraktisch.
+Wir halten Gelenk 1 zunächst in der Grundstellung fest, also $\alpha = 0$, und
+drehen nur Gelenk 2 um $\beta = 90°$. Arm 2 sollte dann senkrecht nach oben
+zeigen. Gelenk 2 bleibt bei $(0.4, 0)$ stehen, und der Greifer sollte
+$0.3\,\text{m}$ darüber bei $(0.4, 0.3)$ landen. Als Erstes versuchen wir es
+mit der Drehmatrix aus Kapitel 5.1.
 
-Wir rechnen kurz nach, warum eine $2 \times 2$-Matrix die Translation nicht
-ersetzen kann. Gesucht ist eine Matrix $\mathbf{M}$, sodass
-$\mathbf{M} \cdot \vec{p} = \vec{p} + \vec{t}$ für alle Punkte $\vec{p}$
-gilt. Für $\vec{p} = (0, 0)^\top$ müsste gelten:
+```{code-cell} python
+# Erster Versuch: den Greifer mit der Drehmatrix um 90 Grad drehen
+R = drehmatrix(np.deg2rad(90))
+print('Greifer nach der Drehung in m:', np.round(R @ arm[2], 4))
+```
 
-\begin{equation*}
-\mathbf{M} \begin{pmatrix} 0 \\ 0 \end{pmatrix}
-= \begin{pmatrix} 0 \\ 0 \end{pmatrix} + \begin{pmatrix} t_x \\ t_y \end{pmatrix}
-= \begin{pmatrix} t_x \\ t_y \end{pmatrix}.
-\end{equation*}
+Der Greifer landet bei $(0, 0.7)$ statt bei $(0.4, 0.3)$. Die Drehmatrix dreht
+um den Ursprung, und dort sitzt Gelenk 1. Wir haben den Greifer also so
+gedreht, als hätte sich Gelenk 1 gedreht. *Wie drehen wir stattdessen um
+Gelenk 2?* Wir verschieben den Arm so, dass Gelenk 2 im Ursprung liegt. Dort
+dreht die Drehmatrix um die richtige Stelle. Danach schieben wir alles wieder
+zurück:
 
-Aber jede Matrix multipliziert mit dem Nullvektor ergibt den Nullvektor:
-$\mathbf{M} \cdot \vec{0} = \vec{0}$. Eine solche Matrix kann also gar nicht
-existieren. Translation ist eine **affine Abbildung**, keine lineare, und
-deshalb nicht als $2 \times 2$-Matrixmultiplikation darstellbar.
+1. Verschieben: Wir ziehen von jedem Punkt die Lage von Gelenk 2 ab.
+2. Drehen: Wir multiplizieren mit der Drehmatrix.
+3. Zurückverschieben: Wir addieren die Lage von Gelenk 2 wieder.
 
-```{admonition} Mini-Übung
+```{code-cell} python
+gelenk2 = arm[1]
+
+# Schritt 1: verschieben, sodass Gelenk 2 im Ursprung liegt
+greifer_verschoben = arm[2] - gelenk2
+# Schritt 2: um den Ursprung drehen, in dem jetzt Gelenk 2 liegt
+greifer_gedreht = R @ greifer_verschoben
+# Schritt 3: zurückverschieben
+greifer_neu = greifer_gedreht + gelenk2
+
+print('Nach Schritt 1:', np.round(greifer_verschoben, 4))
+print('Nach Schritt 2:', np.round(greifer_gedreht, 4))
+print('Nach Schritt 3:', np.round(greifer_neu, 4))
+```
+
+Nach Schritt 1 liegt der Greifer bei $(0.3, 0)$, also $0.3\,\text{m}$ rechts
+vom verschobenen Gelenk 2. Schritt 2 dreht ihn nach $(0, 0.3)$, und Schritt 3
+schiebt ihn an die richtige Stelle $(0.4, 0.3)$.
+
+Das Bauteil behandeln wir genauso. Ziehen wir einen Vektor mit zwei Einträgen
+von einem Array der Form `(4, 2)` ab, zieht NumPy ihn von jeder Zeile ab. So
+verschieben wir alle vier Ecken auf einmal. Gelenk 1 und Gelenk 2 bewegen sich
+bei dieser Drehung nicht. Wir übernehmen sie deshalb unverändert in den neuen
+Arm.
+
+```{code-cell} python
+# Alle Ecken des Bauteils in drei Schritten um Gelenk 2 drehen
+bauteil_neu = (R @ (bauteil - gelenk2).T).T + gelenk2
+
+# Gelenk 1 und Gelenk 2 bleiben stehen, nur der Greifer bewegt sich
+arm_neu = np.array([arm[0], arm[1], greifer_neu])
+
+print('Bauteil nach der Drehung in m:')
+print(np.round(bauteil_neu, 4))
+
+zeichne_roboter([arm, arm_neu], bauteile=[bauteil, bauteil_neu],
+                beschriftungen=['Grundstellung', 'β = 90°'],
+                titel='Gelenk 2 dreht um 90°')
+```
+
+Arm 2 steht jetzt senkrecht auf Arm 1. Das Bauteil hat sich mit dem Greifer um
+90° gedreht, seine lange Kante reicht von $y = 0.26$ bis $y = 0.34$. Mit
+Verschieben, Drehen und Zurückverschieben können wir also um jeden beliebigen
+Punkt drehen, nicht nur um den Ursprung. Diesen Weg hatten wir am Ende von
+Kapitel 5.2 für den schräg liegenden Deckel angekündigt.
+
+```{admonition} Mini-Übung (✩)
 :class: tip
-1. Verschieben Sie das Dreieck um $\vec{t} = (-2, 1)^\top$ und zeichnen
-   Sie Original und verschobenes Dreieck.
-2. Führen Sie danach eine 45°-Drehung des bereits verschobenen Dreiecks
-   durch. Welche zwei Python-Operationen brauchen Sie dafür? Wie viele
-   Schritte sind das insgesamt, um erst zu drehen und dann zu verschieben?
-3. Warum kann eine $2 \times 2$-Matrix den Nullpunkt nicht verschieben?
-   Begründen Sie in einem Satz ohne Code.
+1. Beantworten Sie ohne Code: Wo steht der Greifer, wenn Gelenk 2 um
+   $\beta = -90°$ dreht und Gelenk 1 in der Grundstellung bleibt?
+2. Drehen Sie Greifer und Bauteil mit den drei Schritten um $\beta = 45°$ und
+   zeichnen Sie Grundstellung und neue Stellung mit `zeichne_roboter`.
+3. Beantworten Sie ohne Code: Was passiert bei $\beta = 90°$, wenn wir
+   Schritt 3 vergessen? Wo landet der Greifer, und wo säße Arm 2?
 ```
 
 ```{code-cell} python
@@ -118,172 +232,157 @@ deshalb nicht als $2 \times 2$-Matrixmultiplikation darstellbar.
 :class: tip
 :class: dropdown
 ```python
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.patches import Polygon as MplPolygon
+# Teilaufgabe 2: Greifer und Bauteil um 45 Grad um Gelenk 2 drehen
+R_45 = drehmatrix(np.deg2rad(45))
+greifer_45 = R_45 @ (arm[2] - gelenk2) + gelenk2
+bauteil_45 = (R_45 @ (bauteil - gelenk2).T).T + gelenk2
+arm_45 = np.array([arm[0], arm[1], greifer_45])
+print('Greifer bei β = 45° in m:', np.round(greifer_45, 4))
 
-dreieck = np.array([[0.0, 0.0], [2.0, 0.0], [1.0, 2.0]])
-
-def drehmatrix_2d(phi):
-    return np.array([[np.cos(phi), -np.sin(phi)],
-                     [np.sin(phi),  np.cos(phi)]])
-
-# Teilaufgabe 1: Verschiebung
-t = np.array([-2.0, 1.0])
-dreieck_verschoben = dreieck + t
-
-# Teilaufgabe 2: danach Drehung
-R = drehmatrix_2d(np.deg2rad(45))
-dreieck_gedreht = (R @ dreieck_verschoben.T).T   # Schritt 1: Multiplikation
-                                                  # Schritt 2: Addition (war oben)
-# Insgesamt zwei Schritte: erst + t, dann @ R
-
-fig, ax = plt.subplots(figsize=(5, 5))
-ax.add_patch(MplPolygon(dreieck,           closed=True, fill=False,
-                         edgecolor='blue',   linewidth=2, label='Original'))
-ax.add_patch(MplPolygon(dreieck_verschoben, closed=True, fill=False,
-                         edgecolor='red',    linewidth=2, label='Verschoben'))
-ax.add_patch(MplPolygon(dreieck_gedreht,    closed=True, fill=False,
-                         edgecolor='green',  linewidth=2, label='Verschoben + gedreht'))
-ax.set_xlim(-4, 4); ax.set_ylim(-1, 5)
-ax.set_aspect('equal'); ax.grid(True); ax.legend()
-plt.show()
+zeichne_roboter([arm, arm_45], bauteile=[bauteil, bauteil_45],
+                beschriftungen=['Grundstellung', 'β = 45°'],
+                titel='Gelenk 2 dreht um 45°')
 ```
-
-Zu Teilaufgabe 3: Das Matrixprodukt $\mathbf{M} \cdot \vec{0}$ ergibt
-immer $\vec{0}$, weil jede Linearkombination der Nullzeilen gleich null
-ist. Der Ursprung kann also durch keine lineare Abbildung verschoben werden.
+Bei $\beta = -90°$ dreht Arm 2 im Uhrzeigersinn und zeigt senkrecht nach
+unten, der Greifer steht bei $(0.4, -0.3)$. Bei $\beta = 45°$ steht er bei
+$(0.612, 0.212)$, also $0.3\,\text{m} \cdot \cos 45° \approx 0.212\,\text{m}$
+rechts von Gelenk 2 und ebenso weit darüber. Ohne Schritt 3 landet der Greifer
+bei $(0, 0.3)$. Arm 2 wäre zwar richtig gedreht, aber mit seinem Gelenk im
+Ursprung. Er säße dann am Sockel statt am Ende von Arm 1.
 ````
 
-## Homogene Koordinaten und die Transformationsmatrix
+## Verschieben als Matrix
 
-Die Idee der **homogenen Koordinaten** ist einfach: Wir fügen jedem Punkt
-eine künstliche dritte Koordinate mit dem Wert $1$ hinzu. Aus dem 2D-Punkt
-$(x, y)^\top$ wird der 3D-Vektor $(x, y, 1)^\top$. In diesem erweiterten
-Raum lassen sich Drehung und Verschiebung zu einer einzigen $3 \times 3$-Matrix
-zusammenfassen.
+Unsere Rechnung funktioniert, sie mischt aber zwei Rechenarten: Verschieben ist
+eine Addition, Drehen eine Matrixmultiplikation. Jedes weitere Gelenk bringt
+drei weitere Schritte. Ein Industrieroboter mit sechs Gelenken bräuchte eine
+lange Kette aus Additionen und Multiplikationen. Praktischer wäre es, jeden
+Schritt als Matrix zu schreiben und alle Matrizen zu einer einzigen
+zusammenzufassen. *Lässt sich eine Verschiebung als 2×2-Matrix schreiben?*
 
-```{code-cell} python
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.patches import Polygon as MplPolygon
+Leider nicht. Eine Matrix $\mathbf{M}$, die jeden Punkt um
+$\vec{t} = (t_x, t_y)^\top$ verschiebt, müsste auch den Ursprung verschieben,
+also $\mathbf{M} \cdot \vec{0} = \vec{t}$ erfüllen. Das Produkt einer Matrix
+mit dem Nullvektor ist aber immer der Nullvektor, denn in jedem Eintrag des
+Produkts werden nur Vielfache von 0 addiert. Eine 2×2-Matrix lässt den Ursprung also immer an
+seinem Platz.
 
-dreieck = np.array([[0.0, 0.0], [2.0, 0.0], [1.0, 2.0]])
+Der Ausweg ist ein Trick: Wir hängen an jeden Punkt eine dritte Koordinate mit
+dem Wert 1 an. Aus $(x, y)$ wird $(x, y, 1)$. Diese Schreibweise heißt
+**homogene Koordinaten**. Die dritte Koordinate ist keine Höhe $z$ im Raum,
+sondern ein Rechentrick für Verschiebungen. Bei Punkten hat sie immer den
+Wert 1. Jetzt kann eine 3×3-Matrix verschieben, denn die 1 in der dritten
+Koordinate holt die Verschiebung ins Ergebnis:
 
-# --- Homogene Koordinaten: dritte Spalte mit Einsen anhängen ---
-# np.ones((3, 1)) erzeugt eine (3, 1)-Spalte mit Einsen.
-# np.hstack fügt sie rechts an das (3, 2)-Array an -> (3, 3)-Array.
-# Jede Zeile: [x, y, 1]
-einsen = np.ones((dreieck.shape[0], 1))
-dreieck_hom = np.hstack([dreieck, einsen])
+$$\begin{pmatrix} 1 & 0 & t_x \\ 0 & 1 & t_y \\ 0 & 0 & 1 \end{pmatrix}
+\begin{pmatrix} x \\ y \\ 1 \end{pmatrix}
+= \begin{pmatrix} 1 \cdot x + 0 \cdot y + t_x \cdot 1 \\
+0 \cdot x + 1 \cdot y + t_y \cdot 1 \\
+0 \cdot x + 0 \cdot y + 1 \cdot 1 \end{pmatrix}
+= \begin{pmatrix} x + t_x \\ y + t_y \\ 1 \end{pmatrix}.$$
 
-print("Dreieck in homogenen Koordinaten:")
-print(dreieck_hom)
+Setzen wir links oben statt der Einsen und Nullen die Drehmatrix ein, erhalten
+wir die **homogene Transformationsmatrix**
 
-# --- Homogene Transformationsmatrix T (Drehung + Verschiebung) ---
-# Aufbau:
-#   [ cos(phi)  -sin(phi)  tx ]
-#   [ sin(phi)   cos(phi)  ty ]
-#   [ 0          0         1  ]
-# Die obere linke 2x2-Teilmatrix ist die Drehmatrix R.
-# Die rechte Spalte (tx, ty) ist der Verschiebungsvektor.
-# Die unterste Zeile (0, 0, 1) sorgt dafür, dass die 1 erhalten bleibt.
+$$\mathbf{T} = \begin{pmatrix} \cos\varphi & -\sin\varphi & t_x \\
+\sin\varphi & \cos\varphi & t_y \\ 0 & 0 & 1 \end{pmatrix}
+= \left(\begin{array}{c|c} \mathbf{R}(\varphi) & \vec{t} \\ \hline
+\vec{0}^\top & 1 \end{array}\right).$$
 
-def transformationsmatrix(phi, tx, ty):
-    """Homogene 2D-Transformationsmatrix: Drehung um phi, dann Verschiebung (tx, ty)."""
-    c, s = np.cos(phi), np.sin(phi)
-    return np.array([
-        [c, -s, tx],
-        [s,  c, ty],
-        [0,  0,  1],
-    ])
+Sie dreht einen Punkt zuerst um den Ursprung und verschiebt ihn danach um
+$\vec{t}$. Die letzte Zeile $(0, 0, 1)$ sorgt dafür, dass die dritte Koordinate
+auch nach der Transformation den Wert 1 behält. Mit $\varphi = 0$ ist $\mathbf{T}$ eine
+reine Verschiebung, mit $\vec{t} = \vec{0}$ eine reine Drehung. Die reine
+Drehung sieht genauso aus wie $\mathbf{R}_z(\varphi)$ aus Kapitel 5.1. Beide
+Matrizen lassen die dritte Koordinate unverändert, nur ist sie dort die Höhe
+und hier die 1 der homogenen Koordinaten.
 
-# --- Beispiel: 45° drehen, dann um (1, 2) verschieben ---
-phi = np.deg2rad(45)
-tx, ty = 1.0, 2.0
-T = transformationsmatrix(phi, tx, ty)
+Wir prüfen das an den Schritten 2 und 3 aus dem letzten Abschnitt. Nach
+Schritt 1 liegt der Greifer bei $(0.3, 0)$. Drehen um $90°$ und
+Zurückverschieben um $(0.4, 0)$ erledigt jetzt eine einzige Matrix:
 
-print("\nTransformationsmatrix T (45°, t=(1,2)):")
-print(np.round(T, 4))
+$$\begin{pmatrix} 0 & -1 & 0.4 \\ 1 & 0 & 0 \\ 0 & 0 & 1 \end{pmatrix}
+\begin{pmatrix} 0.3 \\ 0 \\ 1 \end{pmatrix}
+= \begin{pmatrix} 0 \cdot 0.3 + (-1) \cdot 0 + 0.4 \cdot 1 \\
+1 \cdot 0.3 + 0 \cdot 0 + 0 \cdot 1 \\
+0 \cdot 0.3 + 0 \cdot 0 + 1 \cdot 1 \end{pmatrix}
+= \begin{pmatrix} 0.4 \\ 0.3 \\ 1 \end{pmatrix}.$$
 
-# --- Transformation anwenden: T @ dreieck_hom.T ---
-# dreieck_hom.T hat Form (3, 3): drei Zeilen (x, y, 1), drei Spalten (Punkte)
-# T @ dreieck_hom.T hat Form (3, 3): transformierte Koordinaten
-# .T am Ende: zurück in Form (3, 3) mit Punkten als Zeilen
-dreieck_transformiert_hom = (T @ dreieck_hom.T).T
-
-# --- Zurück in euklidische Koordinaten: erste zwei Spalten nehmen ---
-dreieck_transformiert = dreieck_transformiert_hom[:, :2]
-
-print("\nTransformiertes Dreieck (euklidisch):")
-print(np.round(dreieck_transformiert, 4))
-
-# --- Darstellung ---
-fig, ax = plt.subplots(figsize=(5, 5))
-ax.add_patch(MplPolygon(dreieck,              closed=True, fill=False,
-                         edgecolor='blue',      linewidth=2, label='Original'))
-ax.add_patch(MplPolygon(dreieck_transformiert, closed=True, fill=False,
-                         edgecolor='red',       linewidth=2,
-                         label='Gedreht 45° + verschoben (1, 2)'))
-ax.set_xlim(-3, 4); ax.set_ylim(-1, 5)
-ax.set_aspect('equal'); ax.grid(True); ax.legend()
-ax.set_title('Homogene Transformation: Drehen + Verschieben')
-plt.show()
-```
-
-Mit einer einzigen Matrix-Multiplikation haben wir das Dreieck gedreht und
-verschoben. Die Struktur der Transformationsmatrix lässt sich schematisch
-so darstellen:
-
-\begin{equation*}
-\mathbf{T} =
-\begin{pmatrix}
-  \cos\varphi & -\sin\varphi & t_x \\
-  \sin\varphi &  \cos\varphi & t_y \\
-  0           &  0           & 1
-\end{pmatrix} =
-\left(
-\begin{array}{c|c}
-  \mathbf{R}(\varphi) & \vec{t} \\
-  \hline
-  \vec{0}^\top        & 1
-\end{array}
-\right).
-\end{equation*}
-
-Wir rechnen die Transformation von Eckpunkt B $= (2, 0)^\top$ von Hand
-durch. Mit $\cos 45° = \sin 45° = \frac{\sqrt{2}}{2} \approx 0.707$:
-
-\begin{equation*}
-\mathbf{T} \cdot \tilde{p}_B
-= \begin{pmatrix} 0.707 & -0.707 & 1 \\ 0.707 & 0.707 & 2 \\ 0 & 0 & 1 \end{pmatrix}
-  \begin{pmatrix} 2 \\ 0 \\ 1 \end{pmatrix}
-= \begin{pmatrix} 0.707 \cdot 2 + 1 \\ 0.707 \cdot 2 + 2 \\ 1 \end{pmatrix}
-= \begin{pmatrix} 2.414 \\ 3.414 \\ 1 \end{pmatrix}.
-\end{equation*}
-
-Die dritte Koordinate bleibt $1$. Die euklidischen Koordinaten des
-transformierten Punktes sind $(2.414, 3.414)^\top$.
+Lassen wir die dritte Koordinate weg, steht der Greifer wie erwartet bei
+$(0.4, 0.3)$.
 
 ```{admonition} Homogene Koordinaten in der Robotik
 :class: note
-In der industriellen Robotik wird jede Stellung eines Gelenks durch eine
-homogene $4 \times 4$-Transformationsmatrix beschrieben, die Drehung und
-Verschiebung im 3D-Raum kombiniert. Die Gesamtstellung eines Roboterarms
-ergibt sich als Produkt all dieser Matrizen. Genau dasselbe Prinzip
-wenden wir hier in 2D an.
+Im Raum hängen wir an $(x, y, z)$ eine vierte Koordinate 1 an und rechnen mit
+4×4-Matrizen aus einer 3×3-Drehmatrix und einem Verschiebungsvektor.
+Robotersteuerungen beschreiben so jedes Gelenk, und die Lage des Greifers
+ergibt sich aus dem Produkt aller Matrizen.
 ```
 
-```{admonition} Mini-Übung
+In Python schreiben wir $\mathbf{T}$ als Funktion
+`transformationsmatrix(winkel, tx, ty)`.
+
+```{code-cell} python
+def transformationsmatrix(winkel, tx, ty):
+    """Homogene Matrix: um winkel (Radiant) drehen, dann um (tx, ty) verschieben."""
+    return np.array([
+        [np.cos(winkel), -np.sin(winkel), tx],
+        [np.sin(winkel),  np.cos(winkel), ty],
+        [0.0,             0.0,            1.0],
+    ])
+
+# Schritt 1 als Matrix: reine Verschiebung, Gelenk 2 wandert in den Ursprung
+T_hin = transformationsmatrix(0, -0.4, 0)
+# Schritte 2 und 3 in einer Matrix: um 90 Grad drehen, dann zurückverschieben
+T_dreh_zurueck = transformationsmatrix(np.deg2rad(90), 0.4, 0)
+
+print('T_dreh_zurueck:')
+print(np.round(T_dreh_zurueck, 4))
+```
+
+Um viele Punkte auf einmal zu transformieren, verwenden wir die vorgegebene
+Hilfsfunktion `transformiere(T, punkte)`. Sie hängt an jeden Punkt die 1 an,
+multipliziert wie in Kapitel 5.1 mit `(T @ punkte_hom.T).T` und lässt die
+dritte Koordinate am Ende wieder weg. Wie sie das im Einzelnen macht, steht in
+den Kommentaren.
+
+```{code-cell} python
+# Vorgegebene Hilfsfunktion: einfach ausführen, die Details stehen in den Kommentaren.
+def transformiere(T, punkte):
+    """Wendet die homogene Matrix T auf alle Punkte an, Zeile = [x, y]."""
+    # Array aus Einsen: eine Zeile pro Punkt, drei Spalten
+    punkte_hom = np.ones((len(punkte), 3))
+    # x und y mit dem Slicing aus Kapitel 4.1 in die Spalten 0 und 1 eintragen
+    punkte_hom[:, 0:2] = punkte
+    # Alle Punkte auf einmal transformieren wie in Kapitel 5.1
+    ergebnis = (T @ punkte_hom.T).T
+    # Die dritte Koordinate wieder weglassen
+    return ergebnis[:, 0:2]
+```
+
+```{code-cell} python
+# Erst T_hin, dann T_dreh_zurueck auf das Bauteil anwenden
+bauteil_verschoben = transformiere(T_hin, bauteil)
+bauteil_neu = transformiere(T_dreh_zurueck, bauteil_verschoben)
+print('Bauteil nach der Drehung um Gelenk 2 in m:')
+print(np.round(bauteil_neu, 4))
+```
+
+In `T_dreh_zurueck` steht links oben die Drehmatrix $\mathbf{R}(90°)$ und
+rechts der Verschiebungsvektor $(0.4, 0)$. Die Ecken des Bauteils landen an
+denselben Stellen wie im ersten Abschnitt. Statt einer Subtraktion, einer Multiplikation und
+einer Addition brauchen wir jetzt nur noch zwei Matrixmultiplikationen. Wie wir
+auch diese beiden zu einer Matrix zusammenfassen, zeigt der nächste Abschnitt.
+
+```{admonition} Mini-Übung (✩)
 :class: tip
-1. Erstellen Sie eine Transformationsmatrix für eine reine Verschiebung
-   um $(3, -1)^\top$ ohne Drehung ($\varphi = 0$). Wie sieht die Matrix
-   aus? Wenden Sie sie auf Eckpunkt A an und überprüfen Sie das Ergebnis.
-2. Erstellen Sie eine Transformationsmatrix für eine reine Drehung um
-   $90°$ ohne Verschiebung. Vergleichen Sie den oberen linken $2 \times 2$
-   Block mit `drehmatrix_2d(np.deg2rad(90))` aus Abschnitt 5.1.
-3. Was steht in der dritten Zeile von $\mathbf{T}$, und warum muss sie
-   immer $(0, 0, 1)$ lauten? Begründen Sie in einem Satz ohne Code.
+1. Beantworten Sie ohne Code: Wie sieht die Matrix
+   `transformationsmatrix(0, 0.1, -0.2)` aus? Wohin bringt sie den Greifer in
+   Grundstellung?
+2. Drehen Sie den ganzen Arm mit `transformationsmatrix` und `transformiere`
+   um $30°$ um Gelenk 1. Vergleichen Sie mit dem Ergebnis aus Kapitel 5.1.
+3. Beantworten Sie ohne Code: Was würde passieren, wenn in der dritten
+   Koordinate eines Punktes 0 statt 1 stünde?
 ```
 
 ```{code-cell} python
@@ -294,138 +393,143 @@ wenden wir hier in 2D an.
 :class: tip
 :class: dropdown
 ```python
-import numpy as np
-
-dreieck = np.array([[0.0, 0.0], [2.0, 0.0], [1.0, 2.0]])
-einsen  = np.ones((3, 1))
-dreieck_hom = np.hstack([dreieck, einsen])
-
-def transformationsmatrix(phi, tx, ty):
-    c, s = np.cos(phi), np.sin(phi)
-    return np.array([[c, -s, tx],
-                     [s,  c, ty],
-                     [0,  0,  1]])
-
-# Teilaufgabe 1: reine Verschiebung
-T_verschiebung = transformationsmatrix(0, 3.0, -1.0)
-print("T (reine Verschiebung):")
-print(T_verschiebung)
-punkt_A_hom = np.array([0.0, 0.0, 1.0])
-print(f"Eckpunkt A transformiert: {T_verschiebung @ punkt_A_hom}")
-
-# Teilaufgabe 2: reine Drehung
-T_drehung = transformationsmatrix(np.deg2rad(90), 0, 0)
-print("\nT (reine Drehung 90°):")
-print(np.round(T_drehung, 4))
-print("Oberer linker 2x2-Block:")
-print(np.round(T_drehung[:2, :2], 4))
+# Teilaufgabe 2: reine Drehung um Gelenk 1, also ohne Verschiebung
+T_30 = transformationsmatrix(np.deg2rad(30), 0, 0)
+arm_30 = transformiere(T_30, arm)
+print('Arm nach der Drehung um 30° in m:')
+print(np.round(arm_30, 4))
 ```
+Mit $\varphi = 0$ gilt $\cos 0 = 1$ und $\sin 0 = 0$, die Matrix lautet also
 
-Zu Teilaufgabe 1: Die Matrix hat $1$ auf der Diagonalen und $(3, -1)$
-in der rechten Spalte. Eckpunkt A landet bei $(3, -1)$, weil er einfach
-um den Verschiebungsvektor verschoben wird. Zu Teilaufgabe 3: Die dritte
-Zeile $(0, 0, 1)$ stellt sicher, dass die künstliche dritte Koordinate
-jedes Punktes nach der Transformation wieder $1$ bleibt, was Voraussetzung
-für das korrekte Ablesen der euklidischen Koordinaten ist.
+$$\begin{pmatrix} 1 & 0 & 0.1 \\ 0 & 1 & -0.2 \\ 0 & 0 & 1 \end{pmatrix}.$$
+
+Sie verschiebt den Greifer von $(0.7, 0)$ nach $(0.8, -0.2)$. Die reine
+Drehung um $30°$ bringt Gelenk 2 nach $(0.346, 0.200)$ und den Greifer nach
+$(0.606, 0.350)$, genau wie die Drehmatrix in Kapitel 5.1. Mit $\vec{t} = \vec{0}$ steckt die Drehmatrix
+also unverändert in $\mathbf{T}$. Stünde in der dritten Koordinate eine 0,
+würde die rechte Spalte mit 0 multipliziert. Der Punkt würde nur gedreht und
+nicht verschoben. Für Richtungen ist genau das erwünscht: Die Richtung von
+Arm 2 ändert sich zum Beispiel, wenn der Arm sich dreht, aber nicht, wenn er
+verschoben wird. In homogenen Koordinaten bekommen Punkte deshalb eine 1 und
+Richtungen eine 0.
 ````
 
-## Verkettung von Transformationen
+## Transformationen verketten
 
-In der Praxis werden mehrere Transformationen hintereinander ausgeführt.
-Ein Greifarm dreht ein Bauteil, verschiebt es, dreht es nochmals. Mit
-homogenen Koordinaten ergibt die Verkettung zweier Transformationen $\mathbf{T}_1$
-(zuerst) und $\mathbf{T}_2$ (danach) das Produkt $\mathbf{T}_2 \cdot \mathbf{T}_1$.
-Die Reihenfolge ist entscheidend: die zuerst auszuführende Transformation
-steht rechts.
+Wir haben das Bauteil mit zwei Matrizen nacheinander transformiert. Für einen
+Punkt $\tilde{p} = (x, y, 1)^\top$ in homogenen Koordinaten dürfen wir die
+Klammern beim Matrixprodukt versetzen:
+
+$$\mathbf{T}_2 \cdot (\mathbf{T}_1 \cdot \tilde{p})
+= (\mathbf{T}_2 \cdot \mathbf{T}_1) \cdot \tilde{p}.$$
+
+Das Produkt $\mathbf{T}_2 \cdot \mathbf{T}_1$ ist eine einzige Matrix, die beide
+Schritte auf einmal erledigt. Diese Zusammenfassung heißt **Verkettung**. Die
+Matrix, die zuerst wirkt, steht dabei rechts, so wie bei den Drehungen in der
+Zusatzaufgabe von Kapitel 5.2. Für eine Drehung um einen beliebigen Punkt
+verketten wir die drei Schritte zur Funktion `drehung_um_punkt`.
 
 ```{code-cell} python
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.patches import Polygon as MplPolygon
+def drehung_um_punkt(winkel, zentrum):
+    """Homogene Matrix für eine Drehung um den Punkt zentrum, winkel in Radiant."""
+    T_hin = transformationsmatrix(0, -zentrum[0], -zentrum[1])
+    T_dreh = transformationsmatrix(winkel, 0, 0)
+    T_zurueck = transformationsmatrix(0, zentrum[0], zentrum[1])
+    # Die zuerst ausgeführte Matrix steht rechts
+    return T_zurueck @ T_dreh @ T_hin
 
-dreieck = np.array([[0.0, 0.0], [2.0, 0.0], [1.0, 2.0]])
-einsen  = np.ones((3, 1))
-dreieck_hom = np.hstack([dreieck, einsen])
-
-def transformationsmatrix(phi, tx, ty):
-    c, s = np.cos(phi), np.sin(phi)
-    return np.array([[c, -s, tx],
-                     [s,  c, ty],
-                     [0,  0,  1]])
-
-# --- Zwei Transformationen definieren ---
-# T1: Drehung um 30° (keine Verschiebung)
-# T2: Verschiebung um (2, 1) (keine Drehung)
-T1 = transformationsmatrix(np.deg2rad(30), 0.0, 0.0)
-T2 = transformationsmatrix(0.0,            2.0, 1.0)
-
-# --- Verkettung: erst T1 (Drehung), dann T2 (Verschiebung) ---
-# T_ges = T2 @ T1 bedeutet: zuerst T1 anwenden, dann T2
-# Die Reihenfolge ist NICHT egal: T2 @ T1 != T1 @ T2
-T_ges_A = T2 @ T1   # erst drehen, dann verschieben
-T_ges_B = T1 @ T2   # erst verschieben, dann drehen
-
-# --- Ergebnisse berechnen ---
-dreieck_A = (T_ges_A @ dreieck_hom.T).T[:, :2]   # erst drehen, dann verschieben
-dreieck_B = (T_ges_B @ dreieck_hom.T).T[:, :2]   # erst verschieben, dann drehen
-
-print("Gesamtmatrix (erst drehen, dann verschieben):")
-print(np.round(T_ges_A, 4))
-print("\nGesamtmatrix (erst verschieben, dann drehen):")
-print(np.round(T_ges_B, 4))
-print(f"\nGleiche Matrizen: {np.allclose(T_ges_A, T_ges_B)}")
-
-# --- Darstellung: drei Dreiecke im Vergleich ---
-fig, ax = plt.subplots(figsize=(6, 6))
-ax.add_patch(MplPolygon(dreieck,   closed=True, fill=False,
-                         edgecolor='blue',   linewidth=2, label='Original'))
-ax.add_patch(MplPolygon(dreieck_A, closed=True, fill=False,
-                         edgecolor='red',    linewidth=2,
-                         label='Erst drehen, dann verschieben'))
-ax.add_patch(MplPolygon(dreieck_B, closed=True, fill=False,
-                         edgecolor='green',  linewidth=2, linestyle='--',
-                         label='Erst verschieben, dann drehen'))
-ax.set_xlim(-3, 5); ax.set_ylim(-2, 5)
-ax.set_aspect('equal'); ax.grid(True); ax.legend(loc='upper left')
-ax.set_title('Reihenfolge der Transformationen')
-plt.show()
+# Drehung um Gelenk 2 um 90 Grad als eine einzige Matrix
+T_gelenk2 = drehung_um_punkt(np.deg2rad(90), arm[1])
+print(np.round(T_gelenk2, 4))
 ```
 
-Die beiden Ergebnisse landen an verschiedenen Positionen. Das ist intuitiv
-nachvollziehbar: Wenn wir zuerst drehen und dann verschieben, wandert das
-gedrehte Objekt in eine feste Richtung. Drehen wir dagegen nach der
-Verschiebung, dreht sich das Objekt um den Ursprung und seine neue Position
-hängt davon ab, wie weit es bereits vom Ursprung entfernt war.
+Links oben steht wieder $\mathbf{R}(90°)$, rechts die Verschiebung
+$(0.4, -0.4)$. Das ist nicht die Lage von Gelenk 2, sondern genau die
+Verschiebung, die Gelenk 2 nach der Drehung an seinen Platz zurückbringt: Die
+Drehung schickt $(0.4, 0)$ nach $(0, 0.4)$, und $(0, 0.4) + (0.4, -0.4)$ ergibt
+wieder $(0.4, 0)$. Jede Verkettung aus Drehungen und Verschiebungen hat wieder
+die Form von $\mathbf{T}$.
 
-Wir rechnen nach, wohin Eckpunkt B $= (2, 0)^\top$ bei Variante A landet.
-Mit $\cos 30° \approx 0.866$ und $\sin 30° = 0.5$:
+Jetzt drehen sich beide Gelenke. Arm 2 hängt am Ende von Arm 1. Dreht sich
+Gelenk 1, nimmt es Arm 2 mit. Arm 2 macht also beide Drehungen mit, Arm 1 nur
+die Drehung von Gelenk 1. Wir knicken deshalb zuerst Arm 2 um Gelenk 2 ab,
+solange Arm 1 noch in der Grundstellung liegt und wir wissen, dass Gelenk 2 bei
+$(0.4, 0)$ sitzt. Danach drehen wir alles um Gelenk 1:
 
-\begin{equation*}
-\vec{p}^{(1)} = \mathbf{T}_1 \cdot \tilde{p}_B
-= \begin{pmatrix} 0.866 & -0.5 & 0 \\ 0.5 & 0.866 & 0 \\ 0 & 0 & 1 \end{pmatrix}
-  \begin{pmatrix} 2 \\ 0 \\ 1 \end{pmatrix}
-= \begin{pmatrix} 1.732 \\ 1.000 \\ 1 \end{pmatrix},
-\qquad
-\vec{p}^{(2)} = \mathbf{T}_2 \cdot \vec{p}^{(1)}
-= \begin{pmatrix} 1 & 0 & 2 \\ 0 & 1 & 1 \\ 0 & 0 & 1 \end{pmatrix}
-  \begin{pmatrix} 1.732 \\ 1.000 \\ 1 \end{pmatrix}
-= \begin{pmatrix} 3.732 \\ 2.000 \\ 1 \end{pmatrix}.
-\end{equation*}
+* Gelenk 1 und Gelenk 2 transformieren wir mit $\mathbf{T}_\alpha$.
+* Greifer und Bauteil transformieren wir mit
+  $\mathbf{T}_\alpha \cdot \mathbf{T}_\beta$.
 
-Dasselbe Ergebnis liefert direkt $\mathbf{T}_\text{ges} \cdot \tilde{p}_B$,
-ohne Zwischenschritt.
+Mit dem Slicing `arm[0:2]` wählen wir die Zeilen von Gelenk 1 und Gelenk 2 aus,
+mit `arm[1:3]` die Zeilen von Gelenk 2 und Greifer.
 
-```{admonition} Mini-Übung
+```{code-cell} python
+# Gelenk 1 dreht um 30 Grad um den Ursprung
+T_alpha = transformationsmatrix(np.deg2rad(30), 0, 0)
+# Gelenk 2 dreht um 60 Grad um seine Lage in der Grundstellung
+T_beta = drehung_um_punkt(np.deg2rad(60), arm[1])
+# Arm 2 macht beide Drehungen mit: erst T_beta, dann T_alpha
+T_arm2 = T_alpha @ T_beta
+
+# Arm 1 (Gelenk 1 und 2) nur mit T_alpha, Arm 2 (Gelenk 2 und Greifer) mit T_arm2
+arm1_neu = transformiere(T_alpha, arm[0:2])
+arm2_neu = transformiere(T_arm2, arm[1:3])
+bauteil_neu = transformiere(T_arm2, bauteil)
+
+print('Arm 1 in m:')
+print(np.round(arm1_neu, 4))
+print('Arm 2 in m:')
+print(np.round(arm2_neu, 4))
+
+# Gelenk 1, Gelenk 2 und Greifer zu einem Arm zusammensetzen
+arm_neu = np.array([arm1_neu[0], arm1_neu[1], arm2_neu[1]])
+zeichne_roboter([arm, arm_neu], bauteile=[bauteil, bauteil_neu],
+                beschriftungen=['Grundstellung', 'α = 30°, β = 60°'],
+                titel='Beide Gelenke drehen')
+```
+
+Damit ist die Frage vom Anfang beantwortet: Der Greifer steht bei
+$(0.346, 0.500)$. Gelenk 2 taucht in beiden Ergebnissen auf und landet beide
+Male bei $(0.346, 0.200)$. Die beiden Arme bleiben also verbunden, weil
+$\mathbf{T}_\beta$ Gelenk 2 an seinem Platz lässt. Arm 2 ist um
+$30° + 60° = 90°$ gegen die $x$-Achse gedreht und zeigt senkrecht nach oben.
+
+*Spielt die Reihenfolge von $\mathbf{T}_\alpha$ und $\mathbf{T}_\beta$
+überhaupt eine Rolle?* In der Zusatzaufgabe von Kapitel 5.2 durften wir zwei
+Drehungen vertauschen, weil beide um dasselbe Gelenk gingen. Hier drehen die
+Matrizen um verschiedene Punkte. Wir probieren es aus.
+
+```{code-cell} python
+# Vertauschte Reihenfolge: erst T_alpha, dann T_beta
+T_falsch = T_beta @ T_alpha
+arm2_falsch = transformiere(T_falsch, arm[1:3])
+bauteil_falsch = transformiere(T_falsch, bauteil)
+
+print('Arm 2 bei vertauschter Reihenfolge in m:')
+print(np.round(arm2_falsch, 4))
+
+zeichne_roboter([arm_neu, arm2_falsch], bauteile=[bauteil_neu, bauteil_falsch],
+                beschriftungen=['richtig: T_alpha @ T_beta', 'vertauscht: T_beta @ T_alpha'],
+                titel='Reihenfolge vertauscht')
+```
+
+Bei vertauschter Reihenfolge reißt Arm 2 ab: Sein Gelenk landet bei
+$(0.200, 0.054)$ statt bei $(0.346, 0.200)$. Der Grund ist der Drehpunkt von
+$\mathbf{T}_\beta$. Diese Matrix dreht um den Punkt $(0.4, 0)$, an dem Gelenk 2
+in der Grundstellung sitzt. Nach $\mathbf{T}_\alpha$ steht Gelenk 2 dort aber
+nicht mehr, und $\mathbf{T}_\beta$ dreht um eine Stelle, an der gar kein Gelenk
+ist. Das Matrixprodukt ist also im Allgemeinen nicht vertauschbar, und bei
+verketteten Transformationen müssen wir genau auf die Reihenfolge achten.
+
+```{admonition} Mini-Übung (✩)
 :class: tip
-1. Berechnen Sie die Gesamtmatrix $\mathbf{T}_3 = \mathbf{T}_1 \cdot \mathbf{T}_1$
-   (dieselbe Drehung zweimal hintereinander). Was ergibt sich geometrisch?
-   Vergleichen Sie mit `transformationsmatrix(np.deg2rad(60), 0, 0)`.
-2. Bestimmen Sie die **inverse Transformation** von $\mathbf{T}_\text{ges\_A}$
-   mit `np.linalg.inv`. Wenden Sie sie auf `dreieck_A` an und überprüfen Sie
-   mit `np.allclose`, dass Sie das Originaldreieck zurückbekommen.
-3. Überlegen Sie ohne Code: Ein Bauteil soll um seinen eigenen Schwerpunkt
-   bei $(1, 1)^\top$ gedreht werden (nicht um den Ursprung). Welche drei
-   Transformationen müssen in welcher Reihenfolge verkettet werden?
+1. Beantworten Sie ohne Code: Wo stehen Gelenk 2 und der Greifer bei
+   $\alpha = 90°$ und $\beta = -90°$?
+2. Prüfen Sie Ihre Antwort mit `transformationsmatrix`, `drehung_um_punkt` und
+   `transformiere` und zeichnen Sie die Stellung.
+3. Beantworten Sie ohne Code: Warum wenden wir
+   $\mathbf{T}_\alpha \cdot \mathbf{T}_\beta$ nur auf Arm 2 und das Bauteil an
+   und nicht auf Gelenk 1?
 ```
 
 ```{code-cell} python
@@ -436,57 +540,54 @@ ohne Zwischenschritt.
 :class: tip
 :class: dropdown
 ```python
-import numpy as np
+# Teilaufgabe 2: Stellung für alpha = 90 Grad und beta = -90 Grad
+T_alpha_90 = transformationsmatrix(np.deg2rad(90), 0, 0)
+T_arm2_90 = T_alpha_90 @ drehung_um_punkt(np.deg2rad(-90), arm[1])
 
-dreieck = np.array([[0.0, 0.0], [2.0, 0.0], [1.0, 2.0]])
-einsen  = np.ones((3, 1))
-dreieck_hom = np.hstack([dreieck, einsen])
+arm1_90 = transformiere(T_alpha_90, arm[0:2])
+arm2_90 = transformiere(T_arm2_90, arm[1:3])
+bauteil_90 = transformiere(T_arm2_90, bauteil)
+arm_90 = np.array([arm1_90[0], arm1_90[1], arm2_90[1]])
+print(np.round(arm_90, 4))
 
-def transformationsmatrix(phi, tx, ty):
-    c, s = np.cos(phi), np.sin(phi)
-    return np.array([[c, -s, tx],
-                     [s,  c, ty],
-                     [0,  0,  1]])
-
-T1     = transformationsmatrix(np.deg2rad(30), 0.0, 0.0)
-T2     = transformationsmatrix(0.0,            2.0, 1.0)
-T_ges_A = T2 @ T1
-
-# Teilaufgabe 1: T1 zweimal
-T3    = T1 @ T1
-T60   = transformationsmatrix(np.deg2rad(60), 0, 0)
-print("T1 @ T1:")
-print(np.round(T3, 4))
-print(f"Gleich wie T(60°): {np.allclose(T3, T60)}")
-
-# Teilaufgabe 2: Inverse
-T_inv = np.linalg.inv(T_ges_A)
-dreieck_A_hom = (T_ges_A @ dreieck_hom.T).T
-dreieck_zurueck = (T_inv @ dreieck_A_hom.T).T[:, :2]
-dreieck_zurueck = (T_inv @ dreieck_A_hom.T).T[:, :2]
-print(f"\nOriginal zurück: {np.allclose(dreieck, dreieck_zurueck)}")
+zeichne_roboter([arm, arm_90], bauteile=[bauteil, bauteil_90],
+                beschriftungen=['Grundstellung', 'α = 90°, β = -90°'],
+                titel='Arm 1 nach oben, Arm 2 nach rechts')
 ```
-
-Zu Teilaufgabe 1: Dieselbe Drehung zweimal ergibt eine Drehung um den
-doppelten Winkel, also um 60°. Die Matrizen sind identisch.
-Zu Teilaufgabe 3: Zuerst den Schwerpunkt $(1, 1)$ in den Ursprung
-verschieben ($\vec{t} = (-1, -1)^\top$), dann drehen, dann zurück
-verschieben ($\vec{t} = (1, 1)^\top$). Als Gesamtmatrix:
-$\mathbf{T}_\text{ges} = \mathbf{T}(0, 1, 1) \cdot \mathbf{R}(\varphi)
-\cdot \mathbf{T}(0, -1, -1)$.
+Arm 1 zeigt nach oben, Gelenk 2 steht bei $(0, 0.4)$. Arm 2 knickt um $90°$ im
+Uhrzeigersinn ab und zeigt wieder in $x$-Richtung, der Greifer steht bei
+$(0.3, 0.4)$. Das Bauteil liegt wie in der Grundstellung längs zur $x$-Achse,
+denn insgesamt ist es um $90° - 90° = 0°$ gedreht. Zu Teilaufgabe 3:
+$\mathbf{T}_\beta$ dreht um Gelenk 2. Gelenk 1 liegt nicht auf diesem Drehpunkt
+und würde mitgedreht, bei $\alpha = 30°$ und $\beta = 60°$ zum Beispiel nach
+$(0.346, -0.200)$. Gelenk 1 sitzt aber fest im Sockel. Gelenk 2 bewegt nur
+alles, was hinter ihm liegt, also Arm 2, Greifer und Bauteil.
 ````
 
 ## Zusammenfassung und Ausblick
 
-Homogene Koordinaten lösen das Problem, das eine gewöhnliche Matrixmultiplikation
-nicht lösen kann: Translation lässt sich nicht als lineare Abbildung darstellen,
-weil der Nullpunkt immer auf den Nullpunkt abgebildet wird. Durch das Anhängen
-einer künstlichen Koordinate $1$ wird jede Kombination aus Drehung und
-Verschiebung zu einer einzigen $3 \times 3$-Matrixmultiplikation. Mehrere
-solcher Transformationen werden durch Matrizenprodukte verkettet, wobei die
-Reihenfolge entscheidend ist.
+Eine Drehmatrix dreht nur um den Ursprung. Um einen anderen Punkt drehen wir,
+indem wir diesen Punkt in den Ursprung verschieben, dort drehen und wieder
+zurückverschieben. Eine Verschiebung lässt sich nicht als 2×2-Matrix schreiben,
+weil jede Matrix den Ursprung festhält. Homogene Koordinaten lösen dieses
+Problem: Mit einer dritten Koordinate 1 fasst die homogene
+Transformationsmatrix $\mathbf{T}$ Drehung und Verschiebung in einer
+3×3-Matrix zusammen. Mehrere Transformationen verketten wir durch
+Matrixmultiplikation, wobei die zuerst ausgeführte Matrix rechts steht. Eine
+Drehung um einen beliebigen Punkt ist so die Verkettung
+$\mathbf{T}_\text{zurück} \cdot \mathbf{T}_\text{dreh} \cdot \mathbf{T}_\text{hin}$.
+Beim SCARA-Roboter macht Arm 2 jede Bewegung von Arm 1 mit. Seine Punkte
+transformieren wir deshalb mit $\mathbf{T}_\alpha \cdot \mathbf{T}_\beta$, die
+Punkte von Arm 1 nur mit $\mathbf{T}_\alpha$. Vertauschen wir die Reihenfolge,
+dreht Gelenk 2 um eine Stelle, an der es gar nicht mehr sitzt.
 
-Im nächsten Abschnitt wenden wir dieses Werkzeug auf eine typische
-Aufgabe aus der Fahrzeugtechnik an: die Umrechnung von Sensor-Messdaten
-aus dem fahrzeugfesten Koordinatensystem in das Weltkoordinatensystem, die
-so genannte Koordinatentransformation zwischen bewegten Bezugssystemen.
+Bisher haben wir aus den Gelenkwinkeln berechnet, wo der Greifer steht. In der
+Montagezelle stellt sich meist die umgekehrte Frage: Ein Bauteil soll an eine
+bestimmte Stelle der Platine. Welche Winkel muss die Steuerung dafür
+einstellen? Dieser Frage gehen wir im Projekt in Kapitel 5.4 nach.
+
+In diesem Kapitel haben wir alle Punkte in einem gemeinsamen Koordinatensystem
+gedreht und verschoben. In Part 6 lernen wir eine zweite Sichtweise kennen:
+Dort bringt jeder Körper sein eigenes Koordinatensystem mit, und wir rechnen
+Punkte zwischen diesen Koordinatensystemen um. So beschreiben auch die meisten
+Robotersteuerungen ihre Arme.
