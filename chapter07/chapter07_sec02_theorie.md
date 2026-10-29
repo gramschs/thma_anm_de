@@ -140,7 +140,7 @@ dem, was der Schieberegler im Applet visualisiert. Der Differenzenquotient bzw.
 die Sekantensteigung finden wir unten links.
 
 <!-- markdownlint-disable MD033 -->
-<div id="applet-container-720">
+<div class="applet-container applet-720">
 
 <iframe
   src="https://gramschs.github.io/thma_anm_de_assets/interactive/chapter04/sekante.html"
@@ -183,7 +183,7 @@ wenn wir die Sekantensteigung als Approximation für die Tangentensteigung
 nehmen.
 
 <!-- markdownlint-disable MD033 -->
-<div id="applet-container-750">
+<div class="applet-container applet-750">
 <iframe
   src="https://gramschs.github.io/thma_anm_de_assets/interactive/chapter04/sekante-tangente.html"
   width="100%"

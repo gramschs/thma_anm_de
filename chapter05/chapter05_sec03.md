@@ -168,6 +168,16 @@ zurück:
 2. Drehen: Wir multiplizieren mit der Drehmatrix.
 3. Zurückverschieben: Wir addieren die Lage von Gelenk 2 wieder.
 
+```{figure} pics/chap05_drehung_um_gelenk2.svg
+:alt: Vier Koordinatensysteme mit dem Roboterarm: in der Grundstellung liegt der Greifer bei (0.7, 0) und das Ziel bei (0.4, 0.3), nach Schritt 1 liegt Gelenk 2 im Ursprung und der Greifer bei (0.3, 0), nach Schritt 2 ist Arm 2 um 90 Grad um den Ursprung gedreht und der Greifer liegt bei (0, 0.3), nach Schritt 3 sitzt Arm 2 wieder an Gelenk 2 und der Greifer liegt bei (0.4, 0.3)
+:align: center
+:label: fig_chap05_drehung_um_gelenk2
+
+Die drei Schritte bei $\beta = 90°$, grau ist jeweils die Stellung vor dem
+Schritt.
+(Quelle: eigene Abbildung; Lizenz [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0))
+```
+
 ```{code-cell} python
 gelenk2 = arm[1]
 
@@ -186,6 +196,23 @@ print('Nach Schritt 3:', np.round(greifer_neu, 4))
 Nach Schritt 1 liegt der Greifer bei $(0.3, 0)$, also $0.3\,\text{m}$ rechts
 vom verschobenen Gelenk 2. Schritt 2 dreht ihn nach $(0, 0.3)$, und Schritt 3
 schiebt ihn an die richtige Stelle $(0.4, 0.3)$.
+
+In der folgenden interaktiven Abbildung führen Sie die drei Schritte selbst
+aus. Mit dem Schieberegler wählen Sie einen anderen Winkel $\beta$. Der
+Greifer bleibt dabei immer auf dem gestrichelten Kreis um Gelenk 2. Mit
+„Erster Versuch: nur Drehmatrix“ sehen Sie zum Vergleich, wohin die
+Drehmatrix allein den Greifer bringt.
+
+<!-- markdownlint-disable MD033 -->
+<div class="applet-container applet-880">
+<iframe
+  src="https://gramschs.github.io/thma_anm_de_assets/interactive/chapter05/scara-drehung.html"
+  width="100%"
+  frameborder="0"
+  scrolling="no">
+</iframe>
+</div>
+<!-- markdownlint-enable MD033 -->
 
 Das Bauteil behandeln wir genauso. Ziehen wir einen Vektor mit zwei Einträgen
 von einem Array der Form `(4, 2)` ab, zieht NumPy ihn von jeder Zeile ab. So
@@ -520,6 +547,21 @@ in der Grundstellung sitzt. Nach $\mathbf{T}_\alpha$ steht Gelenk 2 dort aber
 nicht mehr, und $\mathbf{T}_\beta$ dreht um eine Stelle, an der gar kein Gelenk
 ist. Das Matrixprodukt ist also im Allgemeinen nicht vertauschbar, und bei
 verketteten Transformationen müssen wir genau auf die Reihenfolge achten.
+
+Im Reiter „Beide Gelenke“ der interaktiven Abbildung spielen Sie beide
+Reihenfolgen ab und verändern die Winkel. Ein Kreis markiert dabei den
+Drehpunkt der Matrix, die gerade wirkt.
+
+<!-- markdownlint-disable MD033 -->
+<div class="applet-container applet-880">
+<iframe
+  src="https://gramschs.github.io/thma_anm_de_assets/interactive/chapter05/scara-drehung.html?tab=2"
+  width="100%"
+  frameborder="0"
+  scrolling="no">
+</iframe>
+</div>
+<!-- markdownlint-enable MD033 -->
 
 ```{admonition} Mini-Übung (✩)
 :class: tip

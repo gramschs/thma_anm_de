@@ -177,6 +177,27 @@ der Kistenmitte?
 # Code-Zelle
 ```
 
+````{admonition} Tipp Teil 1
+:class: tip
+:class: dropdown
+Im zweiten Abschnitt von Kapitel 5.1 haben wir Arm und Bauteil mit
+`(R @ punkte.T).T` gedreht. Wiederholen Sie das in einer Schleife für jeden
+Winkel und hängen Sie jedes Ergebnis an die passende Liste an.
+```python
+# Grundstellung als erstes Element, dann drei gedrehte Stellungen anhängen
+arme = [arm]
+deckel_liste = [deckel]
+for winkel in [45, 90, 135]:
+    R = drehmatrix(___)
+    arme.append(___)
+    deckel_liste.append(___)
+
+zeichne_roboter(arme, bauteile=deckel_liste, umgebung=[foerderband, kiste],
+                beschriftungen=['0°', '45°', '90°', '135°'],
+                titel='Schwenkarm in vier Stellungen')
+```
+````
+
 ````{admonition} Lösung Teil 1
 :class: tip
 :class: dropdown
@@ -220,6 +241,36 @@ Ablagestellung mit der Kistenmitte als Ziel.
 ```{code-cell} python
 # Code-Zelle
 ```
+
+````{admonition} Tipp Teil 2
+:class: tip
+:class: dropdown
+Den Greifer allein drehen wir wie im ersten Abschnitt von Kapitel 5.1 mit
+`drehmatrix(...) @ arm[1]`. Für den Abstand bilden wir den Differenzvektor zur
+Kistenmitte und wenden Pythagoras an. Wie viele Werte braucht `np.linspace` für
+Schritte von $1°$ zwischen $0°$ und $180°$?
+```python
+winkel_grad = np.linspace(0, 180, ___)
+abstaende = np.zeros(len(winkel_grad))
+
+for k in range(len(winkel_grad)):
+    greifer = ___
+    differenz = greifer - kiste_mitte
+    abstaende[k] = ___
+
+# Index des kleinsten Abstands liefert den Ablagewinkel
+k_best = ___
+ablagewinkel = winkel_grad[k_best]
+print(f'Ablagewinkel: {ablagewinkel:.0f}°')
+print(f'Restabstand zur Kistenmitte: {abstaende[k_best] * 1000:.1f} mm')
+
+# Arm in Ablagestellung, R_ablage und arm_ablage brauchen wir wieder in Teil 3
+R_ablage = drehmatrix(np.deg2rad(ablagewinkel))
+arm_ablage = ___
+zeichne_roboter(arm_ablage, ziele=kiste_mitte, umgebung=[foerderband, kiste],
+                titel=f'Ablagestellung bei {ablagewinkel:.0f}°')
+```
+````
 
 ````{admonition} Lösung Teil 2
 :class: tip
@@ -286,6 +337,41 @@ Abhol- und Ablagestellung mit Deckel in ein Bild.
 ```{code-cell} python
 # Code-Zelle
 ```
+
+````{admonition} Tipp Teil 3
+:class: tip
+:class: dropdown
+Den Deckel drehen Sie mit `R_ablage` aus Teil 2. `np.min` und `np.max` aus
+Kapitel 2.1 liefern den kleinsten und größten Wert einer Spalte. Der Deckel
+liegt in der Kiste, wenn alle vier Vergleiche zutreffen.
+```python
+# Deckel in Ablagestellung
+deckel_ablage = ___
+
+# Kleinste und größte Koordinaten des Deckels
+x_min = np.min(deckel_ablage[:, 0])
+x_max = ___
+y_min = ___
+y_max = ___
+
+# Kleinste und größte Koordinaten der Kiste
+kiste_x_min = np.min(kiste[:, 0])
+kiste_x_max = np.max(kiste[:, 0])
+kiste_y_min = np.min(kiste[:, 1])
+kiste_y_max = np.max(kiste[:, 1])
+
+passt = (x_min >= kiste_x_min and ___)
+print('Deckel liegt ganz in der Kiste:', passt)
+
+# Abstände zu den vier Kistenwänden: links, rechts, unten, oben
+raender = np.array([x_min - kiste_x_min, kiste_x_max - x_max, ___, ___])
+print(f'Kleinster Abstand zur Wand: {np.min(raender) * 100:.1f} cm')
+
+zeichne_roboter([arm, arm_ablage], bauteile=[deckel, deckel_ablage],
+                umgebung=[foerderband, kiste], beschriftungen=['Abholen', 'Ablegen'],
+                titel='Deckel in der Kiste')
+```
+````
 
 ````{admonition} Lösung Teil 3
 :class: tip
@@ -355,6 +441,44 @@ Warum ist der Weg aus geraden Stücken immer kürzer als der Kreisbogen?
 ```{code-cell} python
 # Code-Zelle
 ```
+
+````{admonition} Tipp Teil 4
+:class: tip
+:class: dropdown
+Die Schleife aus Teil 2 liefert schon die Greiferpositionen. In `greiferbahn`
+speichern Sie sie statt der Abstände in den Zeilen eines Arrays. In `weglaenge`
+bilden Sie wie in Teil 2 einen Differenzvektor, jetzt zwischen Punkt `k` und
+Punkt `k + 1`. Wie oft muss die Schleife dafür laufen?
+```python
+def greiferbahn(anzahl_punkte):
+    """Greiferpositionen beim Schwenk von 0 Grad bis zum Ablagewinkel."""
+    winkel = np.linspace(0, ablagewinkel, anzahl_punkte)
+    bahn = np.zeros((anzahl_punkte, 2))
+    for k in range(anzahl_punkte):
+        bahn[k] = ___
+    return bahn
+
+def weglaenge(bahn):
+    """Summe der geraden Abstände zwischen aufeinanderfolgenden Punkten."""
+    laenge = 0.0
+    for k in range(___):
+        differenz = ___
+        laenge += np.sqrt(differenz[0]**2 + differenz[1]**2)
+    return laenge
+
+# Exakte Bogenlänge: Radius mal Winkel in Radiant
+bogen = ___
+print(f'Kreisbogen exakt: {bogen:.5f} m')
+
+for anzahl in [8, 29, 141]:
+    weg = weglaenge(greiferbahn(anzahl))
+    print(f'{anzahl:3d} Punkte: {weg:.5f} m, Fehler {(bogen - weg) * 1000:.2f} mm')
+
+zeichne_roboter([arm, arm_ablage], bauteile=[deckel, deckel_ablage],
+                bahn=greiferbahn(8), umgebung=[foerderband, kiste],
+                beschriftungen=['Abholen', 'Ablegen'], titel='Greiferbahn mit 8 Punkten')
+```
+````
 
 ````{admonition} Lösung Teil 4
 :class: tip

@@ -196,6 +196,42 @@ Warum ist sie eindeutig, gehört also zu jedem Winkelpaar genau eine Stellung?
 # Code-Zelle
 ```
 
+````{admonition} Tipp Teil 1
+:class: tip
+:class: dropdown
+Der Rumpf der Funktion steht fast vollständig im letzten Abschnitt von
+Kapitel 5.3. Ersetzen Sie dort die festen Winkel durch `alpha` und `beta`.
+Die Stellungen sammeln Sie wie in Teil 1 von Kapitel 5.2 in Listen.
+```python
+def stellung(alpha, beta):
+    """Punkte des Arms und Ecken des Bauteils für die Gelenkwinkel in Radiant."""
+    T_alpha = transformationsmatrix(alpha, 0, 0)
+    T_arm2 = T_alpha @ ___
+    # Arm 1 nur mit T_alpha, Arm 2 und Bauteil mit beiden Drehungen
+    arm1_neu = transformiere(T_alpha, arm[0:2])
+    arm2_neu = ___
+    arm_neu = np.array([arm1_neu[0], arm1_neu[1], arm2_neu[1]])
+    bauteil_neu = ___
+    return arm_neu, bauteil_neu
+
+# Prüfung mit der Stellung aus Kapitel 5.3
+arm_test, bauteil_test = stellung(___, ___)
+print('Greifer bei (30°, 60°) in m:', np.round(arm_test[2], 4))
+
+# Drei Stellungen sammeln und zeichnen
+arme = []
+bauteile = []
+for winkelpaar in [[0, 0], [30, 60], [60, 90]]:
+    arm_neu, bauteil_neu = stellung(np.deg2rad(winkelpaar[0]), ___)
+    arme.append(arm_neu)
+    bauteile.append(___)
+
+zeichne_roboter(arme, bauteile=bauteile, umgebung=[zufuehrung, platine],
+                beschriftungen=['Grundstellung', '(30°, 60°)', '(60°, 90°)'],
+                titel='Drei Stellungen des SCARA-Roboters')
+```
+````
+
 ````{admonition} Lösung Teil 1
 :class: tip
 :class: dropdown
@@ -267,6 +303,38 @@ $P_1$ entfernt? Zeichnen Sie die gefundene Stellung mit $P_1$ als Ziel.
 # Code-Zelle
 ```
 
+````{admonition} Tipp Teil 2
+:class: tip
+:class: dropdown
+Die äußere Schleife läuft über $\alpha$, die innere über $\beta$. Den Abstand
+berechnen Sie wie in Teil 2 von Kapitel 5.2. Neu ist nur, dass wir nicht alle
+Abstände speichern, sondern mit `if` den bisher besten Wert mitführen.
+`stellung` erwartet die Winkel in Radiant.
+```python
+ziel = bestueckplaetze[0]
+
+# Startwert größer als jeder mögliche Abstand
+bester_abstand = 10.0
+for alpha_grad in np.linspace(0, 180, 181):
+    for beta_grad in np.linspace(0, 150, ___):
+        arm_neu, bauteil_neu = stellung(___, ___)
+        differenz = arm_neu[2] - ziel
+        abstand = ___
+        # Kleinsten Abstand und zugehörige Winkel merken
+        if ___:
+            bester_abstand = abstand
+            bestes_alpha = alpha_grad
+            bestes_beta = beta_grad
+
+print(f'Gefundene Winkel: α = {bestes_alpha:.0f}°, β = {bestes_beta:.0f}°')
+print(f'Restabstand zu P1: {bester_abstand * 1000:.1f} mm')
+
+arm_p1, bauteil_p1 = stellung(np.deg2rad(bestes_alpha), np.deg2rad(bestes_beta))
+zeichne_roboter(arm_p1, bauteile=bauteil_p1, ziele=ziel,
+                umgebung=[zufuehrung, platine], titel='Stellung für P1')
+```
+````
+
 ````{admonition} Lösung Teil 2
 :class: tip
 :class: dropdown
@@ -332,6 +400,37 @@ Stellungen mit ihren Bauteilen in ein Bild.
 ```{code-cell} python
 # Code-Zelle
 ```
+
+````{admonition} Tipp Teil 3
+:class: tip
+:class: dropdown
+Der Rumpf von `suche_winkel` ist die Doppelschleife aus Teil 2. Das Ziel wird
+zum Parameter, und statt der Ausgaben mit `print` gibt `return` die drei
+Ergebnisse zurück. Die Schleife über die Plätze funktioniert wie die Schleife
+über die Winkelpaare in Teil 1.
+```python
+def suche_winkel(ziel):
+    """Sucht die Gelenkwinkel in Grad, die den Greifer am nächsten an ziel bringen."""
+    bester_abstand = 10.0
+    # Hier die Doppelschleife aus Teil 2 einfügen
+    ___
+    return bestes_alpha, bestes_beta, bester_abstand
+
+arme = []
+bauteile = []
+for k in range(len(bestueckplaetze)):
+    alpha_grad, beta_grad, abstand = suche_winkel(___)
+    arm_neu, bauteil_neu = stellung(np.deg2rad(alpha_grad), np.deg2rad(beta_grad))
+    arme.append(arm_neu)
+    bauteile.append(bauteil_neu)
+    print(f'P{k + 1}: α = {alpha_grad:3.0f}°, β = {beta_grad:3.0f}°, '
+          f'Rest {abstand * 1000:.1f} mm, Bauteil um {___:.0f}° gedreht')
+
+zeichne_roboter(arme, bauteile=bauteile, ziele=bestueckplaetze,
+                umgebung=[zufuehrung, platine], beschriftungen=['P1', 'P2', 'P3'],
+                titel='Alle Bestückplätze')
+```
+````
 
 ````{admonition} Lösung Teil 3
 :class: tip

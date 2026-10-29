@@ -4,8 +4,8 @@
 
 Dieses Projekt enthält das Vorlesungsmaterial für das Modul **Angewandte Numerik
 im Maschinenbau** an der Technischen Hochschule Mannheim (Prof. Dr. Simone
-Gramsch) für Studierende des Bachelor-Studiengangs Maschinenbau im 5. Semester.
-Das Modul umfasst 4 SWS und 5 ECTS. Das Material wird mit **MyST Markdown**
+Gramsch) für Studierende des Bachelor-Studiengangs Maschinenbau. Das Modul ist
+ein Wahlfach im 5., 6. oder 7. Semester und umfasst 4 SWS und 5 ECTS. Das Material wird mit **MyST Markdown**
 erstellt und ist für **Jupyter Book 2** konzipiert. Die HTML-Version wird auf
 GitHub Pages veröffentlicht.
 
@@ -68,7 +68,13 @@ Aufbau:
    fertig sind.
 
 Jeder Teilschritt und jede Zusatzaufgabe hat eine Lösung als `dropdown` mit Code
-und kurzer fachlicher Erklärung.
+und kurzer fachlicher Erklärung. Vor der Lösung steht bei jedem Teilschritt ein
+**Tipp** als `dropdown`: ein Satz, welches Werkzeug oder Muster aus dem
+Code-Along weiterhilft, und ein Codegerüst mit `___`-Lücken. Wer allein
+zurechtkommt, braucht den Tipp nicht. Wer nicht weiß, wo er anfangen soll,
+öffnet den Tipp statt der Lösung. Tipps erscheinen nur im HTML-Skript. Das
+Konvertierungsskript entfernt sie wie die Lösungen aus dem verteilten Notebook,
+deshalb beginnt ihr Titel immer mit "Tipp" (in der englischen Fassung "Hint").
 
 ### Selbststudiumskapitel (sec05)
 
@@ -240,6 +246,16 @@ Aufgabentext des ersten Teilschritts.
 # Code-Zelle
 ```
 
+````{admonition} Tipp Teil 1
+:class: tip
+:class: dropdown
+Ein Satz, welches Werkzeug oder Muster aus dem Code-Along hilft.
+```python
+# Codegerüst mit Lücken
+ergebnis = ___
+```
+````
+
 ````{admonition} Lösung Teil 1
 :class: tip
 :class: dropdown
@@ -324,7 +340,7 @@ referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 - `tip` für Mini-Übungen, Vertiefungsprojekte, Teilschritte, Zusatzaufgaben,
   Übungsaufgaben und alle zugehörigen Lösungen
 - `warning` für Hinweise und Stolperfallen
-- `dropdown` für Videos und für alle Lösungen; Lösungen enthalten immer Code
+- `dropdown` für Videos, Tipps und alle Lösungen; Lösungen enthalten immer Code
   **und** eine kurze Erklärung des fachlichen Ergebnisses
 
 ## Struktur des Selbststudiumskapitels (sec05)
@@ -441,6 +457,8 @@ beantwortet.
 - [ ] Ein zusammenhängendes Projekt (✩✩) mit aufeinander aufbauenden
   Teilschritten?
 - [ ] Jeder Teilschritt mit eigener Code-Zelle und eigener Lösung?
+- [ ] Jeder Teilschritt mit Tipp (Titel "Tipp Teil N", Codegerüst mit `___`)
+  vor der Lösung?
 - [ ] Abschlussfrage zur Reflexion vorhanden?
 - [ ] Ein bis zwei optionale Zusatzaufgaben (✩✩✩)?
 
