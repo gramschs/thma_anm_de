@@ -59,6 +59,9 @@ project:
       children:
       - file: chapter06/chapter06_sec01.md
       - file: chapter06/chapter06_sec02.md
+      - file: chapter06/chapter06_sec03.md
+      - file: chapter06/chapter06_sec04.md
+      - file: chapter06/chapter06_sec05.md
     - title: 7. Numerische Differentialrechnung
       children:
       - file: chapter07/chapter07_sec01.md

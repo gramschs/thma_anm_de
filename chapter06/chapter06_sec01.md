@@ -6,21 +6,17 @@ kernelspec:
 
 # 6.1 Fahrzeug- und Weltkoordinaten
 
-In einer Logistikhalle bringt ein **fahrerloses Transportsystem**, kurz FTS,
-Kisten von den Regalen zu einer Übergabestation. Das Fahrzeug fährt ohne
-Fahrer und orientiert sich mit einem Laserscanner. Der Scanner sitzt oben auf
-dem Fahrzeug und misst, wie weit entfernt und in welcher Richtung Gegenstände
-liegen. Meldet er ein Hindernis $1.5\,\text{m}$ voraus, weiß die Steuerung
-zunächst nur, wo das Hindernis relativ zum Fahrzeug liegt. *Wo steht das
-Hindernis in der Halle?*
+In einer Logistikhalle bringt ein **fahrerloses Transportfahrzeug**, kurz FTF,
+Kisten zu einer Übergabestation. Mehrere solcher Fahrzeuge bilden mit ihrer
+Steuerung ein **fahrerloses Transportsystem**, kurz FTS. Das FTF orientiert
+sich mit einem Laserscanner. Meldet der Scanner ein Hindernis
+$1.5\,\text{m}$ voraus, weiß die Steuerung nur, wo es relativ zum Fahrzeug
+liegt. *Wo steht das Hindernis in der Halle?*
 
-In Kapitel 5.3 haben wir mit homogenen Transformationsmatrizen Punkte gedreht
-und verschoben, alle in einem gemeinsamen Koordinatensystem. In diesem Kapitel
-lernen wir eine zweite Sichtweise kennen: Die Halle und das Fahrzeug haben
-jeweils ein eigenes Koordinatensystem, und dieselbe Matrix rechnet Koordinaten
-vom einen in das andere um. Damit bestimmen wir, wo das Fahrzeug steht, wo die
-Messpunkte des Scanners in der Halle liegen und wo ein Ziel aus Sicht des
-Fahrzeugs liegt.
+In Kapitel 5.3 haben wir Punkte in einem gemeinsamen Koordinatensystem gedreht
+und verschoben. Jetzt haben Halle und Fahrzeug jeweils ein eigenes
+Koordinatensystem, und dieselbe Matrix rechnet Koordinaten vom einen in das
+andere um.
 
 ## Lernziele
 
@@ -40,17 +36,15 @@ Fahrzeugs liegt.
 
 ## Wo steht das Fahrzeug in der Halle?
 
-Wie beim SCARA-Roboter schauen wir von oben auf die Halle. Für die Rechnung
-brauchen wir zwei Koordinatensysteme:
+Wie beim SCARA-Roboter schauen wir von oben auf die Halle und brauchen zwei
+Koordinatensysteme:
 
 * Das **Weltkoordinatensystem** W ist fest mit der Halle verbunden. Sein
-  Ursprung liegt in der linken unteren Ecke unseres Hallenausschnitts, die
-  $x_W$-Achse zeigt entlang der langen Hallenwand. In diesem Koordinatensystem
-  sind alle Regale und Stationen der Hallenkarte angegeben.
-* Das **Fahrzeugkoordinatensystem** F ist fest mit dem Fahrzeug verbunden und
-  fährt mit ihm mit. Sein Ursprung liegt in der Fahrzeugmitte, die $x_F$-Achse
-  zeigt nach vorne, die $y_F$-Achse nach links, so wie es die Norm DIN ISO 8855
-  für Fahrzeuge festlegt.
+  Ursprung liegt in der linken unteren Ecke unseres Hallenausschnitts. In ihm
+  ist die Hallenkarte angegeben.
+* Das **Fahrzeugkoordinatensystem** F fährt mit dem Fahrzeug mit. Sein
+  Ursprung liegt in der Fahrzeugmitte, die $x_F$-Achse zeigt nach vorne, die
+  $y_F$-Achse nach links, wie es die Norm DIN ISO 8855 festlegt.
 
 ```{figure} pics/chap06_koordinatensysteme.svg
 :alt: Draufsicht auf eine Hallenecke mit dem Weltkoordinatensystem W, einem um den Winkel psi gedrehten Fahrzeug an der Stelle x, y mit seinen Achsen x_F nach vorne und y_F nach links sowie einem Laserstrahl der Länge r unter dem Winkel phi zu einem Hindernis
@@ -62,30 +56,24 @@ Winkel $\varphi$.
 (Quelle: eigene Abbildung; Lizenz [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0))
 ```
 
-Wo das Fahrzeug steht und wohin es zeigt, also seine Position und seine
-Orientierung aus Kapitel 5.1, beschreiben drei Zahlen: die Lage
-$(x, y)$ der Fahrzeugmitte in Hallenkoordinaten und der **Gierwinkel** $\psi$
-(psi) zwischen der $x_W$-Achse und der $x_F$-Achse. Diese drei Zahlen zusammen
-heißen **Pose** des Fahrzeugs. Ein positiver Gierwinkel bedeutet wie in
-Kapitel 5.1 eine Drehung gegen den Uhrzeigersinn.
+Die Lage $(x, y)$ der Fahrzeugmitte und der **Gierwinkel** $\psi$ (psi)
+zwischen $x_W$- und $x_F$-Achse heißen zusammen **Pose** des Fahrzeugs.
+Positive Gierwinkel drehen wie in Kapitel 5.1 gegen den Uhrzeigersinn.
 
-Unser FTS ist $1.2\,\text{m}$ lang und $0.8\,\text{m}$ breit. Seine Ecken liegen
-im Fahrzeugkoordinatensystem immer an denselben Stellen, egal wo das Fahrzeug
-gerade fährt. Wir legen sie deshalb einmal als Array `umriss` an. Die ersten
-beiden Ecken bilden die Vorderkante.
-
-Zuerst führen wir zwei Zellen aus. Die erste enthält die vorgegebene
-Zeichenfunktion `zeichne_halle`, die wie `zeichne_roboter` aus Part 5 nicht
-im Detail verstanden werden muss. Die zweite enthält die Funktionen
-`transformationsmatrix` und `transformiere` aus Kapitel 5.3, den Umriss und die
-Hallenkarte mit einem Regal, einer Palette und einer Säule.
+Zuerst führen wir zwei Zellen aus: die vorgegebene Zeichenfunktion
+`zeichne_halle` und eine Zelle mit `transformationsmatrix` und `transformiere`
+aus Kapitel 5.3 und der Hallenkarte. Dazu kommt der `umriss` des
+$1.2\,\text{m}$ langen und $0.8\,\text{m}$ breiten FTF. Seine Ecken liegen in
+Fahrzeugkoordinaten immer an denselben Stellen, die ersten beiden bilden die
+Vorderkante.
 
 ```{code-cell} python
 :tags: [hide-input]
 # Vorgegebene Zeichenfunktion: einfach ausführen, sie muss nicht verstanden werden.
 def zeichne_halle(fahrzeuge=None, koordinatensysteme=None, messpunkte=None,
-                  scanner=None, ziele=None, bahn=None, umgebung=None,
-                  beschriftungen=None, titel='', bereich=(0, 10, 0, 8)):
+                  scanner=None, schutzfeld=None, ziele=None, bahn=None,
+                  umgebung=None, beschriftungen=None, titel='',
+                  bereich=(0, 10, 0, 8)):
     """Zeichnet einen Ausschnitt der Halle von oben.
 
     fahrzeuge: Ecken eines Fahrzeugumrisses als Array, Zeile = [x, y], die
@@ -98,12 +86,15 @@ def zeichne_halle(fahrzeuge=None, koordinatensysteme=None, messpunkte=None,
                 gezeichnet (optional)
     scanner: Lage [x, y] des Scanners, zeichnet die Laserstrahlen vom Scanner
              zu den Messpunkten als dünne rote Linien (optional)
+    schutzfeld: Ecken eines Schutzfelds als Array, Zeile = [x, y], wird gelb
+                gefüllt und gestrichelt umrandet (optional)
     ziele: Zielpunkte als Array, Zeile = [x, y], werden als Kreuze markiert (optional)
     bahn: Bahnpunkte als Array, Zeile = [x, y], werden als gestrichelte Linie
-          mit Punkten gezeichnet (optional)
+          mit Punkten über den Fahrzeugen gezeichnet (optional)
     umgebung: Ecken von Flächen wie Regalen oder Paletten als Array oder Liste
               von Arrays, werden grau gefüllt (optional)
-    beschriftungen: Legendentexte, einer pro Fahrzeug (optional)
+    beschriftungen: Legendentexte, einer pro Fahrzeug, ohne Beschriftungen
+                    werden alle Fahrzeuge blau umrandet (optional)
     titel: Diagrammtitel
     bereich: sichtbarer Ausschnitt (x_min, x_max, y_min, y_max) in m
     """
@@ -123,15 +114,21 @@ def zeichne_halle(fahrzeuge=None, koordinatensysteme=None, messpunkte=None,
             ax.fill(flaeche[:, 0], flaeche[:, 1], facecolor='#DDDEDE',
                     edgecolor=grau, linewidth=1, zorder=0)
 
-    # Bahn als gestrichelte Linie mit Punkten
+    # Schutzfeld gelb gefüllt, gestrichelt umrandet
+    if schutzfeld is not None:
+        ax.fill(schutzfeld[:, 0], schutzfeld[:, 1], facecolor='#FFEC7F',
+                edgecolor=orange, linestyle='--', linewidth=1.5,
+                label='Schutzfeld', zorder=1)
+
+    # Bahn als gestrichelte Linie mit Punkten, über den Fahrzeugen
     if bahn is not None:
         ax.plot(bahn[:, 0], bahn[:, 1], color=grau, linestyle='--', linewidth=1,
-                marker='o', markersize=3, label='Bahn', zorder=1)
+                marker='o', markersize=3, label='Bahn', zorder=4)
 
     # Fahrzeuge: Umriss hellblau gefüllt, Vorderkante (Ecke 0 bis Ecke 1) orange
     if fahrzeuge is not None:
         for k in range(len(fahrzeuge)):
-            farbe = farben[k % len(farben)]
+            farbe = blau if beschriftungen is None else farben[k % len(farben)]
             ecken = fahrzeuge[k]
             label = None if beschriftungen is None else beschriftungen[k]
             ax.fill(ecken[:, 0], ecken[:, 1], facecolor='#CCDEE9', edgecolor=farbe,
@@ -169,7 +166,7 @@ def zeichne_halle(fahrzeuge=None, koordinatensysteme=None, messpunkte=None,
                    linewidth=2, zorder=5, label='Ziel')
 
     if (beschriftungen is not None or messpunkte is not None or ziele is not None
-            or bahn is not None):
+            or bahn is not None or schutzfeld is not None):
         ax.legend(loc='upper left')
     ax.set_xlim(bereich[0], bereich[1])
     ax.set_ylim(bereich[2], bereich[3])
@@ -201,7 +198,7 @@ def transformiere(T, punkte):
     ergebnis = (T @ punkte_hom.T).T
     return ergebnis[:, 0:2]
 
-# Ecken des FTS im Fahrzeugkoordinatensystem in m, Zeile = [x, y]
+# Ecken des FTF im Fahrzeugkoordinatensystem in m, Zeile = [x, y]
 umriss = np.array([
     [ 0.6, -0.4],   # vorne rechts
     [ 0.6,  0.4],   # vorne links
@@ -216,11 +213,8 @@ saeule = np.array([[6.3, 0.3], [6.7, 0.3], [6.7, 0.7], [6.3, 0.7]])
 halle = [regal, palette, saeule]
 ```
 
-Wie kommen die Ecken in Hallenkoordinaten? Stellen wir uns das Fahrzeug
-zunächst so vor, dass seine Mitte im Ursprung der Halle steht und es in
-$x_W$-Richtung zeigt. Dann stimmen Fahrzeug- und Hallenkoordinaten überein. Von
-dort bringen wir es wie das Bauteil in Kapitel 5.3 in seine Pose: erst um
-$\psi$ drehen, dann um $(x, y)$ verschieben. Das erledigt eine einzige homogene
+In seine Pose bringen wir das Fahrzeug wie das Bauteil in Kapitel 5.3: erst um
+$\psi$ drehen, dann um $(x, y)$ verschieben. Das erledigt die homogene
 Transformationsmatrix
 
 $$\mathbf{T}_{WF} = \begin{pmatrix} \cos\psi & -\sin\psi & x \\
@@ -228,36 +222,18 @@ $$\mathbf{T}_{WF} = \begin{pmatrix} \cos\psi & -\sin\psi & x \\
 
 ```{admonition} Indexschreibweise
 :class: note
-Die Indizes von $\mathbf{T}_{WF}$ lesen wir von rechts nach links: Der rechte
-Index F nennt das System, aus dem die Koordinaten kommen, der linke Index W
-das System, in das sie umgerechnet werden. Hat ein Punkt in homogenen
-Koordinaten aus Kapitel 5.3 die Koordinaten $\tilde{p}_F$ im System F und
-$\tilde{p}_W$ im System W, gilt also
-
-$$\tilde{p}_W = \mathbf{T}_{WF} \cdot \tilde{p}_F.$$
+Die Indizes lesen wir von rechts nach links: $\mathbf{T}_{WF}$ rechnet
+Koordinaten aus dem System F in das System W um. Für einen Punkt in homogenen
+Koordinaten aus Kapitel 5.3 gilt
+$\tilde{p}_W = \mathbf{T}_{WF} \cdot \tilde{p}_F$.
 ```
 
-Wir prüfen das an einem Fall, den wir im Kopf überblicken. Das Fahrzeug stehe
-bei $(4, 2)$ und zeige mit $\psi = 90°$ in $y_W$-Richtung. Die Ecke vorne links
-hat die Fahrzeugkoordinaten $(0.6, 0.4)$. Wie in Kapitel 5.3 rechnen wir
-Zeile mal Spalte:
-
-$$\begin{pmatrix} 0 & -1 & 4 \\ 1 & 0 & 2 \\ 0 & 0 & 1 \end{pmatrix}
-\begin{pmatrix} 0.6 \\ 0.4 \\ 1 \end{pmatrix}
-= \begin{pmatrix} 3.6 \\ 2.6 \\ 1 \end{pmatrix}.$$
-
-Die Ecke liegt $0.6\,\text{m}$ weiter in $y_W$-Richtung als die Mitte, also
-vorne, und $0.4\,\text{m}$ weiter in negativer $x_W$-Richtung. Für ein
-Fahrzeug, das in $y_W$-Richtung zeigt, ist das links.
-
-In unserer Halle steht das FTS bei $(4, 2)$ mit dem Gierwinkel $\psi = 30°$.
-Wir bauen $\mathbf{T}_{WF}$ mit `transformationsmatrix` auf und rechnen den
-Umriss mit `transformiere` in Hallenkoordinaten um. Der Parameter
-`koordinatensysteme` von `zeichne_halle` zeichnet zusätzlich die Achsen des
+Unser FTF steht bei $(4, 2)$ mit $\psi = 30°$. Der Parameter
+`koordinatensysteme` zeichnet zusätzlich die Achsen des
 Fahrzeugkoordinatensystems ein.
 
 ```{code-cell} python
-# Pose des FTS: Mitte bei (4, 2) m, Gierwinkel 30 Grad
+# Pose des FTF: Mitte bei (4, 2) m, Gierwinkel 30 Grad
 T_WF = transformationsmatrix(np.deg2rad(30), 4, 2)
 print('T_WF:')
 print(np.round(T_WF, 4))
@@ -268,32 +244,30 @@ print('Ecken in Hallenkoordinaten in m:')
 print(np.round(umriss_W, 3))
 
 zeichne_halle(umriss_W, koordinatensysteme=T_WF, umgebung=halle,
-              titel='FTS in der Halle')
+              titel='FTF in der Halle')
 ```
 
-Im Bild zeigt die rote Achse $x_F$ nach vorne und die blaue Achse $y_F$ nach
-links. *Wo finden wir diese Achsen in der Matrix wieder?* In der ersten Spalte
-von $\mathbf{T}_{WF}$ steht $(0.866, 0.5)$. Das ist die Richtung der
-$x_F$-Achse in Hallenkoordinaten, also ein Einheitsvektor unter $30°$. Die
-zweite Spalte $(-0.5, 0.866)$ ist die Richtung der $y_F$-Achse, und die dritte
-Spalte $(4, 2)$ ist der Ursprung des Fahrzeugkoordinatensystems, also die
-Fahrzeugmitte. Die Matrix enthält damit die ganze Pose: wo die Mitte liegt und
-wohin die Achsen zeigen.
+Die rote Achse $x_F$ zeigt nach vorne, die blaue $y_F$ nach links. *Wo finden
+wir diese Achsen in der Matrix wieder?* Die erste Spalte von
+$\mathbf{T}_{WF}$, $(0.866, 0.5)$, ist die Richtung der $x_F$-Achse in
+Hallenkoordinaten, die zweite die Richtung der $y_F$-Achse, die dritte die
+Fahrzeugmitte $(4, 2)$. Ein Punkt mit den Fahrzeugkoordinaten $(x_F, y_F)$
+liegt also bei der Fahrzeugmitte plus $x_F$ mal erste Spalte plus $y_F$ mal
+zweite Spalte.
 
-Wir können $\mathbf{T}_{WF}$ also auf zwei Arten lesen. Als Bewegung bringt
-sie das Fahrzeug aus dem Ursprung in seine Pose, so wie wir in Kapitel 5.3 den
-Roboterarm bewegt haben. Als Umrechnung beschreibt sie dieselben Ecken einmal
-in Fahrzeug- und einmal in Hallenkoordinaten, ohne dass sich etwas bewegt.
+$\mathbf{T}_{WF}$ lässt sich damit auf zwei Arten lesen: als Bewegung, die das
+Fahrzeug aus dem Ursprung in seine Pose bringt wie den Roboterarm in Kapitel
+5.3, oder als Umrechnung derselben Ecken von Fahrzeug- in Hallenkoordinaten.
 Beide Sichtweisen liefern dieselben Zahlen.
 
 ```{admonition} Mini-Übung (✩)
 :class: tip
-1. Beantworten Sie ohne Code: Ein zweites FTS steht bei $(2, 5)$ mit
+1. Beantworten Sie ohne Code: Ein zweites FTF steht bei $(2, 5)$ mit
    $\psi = 180°$. In welche Richtung der Halle zeigt seine $x_F$-Achse? Wo
    liegt seine Ecke vorne links?
 2. Prüfen Sie Ihre Antwort mit `transformationsmatrix` und `transformiere`.
    Zeichnen Sie beide Fahrzeuge mit ihren Koordinatensystemen in ein Bild.
-3. Beantworten Sie ohne Code: Das erste FTS fährt $1\,\text{m}$ geradeaus.
+3. Beantworten Sie ohne Code: Das erste FTF fährt $1\,\text{m}$ geradeaus.
    Welche Spalten von $\mathbf{T}_{WF}$ ändern sich, und welche bleiben gleich?
    Was ändert sich, wenn es sich stattdessen auf der Stelle dreht?
 ```
@@ -306,21 +280,21 @@ Beide Sichtweisen liefern dieselben Zahlen.
 :class: tip
 :class: dropdown
 ```python
-# Teilaufgabe 2: zweites FTS bei (2, 5) m mit Gierwinkel 180 Grad
+# Teilaufgabe 2: zweites FTF bei (2, 5) m mit Gierwinkel 180 Grad
 T_WF2 = transformationsmatrix(np.deg2rad(180), 2, 5)
 umriss_W2 = transformiere(T_WF2, umriss)
-print('Ecken des zweiten FTS in m:')
+print('Ecken des zweiten FTF in m:')
 print(np.round(umriss_W2, 3))
 
 zeichne_halle([umriss_W, umriss_W2], koordinatensysteme=[T_WF, T_WF2],
-              umgebung=halle, beschriftungen=['FTS 1', 'FTS 2'],
+              umgebung=halle, beschriftungen=['FTF 1', 'FTF 2'],
               titel='Zwei Fahrzeuge in der Halle')
 ```
 Bei $\psi = 180°$ zeigt die $x_F$-Achse in negative $x_W$-Richtung, das zweite
-FTS fährt also nach links durch die Halle. Seine Ecke vorne links liegt bei
+FTF fährt also nach links durch die Halle. Seine Ecke vorne links liegt bei
 $(1.4, 4.6)$ und steht in der zweiten Zeile der Ausgabe. Vorne heißt hier
 $0.6\,\text{m}$ in negativer $x_W$-Richtung, und links heißt $0.4\,\text{m}$ in
-negativer $y_W$-Richtung. Fährt das erste FTS $1\,\text{m}$ geradeaus, wandert
+negativer $y_W$-Richtung. Fährt das erste FTF $1\,\text{m}$ geradeaus, wandert
 seine Mitte um $1\,\text{m}$ in Richtung der ersten Spalte. Nur die dritte
 Spalte ändert sich, sie wird zu $(4.866, 2.5)$. Die Richtungen der Achsen
 bleiben gleich. Dreht sich das Fahrzeug auf der Stelle, ändern sich die ersten
@@ -329,33 +303,23 @@ beiden Spalten, und die dritte bleibt bei $(4, 2)$.
 
 ## Wo liegt das Hindernis in der Halle?
 
-Der Laserscanner sitzt oben in der Mitte des Fahrzeugs, also im Ursprung des
-Fahrzeugkoordinatensystems. Er sendet Laserstrahlen in verschiedene Richtungen
-und misst für jeden Strahl, nach welcher Entfernung $r$ er auf einen
-Gegenstand trifft. Die Richtung gibt er als Winkel $\varphi$ gegen die
-$x_F$-Achse an, positiv nach links. Die Abbildung im ersten Abschnitt zeigt
-eine solche Messung. Ein Messpunkt liegt also nicht als $(x_F, y_F)$ vor,
-sondern als Entfernung und Winkel.
+Der Scanner sitzt in der Fahrzeugmitte, also im Ursprung des
+Fahrzeugkoordinatensystems. Für jeden Laserstrahl misst er die Entfernung $r$
+bis zum ersten Gegenstand und gibt die Richtung als Winkel $\varphi$ gegen die
+$x_F$-Achse an, positiv nach links, wie in der Abbildung oben.
 
 ```{admonition} Aus der Mathematik: Polarkoordinaten
 :class: note
-Ein Punkt in der Ebene lässt sich durch seinen Abstand $r$ vom Ursprung und den
-Winkel $\varphi$ gegen die $x$-Achse beschreiben. Diese **Polarkoordinaten**
-rechnen wir mit
-
-$$x = r \cos\varphi, \qquad y = r \sin\varphi$$
-
-in kartesische Koordinaten um. Genauso haben wir in Kapitel 5.1 die Lage des
-Greifers auf seinem Kreis berechnet. Der Punkt mit $r = 2$ und $\varphi = 90°$
-liegt zum Beispiel bei $(0, 2)$.
+Ein Punkt mit dem Abstand $r$ vom Ursprung unter dem Winkel $\varphi$ gegen
+die $x$-Achse hat die **Polarkoordinaten** $(r, \varphi)$ und die
+kartesischen Koordinaten $x = r \cos\varphi$, $y = r \sin\varphi$. So haben
+wir in Kapitel 5.1 den Greifer auf seinem Kreis berechnet.
 ```
 
-Damit beantworten wir die Frage vom Anfang. Ein Hindernis $1.5\,\text{m}$
-voraus hat $r = 1.5$ und $\varphi = 0$, im Fahrzeugkoordinatensystem also die
-Koordinaten $(1.5, 0)$. In Hallenkoordinaten bringt es $\mathbf{T}_{WF}$.
-`transformiere` erwartet ein Array mit einem Punkt pro Zeile. Den einzelnen
-Punkt schreiben wir deshalb mit doppelten eckigen Klammern als Array der Form
-`(1, 2)`.
+Das Hindernis vom Anfang hat $r = 1.5$ und $\varphi = 0$, also die
+Fahrzeugkoordinaten $(1.5, 0)$. `transformiere` erwartet einen Punkt pro
+Zeile, deshalb schreiben wir den einzelnen Punkt mit doppelten eckigen
+Klammern als Array der Form `(1, 2)`.
 
 ```{code-cell} python
 # Hindernis 1.5 m voraus: r = 1.5 m und phi = 0, also (1.5, 0) im Fahrzeug-KS
@@ -364,21 +328,15 @@ hindernis_W = transformiere(T_WF, hindernis_F)
 print('Hindernis in Hallenkoordinaten in m:', np.round(hindernis_W, 3))
 ```
 
-Das Hindernis liegt bei $(5.299, 2.750)$. Das passt: $1.5\,\text{m}$ in
-Fahrtrichtung unter $30°$ sind $1.5 \cdot \cos 30° = 1.299\,\text{m}$ in
-$x_W$-Richtung und $1.5 \cdot \sin 30° = 0.75\,\text{m}$ in $y_W$-Richtung,
-gerechnet ab der Fahrzeugmitte $(4, 2)$. Bei einer anderen Pose hätte dasselbe
-Hindernis ganz andere Hallenkoordinaten. Die Messung allein verrät also nicht,
-wo es in der Halle steht, dafür brauchen wir zusätzlich die Pose.
+Das Hindernis liegt bei $(5.299, 2.750)$. Bei einer anderen Pose hätte es ganz
+andere Hallenkoordinaten. Die Messung allein verrät also nicht, wo es in der
+Halle steht, dafür brauchen wir die Pose.
 
-Ein Scanner misst nicht nur einen Punkt, sondern viele. Fünf seiner Strahlen
-haben einen Gegenstand links vor dem Fahrzeug getroffen. Die Formeln für
-Polarkoordinaten wenden wir wie in Kapitel 2.1 auf ganze Arrays auf einmal an.
-Danach tragen wir $x_F$ und $y_F$ wie in der Funktion `transformiere` in die
-Spalten eines Arrays der Form `(5, 2)` ein. Der Parameter `scanner` von
-`zeichne_halle` zeichnet zusätzlich die Laserstrahlen ein. Er erwartet die
-Lage des Scanners in Hallenkoordinaten, also die Fahrzeugmitte aus der dritten
-Spalte von $\mathbf{T}_{WF}$.
+Fünf Strahlen haben einen Gegenstand links vor dem Fahrzeug getroffen. Die
+Formeln für Polarkoordinaten wenden wir wie in Kapitel 2.1 auf ganze Arrays an
+und tragen $x_F$ und $y_F$ in die Spalten eines Arrays der Form `(5, 2)` ein.
+Der Parameter `scanner` zeichnet die Laserstrahlen ab der Fahrzeugmitte ein,
+also ab der dritten Spalte von $\mathbf{T}_{WF}$.
 
 ```{code-cell} python
 # Fünf Messungen des Scanners: Entfernung in m und Winkel in Grad
@@ -400,10 +358,9 @@ zeichne_halle(umriss_W, messpunkte=messpunkte_W, scanner=T_WF[0:2, 2],
               umgebung=halle, titel='Was der Scanner sieht')
 ```
 
-Alle fünf Messpunkte liegen auf dem Rand der Palette, drei auf ihrer unteren
-Kante bei $y = 4$ und zwei auf ihrer linken Kante bei $x = 5.6$. Dass einige
-Werte wie $3.999$ statt $4$ lauten, liegt nicht an der Rechnung: Der Scanner
-gibt die Entfernungen auf Zentimeter gerundet aus.
+Alle fünf Messpunkte liegen auf der unteren und der linken Kante der Palette.
+Werte wie $3.999$ statt $4$ kommen daher, dass der Scanner die Entfernungen
+auf Zentimeter rundet.
 
 ```{admonition} Mini-Übung (✩)
 :class: tip
@@ -457,38 +414,24 @@ im Schatten.
 
 ## Wo liegt die Übergabestation aus Sicht des Fahrzeugs?
 
-Bisher haben wir Fahrzeugkoordinaten in Hallenkoordinaten umgerechnet. Für die
-Fahrt zur Übergabestation braucht die Steuerung die umgekehrte Richtung. Die
-Station steht laut Hallenkarte bei $(8, 2.5)$. Um sie anzufahren, muss das
-Fahrzeug wissen, ob sie vor oder hinter ihm liegt und ob es nach links oder
-rechts lenken muss. Genau das verraten die Fahrzeugkoordinaten der Station:
-$x_F > 0$ heißt vorne, $y_F > 0$ heißt links.
-
-*Welche Matrix rechnet von W nach F?* Sie muss die Wirkung von
-$\mathbf{T}_{WF}$ genau aufheben. Eine solche Matrix haben wir in Kapitel 5.1
-kennengelernt.
+Für die Fahrt zur Übergabestation bei $(8, 2.5)$ braucht die Steuerung die
+umgekehrte Richtung. Die Fahrzeugkoordinaten der Station verraten, ob sie vorne
+($x_F > 0$) oder hinten liegt und ob das FTF nach links ($y_F > 0$) oder
+rechts lenken muss. *Welche Matrix rechnet von W nach F?*
 
 ```{admonition} Aus der Mathematik: inverse Matrix
 :class: note
-Die **inverse Matrix** $\mathbf{A}^{-1}$ einer quadratischen Matrix
-$\mathbf{A}$ hebt deren Wirkung auf, es gilt
-$\mathbf{A}^{-1} \mathbf{A} = \mathbf{I}$. Sie existiert genau dann, wenn
-$\det(\mathbf{A}) \neq 0$ gilt. Für Drehmatrizen haben wir in Kapitel 5.1
-gesehen, dass die Inverse die Transponierte ist, $\mathbf{R}^{-1} = \mathbf{R}^\top$.
-Unsere homogenen Transformationsmatrizen bestehen nur aus einer Drehung und
-einer Verschiebung. Ihre Determinante ist wie bei der Drehmatrix immer 1,
-deshalb lassen sie sich immer umkehren.
+Die **inverse Matrix** $\mathbf{A}^{-1}$ hebt die Wirkung von $\mathbf{A}$
+auf, $\mathbf{A}^{-1} \mathbf{A} = \mathbf{I}$. Sie existiert, wenn
+$\det(\mathbf{A}) \neq 0$ gilt. Bei Drehmatrizen ist sie die Transponierte
+(Kapitel 5.1). Unsere homogenen Matrizen haben wie die Drehmatrix die
+Determinante 1 und lassen sich immer umkehren.
 ```
 
-Die Umrechnung von W nach F leistet also
-
-$$\mathbf{T}_{FW} = \mathbf{T}_{WF}^{-1}.$$
-
-Auch hier lesen wir die Indizes von rechts nach links: $\mathbf{T}_{FW}$ nimmt
-Hallenkoordinaten entgegen und liefert Fahrzeugkoordinaten. NumPy berechnet
-die inverse Matrix mit `np.linalg.inv`. Zur Probe prüfen wir mit `np.allclose`
-und `np.eye` aus Kapitel 5.1, ob $\mathbf{T}_{FW} \cdot \mathbf{T}_{WF}$ die
-Einheitsmatrix ergibt.
+Von W nach F rechnet also $\mathbf{T}_{FW} = \mathbf{T}_{WF}^{-1}$. NumPy
+berechnet die Inverse mit `np.linalg.inv`. Zur Probe muss
+$\mathbf{T}_{FW} \cdot \mathbf{T}_{WF}$ die Einheitsmatrix `np.eye(3)` aus
+Kapitel 5.1 ergeben.
 
 ```{code-cell} python
 # Übergabestation in Hallenkoordinaten in m, als Array der Form (1, 2)
@@ -507,17 +450,12 @@ zeichne_halle(umriss_W, koordinatensysteme=T_WF, ziele=station, umgebung=halle,
               titel='Wo liegt die Übergabestation?')
 ```
 
-Die Station liegt $3.714\,\text{m}$ vor der Fahrzeugmitte. Ihre
-$y_F$-Koordinate ist negativ, sie liegt also $1.567\,\text{m}$ rechts. Das
-Fahrzeug muss nach rechts lenken.
-
-In $\mathbf{T}_{FW}$ steht links oben $\mathbf{R}(-30°)$, die Rückdrehung aus
-Kapitel 5.1. Die rechte Spalte ist aber nicht einfach $(-4, -2)$, sondern
-$(-4.464, 0.268)$. *Warum?* $\mathbf{T}_{WF}$ dreht zuerst und verschiebt dann.
-Die Umkehrung muss die beiden Schritte in umgekehrter Reihenfolge rückgängig
-machen: zuerst zurückverschieben, dann zurückdrehen. Die Rückdrehung erfasst
-dabei auch den Verschiebungsvektor. `np.linalg.inv` nimmt uns diese
-Überlegung ab.
+Die Station liegt $3.714\,\text{m}$ vor und $1.567\,\text{m}$ rechts von der
+Fahrzeugmitte, das FTF muss nach rechts lenken. Links oben in
+$\mathbf{T}_{FW}$ steht die Rückdrehung $\mathbf{R}(-30°)$. Die rechte Spalte
+ist aber nicht $(-4, -2)$: $\mathbf{T}_{WF}$ hat zuerst gedreht und dann
+verschoben, die Umkehrung muss also zuerst zurückverschieben und dann
+zurückdrehen. Die Rückdrehung erfasst dabei den Verschiebungsvektor mit.
 
 ```{admonition} Mini-Übung (✩)
 :class: tip
@@ -562,21 +500,14 @@ Kapitel 5.3 spielt die Reihenfolge eine Rolle.
 
 ## Zusammenfassung und Ausblick
 
-Die Halle und das Fahrzeug haben jeweils ein eigenes Koordinatensystem. Die
-Pose $(x, y, \psi)$ legt fest, wo das Fahrzeugkoordinatensystem in der Halle
-liegt und wohin es zeigt. Die homogene Transformationsmatrix
-$\mathbf{T}_{WF}$ aus Kapitel 5.3 rechnet Fahrzeugkoordinaten in
-Hallenkoordinaten um. In ihren Spalten stehen die Richtungen der
-Fahrzeugachsen und die Lage der Fahrzeugmitte. Messungen des Laserscanners aus
-Entfernung und Winkel rechnen wir mit $x = r\cos\varphi$ und
-$y = r\sin\varphi$ in Fahrzeugkoordinaten um und bringen sie dann mit
-$\mathbf{T}_{WF}$ in die Halle. Für die umgekehrte Richtung verwenden wir die
-inverse Matrix $\mathbf{T}_{FW} = \mathbf{T}_{WF}^{-1}$, die NumPy mit
-`np.linalg.inv` berechnet. Die Fahrzeugkoordinaten eines Ziels verraten, ob es
-vor oder hinter dem Fahrzeug liegt und ob es links oder rechts liegt.
+Halle und Fahrzeug haben jeweils ein eigenes Koordinatensystem. Die Pose
+$(x, y, \psi)$ legt fest, wo das Fahrzeugkoordinatensystem liegt und wohin es
+zeigt. $\mathbf{T}_{WF}$ rechnet Fahrzeug- in Hallenkoordinaten um, in ihren
+Spalten stehen die Fahrzeugachsen und die Fahrzeugmitte. Scannermessungen
+rechnen wir mit $x = r\cos\varphi$ und $y = r\sin\varphi$ in
+Fahrzeugkoordinaten um. Die umgekehrte Richtung leistet
+$\mathbf{T}_{FW} = \mathbf{T}_{WF}^{-1}$ mit `np.linalg.inv`.
 
-Im Projekt in Kapitel 6.2 werten wir einen ganzen Scan aus. Dort sitzt der
-Scanner nicht in der Fahrzeugmitte, sondern vorne am Fahrzeug, und bringt
-damit ein drittes Koordinatensystem mit. Wie beim Roboterarm in Kapitel 5.3
-verketten wir deshalb zwei Transformationen. Außerdem prüfen wir, ob ein
-Hindernis so nah vor dem Fahrzeug liegt, dass es anhalten muss.
+Im Projekt in Kapitel 6.2 sitzt ein zweiter Scanner vorne am Fahrzeug und
+bringt ein drittes Koordinatensystem mit. Wie in Kapitel 5.3 verketten wir
+deshalb zwei Transformationen und prüfen, ob das FTF anhalten muss.
