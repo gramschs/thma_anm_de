@@ -206,7 +206,7 @@ Drehmatrix allein den Greifer bringt.
 <!-- markdownlint-disable MD033 -->
 <div class="applet-container applet-880">
 <iframe
-  src="https://gramschs.github.io/thma_anm_de_assets/interactive/chapter05/scara-drehung.html"
+  src="https://gramschs.github.io/thma_anm_assets/interactive/chapter05/scara-drehung.html"
   width="100%"
   frameborder="0"
   scrolling="no">
@@ -555,7 +555,7 @@ Drehpunkt der Matrix, die gerade wirkt.
 <!-- markdownlint-disable MD033 -->
 <div class="applet-container applet-880">
 <iframe
-  src="https://gramschs.github.io/thma_anm_de_assets/interactive/chapter05/scara-drehung.html?tab=2"
+  src="https://gramschs.github.io/thma_anm_assets/interactive/chapter05/scara-drehung.html?tab=2"
   width="100%"
   frameborder="0"
   scrolling="no">
