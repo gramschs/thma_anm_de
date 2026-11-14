@@ -203,7 +203,7 @@ Greifer bleibt dabei immer auf dem gestrichelten Kreis um Gelenk 2. Mit
 „Erster Versuch: nur Drehmatrix“ sehen Sie zum Vergleich, wohin die
 Drehmatrix allein den Greifer bringt.
 
-<!-- markdownlint-disable MD033 -->
+<!-- markdownlint-disable -->
 <div class="applet-container applet-880">
 <iframe
   src="https://gramschs.github.io/thma_anm_assets/interactive/chapter05/scara-drehung.html"
@@ -212,7 +212,7 @@ Drehmatrix allein den Greifer bringt.
   scrolling="no">
 </iframe>
 </div>
-<!-- markdownlint-enable MD033 -->
+<!-- markdownlint-enable -->
 
 Das Bauteil behandeln wir genauso. Ziehen wir einen Vektor mit zwei Einträgen
 von einem Array der Form `(4, 2)` ab, zieht NumPy ihn von jeder Zeile ab. So
@@ -552,7 +552,7 @@ Im Reiter „Beide Gelenke“ der interaktiven Abbildung spielen Sie beide
 Reihenfolgen ab und verändern die Winkel. Ein Kreis markiert dabei den
 Drehpunkt der Matrix, die gerade wirkt.
 
-<!-- markdownlint-disable MD033 -->
+<!-- markdownlint-disable -->
 <div class="applet-container applet-880">
 <iframe
   src="https://gramschs.github.io/thma_anm_assets/interactive/chapter05/scara-drehung.html?tab=2"
@@ -561,7 +561,7 @@ Drehpunkt der Matrix, die gerade wirkt.
   scrolling="no">
 </iframe>
 </div>
-<!-- markdownlint-enable MD033 -->
+<!-- markdownlint-enable -->
 
 ```{admonition} Mini-Übung (✩)
 :class: tip

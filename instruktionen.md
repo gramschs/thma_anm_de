@@ -322,6 +322,53 @@ referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 ```
 ````
 
+### Applets im Jupyter Notebook (Standbild)
+
+Im verteilten Notebook stehen an der Stelle des Applets ein Standbild und
+darunter ein Link, der das Applet im Browser öffnet. Das Applet zeigt mit
+dem URL-Parameter `standbild=1` seinen Endzustand ohne Bedienelemente. Davon
+entsteht per Puppeteer ein Screenshot (760 px breit,
+`deviceScaleFactor: 1.5`, auf die Applet-Karte zugeschnitten), abgelegt als
+`pics/<applet>.png` mit dem Dateinamen des Applets, in EN mit `?lang=en`. Der
+Konverter `convert_myst_to_notebook.py` im EN-Repo setzt Bild und Link an die
+Stelle des Applet-Blocks. Ohne Standbild bleibt nur der Link. Beispiel:
+Kapitel 7.1, `chap07_sec01_ftf_meldungen`.
+
+### Applets mit wechselnder Höhe (Vorschaubild mit Overlay)
+
+Applets mit stark schwankender Höhe (zum Beispiel ein Quiz, Kapitel 7.0)
+erhalten keine feste Höhe. Stattdessen zeigt die Seite ein Vorschaubild mit
+Play-Taste, ein Klick öffnet das Applet als Overlay über der ganzen Seite.
+Das nötige CSS steht in `my_styling.css` (DE und EN), JavaScript ist nicht
+nötig.
+
+1. Vorschaubild: Screenshot des Startbildschirms per Puppeteer (760 px breit,
+   `deviceScaleFactor: 1.5`, auf die Applet-Karte zugeschnitten), abgelegt als
+   `pics/<applet>_vorschau.png`, in EN als `_preview.png` mit `?lang=en`.
+2. Einbindung wie unten, `applet-container` ohne Höhenklasse, keine
+   Leerzeilen im HTML-Block.
+3. Im Text davor ein Satz zur Bedienung: "Ein Klick auf das Bild startet das
+   …, das Kreuz oben rechts schließt es wieder."
+
+```html
+<!-- markdownlint-disable -->
+<details class="applet-overlay">
+<summary>
+<img src="pics/<applet>_vorschau.png"
+  alt="Vorschau … Klicken Sie, um … zu starten.">
+</summary>
+<div class="applet-container">
+<iframe
+  src="https://gramschs.github.io/thma_anm_assets/interactive/chapterXX/<applet>.html"
+  width="100%"
+  frameborder="0"
+  scrolling="auto">
+</iframe>
+</div>
+</details>
+<!-- markdownlint-enable -->
+```
+
 ## Variablennamen im Code
 
 - Variablennamen und Funktionsnamen ausschließlich **ASCII-Zeichen**: keine
