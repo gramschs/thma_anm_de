@@ -523,7 +523,7 @@ $(i, i)$ und $(j, j)$ ein und $-\mathbf{b}$ in die beiden
 
 Zum Eintragen brauchen wir ein neues Werkzeug, das **Slicing**. Der Ausdruck
 `K[0:2, 2:4]` wählt die Zeilen 0 und 1 und die Spalten 2 und 3 aus, also einen
-$2 \times 2$-Block. Wie bei `range` gehört die obere Grenze nicht mehr dazu.
+$2 \times 2$-Block. Wie bei `range()` gehört die obere Grenze nicht mehr dazu.
 Stab 0 verbindet Knoten 0 mit Knoten 1. Knoten 0 belegt die Zeilen und
 Spalten 0 und 1, Knoten 1 die Zeilen und Spalten 2 und 3. Wir tragen den Block
 von Stab 0 zuerst von Hand ein.
@@ -622,7 +622,7 @@ Knoten 2 gibt es keinen Stab, deshalb sind diese Blöcke null.
 ```
 
 Können wir $\mathbf{K} \cdot \vec{u} = \vec{F}$ jetzt einfach mit
-`np.linalg.solve` lösen? Wir prüfen die Lösbarkeit wie in Kapitel 3.1 mit der
+`np.linalg.solve()` lösen? Wir prüfen die Lösbarkeit wie in Kapitel 3.1 mit der
 Determinante. Außerdem schieben wir das ganze Fachwerk probeweise um
 $1\,\text{mm}$ nach rechts.
 
@@ -706,7 +706,7 @@ Ein ebenes Fachwerk beschreiben wir durch vier Datenstrukturen: die
 Knotenkoordinaten, die Lagerknoten, die Stabliste und den Kraftvektor. Jeder
 Knoten hat zwei Freiheitsgrade, Knoten $n$ belegt die Indizes $2n$ und $2n+1$.
 Jeder Stab wirkt wie eine Feder mit der Steifigkeit $k = EA/L$ und liefert
-einen $2 \times 2$-Steifigkeitsblock. Die Funktion `baue_steifigkeitsmatrix`
+einen $2 \times 2$-Steifigkeitsblock. Die Funktion `baue_steifigkeitsmatrix()`
 trägt jeden Block mit Slicing in die Steifigkeitsmatrix $\mathbf{K}$ ein,
 positiv auf den Diagonalblöcken und negativ auf den Nebendiagonalblöcken.
 Ohne Lager ist

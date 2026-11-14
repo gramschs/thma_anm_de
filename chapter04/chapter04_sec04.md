@@ -54,11 +54,11 @@ Führen Sie zuerst die beiden folgenden Zellen aus. Die erste enthält die
 vorgegebene Zeichenfunktion, die zweite die Importe und die drei Funktionen
 aus den Kapiteln 4.1 und 4.3.
 
-Die Funktion `berechne_verschiebungen` hat einen zusätzlichen Parameter
+Die Funktion `berechne_verschiebungen()` hat einen zusätzlichen Parameter
 `loslager_indizes`. Ein Loslager wie das Lager B in Kapitel 3.2 hält den
 Knoten nur in senkrechter Richtung fest, waagerecht kann er sich frei
 bewegen. Deshalb ersetzt die Funktion an einem Loslager nur die Gleichung für
-$u_y$. Auch `zeichne_fachwerk` kennt diesen Parameter und zeichnet Loslager
+$u_y$. Auch `zeichne_fachwerk()` kennt diesen Parameter und zeichnet Loslager
 mit einem zusätzlichen Strich.
 
 ```{code-cell} python

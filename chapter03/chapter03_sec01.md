@@ -224,12 +224,12 @@ Das Ergebnis ist nicht exakt null, sondern eine winzige Zahl wie `1e-15` oder
 ganze Zahlen und werden exakt gespeichert. NumPy berechnet die Determinante
 aber in mehreren Zwischenschritten mit Divisionen, und nicht jedes
 Zwischenergebnis lässt sich exakt als Fließkommazahl speichern. Diese kleinen
-Rundungsfehler sind der Grund, warum wir mit `np.isclose` vergleichen und
+Rundungsfehler sind der Grund, warum wir mit `np.isclose()` vergleichen und
 nicht mit `== 0`.
 
 ````{admonition} Was passiert bei einer singulären Matrix?
 :class: warning
-Die Lösungsfunktion `np.linalg.solve` meldet einen `LinAlgError` nur dann,
+Die Lösungsfunktion `np.linalg.solve()` meldet einen `LinAlgError` nur dann,
 wenn bei der Elimination eine exakte Null auftritt. Wegen der Rundungsfehler
 passiert das bei `A_singular` nicht: `np.linalg.solve(A_singular, b)` liefert
 ohne jede Warnung eine vermeintliche Lösung mit Einträgen in der
@@ -262,7 +262,7 @@ Messbrücke.
 Die Regel "Determinante ungleich null, genau eine Lösung" gilt in der exakten
 Mathematik. Im Rechner hängt der Wert der Determinante aber auch von der
 Skalierung der Matrix ab. Multiplizieren wir die $20 \times 20$-Einheitsmatrix
-mit $0.001$, sinkt ihre Determinante auf $10^{-60}$ und `np.isclose` meldet
+mit $0.001$, sinkt ihre Determinante auf $10^{-60}$ und `np.isclose()` meldet
 null, obwohl sich das System genauso leicht lösen lässt wie vorher. Für unsere
 kleinen, gut skalierten Beispiele reicht der Determinantentest aus.
 Zuverlässigere numerische Kriterien sind der Rang und die **Konditionszahl**
@@ -305,14 +305,14 @@ print('nahe null:', np.isclose(det_M, 0.0))
 Die zweite Zeile ist genau das Doppelte der ersten Zeile und enthält daher
 keine neue Information. Die Determinante ist deshalb null. Je nach
 Rundungsfehlern zeigt der Rechner sie als exakt `0.00e+00` oder als winzige
-Zahl nahe null an. In beiden Fällen gibt `np.isclose` den Wert `True` zurück,
+Zahl nahe null an. In beiden Fällen gibt `np.isclose()` den Wert `True` zurück,
 das System hat keine eindeutige Lösung.
 ````
 
 ## Das System lösen und die Probe
 
 Wenn die Determinante ungleich null ist, berechnen wir die Lösung mit
-`np.linalg.solve`. Die Funktion erwartet zuerst die Matrix, dann die rechte
+`np.linalg.solve()`. Die Funktion erwartet zuerst die Matrix, dann die rechte
 Seite.
 
 ```{code-cell} python
@@ -354,7 +354,7 @@ Tagesumsatz in Euro:
 | Mi | 4 | 2 | 3 | 23.30 |
 
 1. Legen Sie `A_cafe` und `b_cafe` an, prüfen Sie die Determinante, lösen Sie
-   mit `np.linalg.solve` und sichern Sie das Ergebnis mit einer Probe ab.
+   mit `np.linalg.solve()` und sichern Sie das Ergebnis mit einer Probe ab.
 2. Beantworten Sie ohne Code: Die Probe
    `np.allclose(A_cafe @ x_cafe, b_cafe)` ergibt `True`. Heißt das, dass
    `A_cafe` und `b_cafe` garantiert richtig aufgestellt wurden?

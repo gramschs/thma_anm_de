@@ -35,7 +35,7 @@ berechnet. Das nennt man **numerische Quadratur**.
   auszuführen.
 * [ ] Sie können die **Trapezregel** aus der Idee der linearen Interpolation
   herleiten und als Python-Schleife implementieren.
-* [ ] Sie können `np.trapezoid` einsetzen und das Ergebnis mit der eigenen
+* [ ] Sie können `np.trapezoid()` einsetzen und das Ergebnis mit der eigenen
   Implementierung vergleichen.
 ```
 
@@ -269,9 +269,9 @@ plt.tight_layout()
 plt.show()
 ```
 
-NumPy bietet seit Version 2.0 die Funktion `np.trapezoid`, die dieselbe Rechnung
-in einer Zeile erledigt. In älteren NumPy-Versionen heißt die Funktion
-`np.trapz`; sie ist inhaltlich gleich.
+NumPy bietet seit Version 2.0 die Funktion `np.trapezoid()`, die dieselbe
+Rechnung in einer Zeile erledigt. In älteren NumPy-Versionen heißt die Funktion
+`np.trapz()`; sie ist inhaltlich gleich.
 
 ```{code-cell} python
 import numpy as np
@@ -301,7 +301,7 @@ Ein Fahrzeug misst die Geschwindigkeit an drei Zeitpunkten:
 
 1. Berechnen Sie den Bremsweg mit der Trapezregel per Handrechnung.
    Zeigen Sie beide Trapezflächen einzeln.
-2. Implementieren Sie die Berechnung mit `np.trapezoid` und überprüfen
+2. Implementieren Sie die Berechnung mit `np.trapezoid()` und überprüfen
    Sie Ihr Handrechenresultat.
 3. Warum ergibt die Linkssumme für diese drei Punkte einen anderen Wert?
    Berechnen Sie auch diesen per Hand und vergleichen Sie.
@@ -353,7 +353,7 @@ Die Rechteckregel nähert das Integral durch konstante Funktionswerte
 pro Intervall an. Linkssumme und Rechtssumme liefern bei monotonen
 Verläufen einen systematischen Fehler, der sich erst mit vielen
 Messpunkten verringert. Die Trapezregel verbessert die Näherung durch
-lineare Interpolation zwischen den Messpunkten. Mit `np.trapezoid` steht
+lineare Interpolation zwischen den Messpunkten. Mit `np.trapezoid()` steht
 sie als fertiges NumPy-Werkzeug zur Verfügung.
 
 In Abschnitt 9.2 wenden wir die Trapezregel auf einen realistischen

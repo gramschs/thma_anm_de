@@ -31,7 +31,7 @@ Der Gradient hat jetzt zwei Komponenten, eine für jeden Parameter.
   anwenden.
 * [ ] Sie können Gradient Descent für ein Zweiparameter-Problem implementieren,
   ohne Vektornotation zu verwenden.
-* [ ] Sie können `scipy.optimize.minimize` auf ein Kurvenanpassungsproblem
+* [ ] Sie können `scipy.optimize.minimize()` auf ein Kurvenanpassungsproblem
   anwenden und das Ergebnis mit einer eigenen GD-Implementierung vergleichen.
 ```
 
@@ -221,7 +221,7 @@ exakt beim wahren Parameterwert, sondern leicht daneben.
 Wir haben alle Zutaten: die Kostenfunktion, die Gradienten und die
 Update-Regeln. Jetzt setzen wir alles zu einer vollständigen
 Kurvenanpassung zusammen und vergleichen das Ergebnis mit
-`scipy.optimize.minimize`.
+`scipy.optimize.minimize()`.
 
 ```{code-cell} python
 from scipy.optimize import minimize
@@ -298,7 +298,7 @@ ax.grid(True)
 plt.show()
 ```
 
-Beide Methoden finden nahezu dasselbe Ergebnis. `scipy.optimize.minimize`
+Beide Methoden finden nahezu dasselbe Ergebnis. `scipy.optimize.minimize()`
 passt die Schrittgröße automatisch an, braucht keine manuell gewählten
 Lernraten und konvergiert deutlich schneller. Die eigene GD-Implementierung
 ist dafür transparent: wir sehen jeden Schritt und können den Algorithmus
@@ -306,7 +306,7 @@ nach Bedarf anpassen.
 
 ```{admonition} Wann GD selbst implementieren, wann scipy?
 :class: note
-`scipy.optimize.minimize` ist in der Ingenieurpraxis die erste Wahl: robust,
+`scipy.optimize.minimize()` ist in der Ingenieurpraxis die erste Wahl: robust,
 schnell und ohne Lernraten-Tuning. Die eigene GD-Implementierung ist sinnvoll,
 wenn man den Algorithmus verstehen, Zwischenergebnisse speichern oder
 den Update-Schritt anpassen will, zum Beispiel in der Simulation von
@@ -357,7 +357,7 @@ Zu Frage 2: `scipy` findet vom Startwert `x0=[50.0, 0.001]` **nicht** das
 richtige Minimum. Stattdessen konvergiert es zu einem *lokalen* Minimum bei
 $T_\infty \approx 31.86\,°\text{C}$ und $\lambda \approx 4.47\,\text{s}^{-1}$
 mit einem MSE von rund $295\,°\text{C}^2$, also etwa 80-mal schlechter als das
-globale Minimum. `scipy.optimize.minimize` ist ein **lokaler** Optimierer: Es findet das nächstgelegene Minimum, nicht zwingend das globale. Für globale Suche wären andere Verfahren nötig, etwa [`scipy.optimize.differential_evolution`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.differential_evolution.html).
+globale Minimum. `scipy.optimize.minimize()` ist ein **lokaler** Optimierer: Es findet das nächstgelegene Minimum, nicht zwingend das globale. Für globale Suche wären andere Verfahren nötig, etwa [`scipy.optimize.differential_evolution()`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.differential_evolution.html).
 
 Zu Frage 3: GD mit den gewählten Lernraten konvergiert vom schlechten
 Startwert möglicherweise nicht mehr korrekt, weil die Lernraten auf den
@@ -370,8 +370,8 @@ Lernraten: sie funktionieren nur in einem bestimmten Bereich zuverlässig.
 Gradient Descent für zwei Parameter funktioniert nach demselben Prinzip wie
 in 1D: für jeden Parameter einen Update-Schritt, berechnet mit der zentralen
 Differenz aus Kapitel 7. Die Lernraten müssen an die unterschiedlichen Skalen
-der Parameter angepasst werden. `scipy.optimize.minimize` löst dasselbe Problem
-robuster und schneller, ohne manuelles Lernraten-Tuning.
+der Parameter angepasst werden. `scipy.optimize.minimize()` löst dasselbe
+Problem robuster und schneller, ohne manuelles Lernraten-Tuning.
 
 In Abschnitt 8.4 wenden wir die vollständige Kurvenanpassungs-Pipeline auf
 ein neues ingenieurtechnisches Problem an. Kapitel 9 wechselt dann das Thema:

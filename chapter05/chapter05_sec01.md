@@ -232,8 +232,8 @@ den SCARA-Roboter genügt deshalb die Draufsicht.
 ```
 
 In Python schreiben wir die Drehmatrix als Funktion `drehmatrix(winkel)`, die
-ein 2×2-Array zurückgibt. `np.cos` und `np.sin` erwarten den Winkel in
-**Radiant**, nicht in Grad. Die Umrechnung übernimmt `np.deg2rad`. Den Punkt
+ein 2×2-Array zurückgibt. `np.cos()` und `np.sin()` erwarten den Winkel in
+**Radiant**, nicht in Grad. Die Umrechnung übernimmt `np.deg2rad()`. Den Punkt
 drehen wir mit dem Operator `@` für die Matrixmultiplikation aus Kapitel 3.1.
 
 ```{code-cell} python
@@ -266,14 +266,14 @@ Einheitsvektor $\vec{e}_x$.
 :class: warning
 Der Aufruf `np.cos(30)` rechnet mit 30 Radiant statt mit 30° und liefert ohne
 Fehlermeldung 0.154 statt 0.866. Grad rechnen wir deshalb immer zuerst mit
-`np.deg2rad` um.
+`np.deg2rad()` um.
 ```
 
 ```{admonition} Mini-Übung (✩)
 :class: tip
 1. Beantworten Sie ohne Code: Wo steht der Greifer bei $\alpha = 180°$, wo bei
    $\alpha = -90°$?
-2. Berechnen Sie mit `drehmatrix` die Position des Greifers für
+2. Berechnen Sie mit `drehmatrix()` die Position des Greifers für
    $\alpha = 135°$.
 3. Beantworten Sie ohne Code: Warum haben die beiden Koordinaten aus
    Teilaufgabe 2 denselben Betrag?
@@ -366,7 +366,7 @@ die **Orientierung**, also die Ausrichtung eines Körpers.
 ```{admonition} Mini-Übung (✩)
 :class: tip
 1. Drehen Sie Arm und Bauteil um $\alpha = -60°$ und zeichnen Sie
-   Grundstellung und gedrehte Stellung mit `zeichne_roboter`.
+   Grundstellung und gedrehte Stellung mit `zeichne_roboter()`.
 2. Beantworten Sie ohne Code: Welche Form haben `arm.T` und `R @ arm.T`?
 3. Beantworten Sie ohne Code: Das Bauteil soll längs zur $x$-Achse auf der
    Platine landen. Was passiert, wenn der Roboter es bei $\alpha = -60°$
@@ -439,8 +439,8 @@ Orthogonale Matrizen ändern weder Längen noch Winkel. Deshalb behalten Arm und
 Bauteil bei jeder Drehung ihre Form.
 
 In Python erzeugt `np.eye(2)` die 2×2-Einheitsmatrix. Wir vergleichen mit
-`np.allclose` aus Kapitel 3.1, weil Kosinus und Sinus kleine Rundungsfehler
-haben. Zusätzlich berechnen wir die Determinante mit `np.linalg.det`.
+`np.allclose()` aus Kapitel 3.1, weil Kosinus und Sinus kleine Rundungsfehler
+haben. Zusätzlich berechnen wir die Determinante mit `np.linalg.det()`.
 
 ```{code-cell} python
 # R transponiert mal R soll die Einheitsmatrix ergeben
@@ -472,14 +472,14 @@ print('Grundstellung erreicht:', np.allclose(arm_zurueck, arm))
 
 Der Arm steht wieder in der Grundstellung. In der Ausgabe erscheint dabei
 `-0.`. Das sind winzige negative Rundungsreste in der Größenordnung $10^{-18}$,
-die `np.round` als $-0$ anzeigt. Auch hier vergleichen wir deshalb mit
-`np.allclose` und nicht mit `==`.
+die `np.round()` als $-0$ anzeigt. Auch hier vergleichen wir deshalb mit
+`np.allclose()` und nicht mit `==`.
 
 ```{admonition} Mini-Übung (✩)
 :class: tip
 1. Berechnen Sie die Länge der langen Bauteilkante, also den Abstand der Ecken
    0 und 1, vor und nach der Drehung um $30°$.
-2. Prüfen Sie mit `np.allclose`, dass $\mathbf{R}^\top \mathbf{R}$ auch für
+2. Prüfen Sie mit `np.allclose()`, dass $\mathbf{R}^\top \mathbf{R}$ auch für
    $\varphi = 135°$ die Einheitsmatrix ergibt.
 3. Beantworten Sie ohne Code: $\mathbf{R}(30°)^\top$ dreht den Arm zurück in
    die Grundstellung. Welcher Drehung entspricht $\mathbf{R}(30°)^\top$? Tipp:

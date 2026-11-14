@@ -20,8 +20,8 @@ der Bahn und prüfen im Bild, ob das FTF an Kiste und Säule vorbeikommt.
 
 ```{admonition} Lernziele
 :class: attention
-* [ ] Sie können den Gierwinkel einer Fahrtrichtung mit `np.arctan2`
-  berechnen und erklären, warum `np.arctan` dafür nicht genügt.
+* [ ] Sie können den Gierwinkel einer Fahrtrichtung mit `np.arctan2()`
+  berechnen und erklären, warum `np.arctan()` dafür nicht genügt.
 * [ ] Sie können für jeden Punkt einer Bahn den Gierwinkel bestimmen und
   wissen, dass die Richtung zum nächsten Bahnpunkt die Richtung der Bahn nur
   annähert.
@@ -220,10 +220,10 @@ Winkel $\psi$ gegen die $x_W$-Achse gilt
 
 $$\tan\psi = \frac{\Delta y}{\Delta x}.$$
 
-Naheliegend ist also der **Arkustangens** `np.arctan`. Sein Ergebnis in
-Radiant rechnet `np.rad2deg`, das Gegenstück zu `np.deg2rad`, in Grad um. Wir
-probieren ihn für den ersten Abschnitt und für die spätere Rückfahrt zum Start
-aus.
+Naheliegend ist also der **Arkustangens** `np.arctan()`. Sein Ergebnis in
+Radiant rechnet `np.rad2deg()`, das Gegenstück zu `np.deg2rad()`, in Grad um.
+Wir probieren ihn für den ersten Abschnitt und für die spätere Rückfahrt zum
+Start aus.
 
 ```{code-cell} python
 # Richtung vom ersten zum zweiten Bahnpunkt
@@ -265,7 +265,7 @@ print(f'Gierwinkel für die Rückfahrt: {np.rad2deg(psi_zurueck):.1f}°')
 ```
 
 Für den ersten Abschnitt ändert sich nichts, denn dort ist $\Delta x > 0$. Für
-die Rückfahrt liefert `np.arctan2` jetzt $-172.9°$, genau $180°$ weniger als
+die Rückfahrt liefert `np.arctan2()` jetzt $-172.9°$, genau $180°$ weniger als
 der Arkustangens, also die entgegengesetzte Richtung.
 
 ```{admonition} Mini-Übung (✩)
@@ -275,7 +275,7 @@ mögliche Ziele liegen bei $(8, 4.5)$, $(6, 2.5)$ und $(7, 1.5)$.
 
 1. Beantworten Sie ohne Code: Welchen Gierwinkel braucht das FTF für die
    Fahrt zu jedem der drei Ziele?
-2. Prüfen Sie Ihre Antworten mit `np.arctan2` und `np.rad2deg`.
+2. Prüfen Sie Ihre Antworten mit `np.arctan2()` und `np.rad2deg()`.
 3. Beantworten Sie ohne Code: Für welche der drei Fahrten liefert der
    Arkustangens des Quotienten $\Delta y / \Delta x$ einen falschen Winkel oder
    gar keinen? Begründen Sie.
@@ -301,7 +301,7 @@ $y_W$-Richtung. Das FTF braucht also $90°$. Das zweite liegt $2\,\text{m}$ link
 davon, in negativer $x_W$-Richtung, das ergibt $180°$. Das dritte liegt
 $1\,\text{m}$ links und $1\,\text{m}$ tiefer, die Richtung halbiert also den
 Winkel zwischen negativer $x_W$- und negativer $y_W$-Richtung. Das sind
-$-135°$ oder gleichwertig $225°$, `np.arctan2` liefert $-135°$. Der
+$-135°$ oder gleichwertig $225°$, `np.arctan2()` liefert $-135°$. Der
 Arkustangens versagt bei allen drei Fahrten. Beim ersten Ziel ist
 $\Delta x = 0$, der Quotient ist nicht definiert. Beim zweiten ist der
 Quotient $0 / (-2) = 0$, und der Arkustangens liefert $0°$ statt $180°$. Beim
@@ -316,7 +316,7 @@ Jetzt wiederholen wir die Rechnung für alle Abschnitte: An Bahnpunkt `k` soll
 das FTF zum Bahnpunkt `k + 1` zeigen. Neun Bahnpunkte haben acht Abschnitte,
 die Schleife läuft deshalb über `range(len(bahn) - 1)`. Die Gierwinkel sammeln
 wir wie die Messpunkte in Kapitel 6.1 in einem Array, das wir vorher mit
-`np.zeros` anlegen. Der letzte Bahnpunkt hat keinen Nachfolger und übernimmt
+`np.zeros()` anlegen. Der letzte Bahnpunkt hat keinen Nachfolger und übernimmt
 den vorletzten Winkel.
 
 ```{code-cell} python
@@ -358,7 +358,7 @@ $\Delta y / \Delta x$ der Sekante heißt **Differenzenquotient**. In Kapitel
    die Schleife nur achtmal durchlaufen wird?
 2. Berechnen Sie in einer Schleife, um wie viel Grad sich das FTF zwischen je
    zwei benachbarten Bahnpunkten dreht, also `psi_grad[k + 1] - psi_grad[k]`.
-   Bestimmen Sie mit `np.argmax` und `np.argmin` die größte Drehung nach
+   Bestimmen Sie mit `np.argmax()` und `np.argmin()` die größte Drehung nach
    links und die größte Drehung nach rechts. Zwischen welchen Bahnpunkten
    liegen sie?
 3. Beantworten Sie ohne Code: Wie ändern sich die Drehungen zwischen
@@ -389,7 +389,7 @@ print(f'Größte Rechtsdrehung: {drehungen[k_rechts]:.1f}° '
 ```
 Die Schleife füllt nur die Einträge `psi[0]` bis `psi[7]`, einen pro
 Abschnitt. Den letzten Eintrag `psi[8]` setzt die Zeile `psi[-1] = psi[-2]`
-nach der Schleife. Ohne sie bliebe er auf dem Startwert $0$ aus `np.zeros`.
+nach der Schleife. Ohne sie bliebe er auf dem Startwert $0$ aus `np.zeros()`.
 Bei unserer Bahn wäre das zufällig richtig, bei einer anderen Bahn aber nicht.
 Die größte Linksdrehung beträgt $27.9°$ von Bahnpunkt 3 zu 4. Dort hat das FTF
 den tiefsten Punkt erreicht und fährt wieder hinauf. Die größte Rechtsdrehung
@@ -400,7 +400,7 @@ Die Sekanten werden kürzer und passen besser zur Tangente. Das FTF fährt also
 ruhiger und zeigt an jedem Bahnpunkt genauer in die Richtung der Bahn.
 
 Die einfache Differenz zweier Gierwinkel funktioniert hier, weil unsere Bahn
-nie in negative $x_W$-Richtung führt. Dort springt `np.arctan2` von $180°$ auf
+nie in negative $x_W$-Richtung führt. Dort springt `np.arctan2()` von $180°$ auf
 $-180°$, und die Differenz kann um $360°$ falsch sein. Aufgabe 6.4 in Kapitel
 6.5 zeigt, wie es dazu kommt und wie wir den Wert korrigieren.
 ````
@@ -411,7 +411,7 @@ Mit `bahn[k]` und `psi[k]` kennen wir an jedem Bahnpunkt die Pose. Wie in
 Kapitel 6.1 bauen wir daraus $\mathbf{T}_{WF}$ und rechnen den Umriss in die
 Halle um, jetzt in einer Schleife. Die Umrisse sammeln wir wie die Abstände in
 Teil 3 von Kapitel 6.2 in einer Liste: Vor der Schleife legen wir eine leere
-Liste an, und `append` hängt jeden neuen Umriss hinten an. Der Parameter
+Liste an, und `append()` hängt jeden neuen Umriss hinten an. Der Parameter
 `bereich` zeigt nur den Ausschnitt um die Bahn.
 
 ```{code-cell} python
@@ -487,7 +487,7 @@ schwenkt nach rechts aus, hier nach unten zur Säule.
 ## Zusammenfassung und Ausblick
 
 Den Gierwinkel zwischen zwei Bahnpunkten berechnen wir mit
-`np.arctan2(dy, dx)`. Anders als `np.arctan` erkennt diese Funktion an den
+`np.arctan2(dy, dx)`. Anders als `np.arctan()` erkennt diese Funktion an den
 Vorzeichen den Quadranten und liefert Winkel von $-180°$ bis $180°$. In einer
 Schleife erhalten wir den Gierwinkel an jedem Bahnpunkt, angenähert durch die
 Richtung der Sekante. Mit Lage und Gierwinkel bauen wir an jedem Bahnpunkt

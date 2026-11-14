@@ -229,7 +229,7 @@ Vor und nach der Drehung ist der Greifer $\sqrt{0.4^2 + 0.3^2} = 0.5\,\text{m}$
 vom Ursprung entfernt, denn eine Drehung ändert keine Längen. `R.T` ist die
 Drehung um $-90°$. Sie bringt den Greifer nach $(0.3, -0.4)$, also in die
 Stellung $\alpha = -90°$, $\beta = 90°$. Die letzte Zeile rechnet mit
-90 Radiant statt mit $90°$. Ohne `np.deg2rad` gibt es keine Fehlermeldung,
+90 Radiant statt mit $90°$. Ohne `np.deg2rad()` gibt es keine Fehlermeldung,
 sondern nur ein falsches Ergebnis.
 ````
 
@@ -265,7 +265,7 @@ Notieren Sie Ihre Vermutung in einer Markdown-Zelle, bevor Sie den Code
 ausführen.
 
 1. Welche Form hat `deckel.T`, und welche Form hat `deckel_neu`?
-2. Was geben die beiden Zeilen mit `np.allclose` aus? Begründen Sie Ihre
+2. Was geben die beiden Zeilen mit `np.allclose()` aus? Begründen Sie Ihre
    Antwort.
 3. In der Grundstellung ist die lange Kante $0.1\,\text{m}$ lang und zeigt in
    $x$-Richtung. Welche Werte erwarten Sie für `kante` nach dem Schwenk? Tipp:
@@ -465,13 +465,13 @@ In einem Matrixprodukt wirkt die rechte Matrix zuerst. Bei
 `T_schieb @ T_dreh` dreht der Tisch das Werkstück zuerst nach $(0, 0.1)$ und
 verschiebt es dann nach $(0.2, 0.1)$. Bei `T_dreh @ T_schieb` wird es zuerst
 nach $(0.3, 0)$ verschoben und dann um den Ursprung nach $(0, 0.3)$ gedreht.
-`transformationsmatrix` dreht nach ihrer Definition zuerst und verschiebt
+`transformationsmatrix()` dreht nach ihrer Definition zuerst und verschiebt
 danach. Deshalb ist `T_schieb @ T_dreh` gleich
 `transformationsmatrix(np.deg2rad(90), 0.2, 0)`. Im anderen Produkt steht die
 Verschiebung $(0, 0.2)$, denn die Drehung hat den Verschiebungsvektor
 mitgedreht. Sobald Verschiebungen beteiligt sind, ist das Matrixprodukt also
 nicht mehr vertauschbar. Das Werkstück ist ein Array der Form `(1, 2)`, weil
-`transformiere` die Punkte zeilenweise erwartet.
+`transformiere()` die Punkte zeilenweise erwartet.
 ````
 
 ```{admonition} Aufgabe 5.5 (✩✩)
@@ -482,7 +482,7 @@ liegt auf dem Maschinentisch bei $M = (120, 80)$ in mm, der Lochkreis hat den
 Radius $50\,\text{mm}$. Die erste Bohrung liegt rechts neben der Mitte bei
 $(170, 80)$, die übrigen folgen gegen den Uhrzeigersinn im Abstand von $60°$.
 
-1. Berechnen Sie mit `drehung_um_punkt` und `transformiere` die Positionen
+1. Berechnen Sie mit `drehung_um_punkt()` und `transformiere()` die Positionen
    aller sechs Bohrungen und speichern Sie sie in einem Array `bohrungen` der
    Form `(6, 2)`. Bohrung $k$ entsteht, indem Sie die erste Bohrung um
    $k \cdot 60°$ um $M$ drehen.
@@ -491,7 +491,7 @@ $(170, 80)$, die übrigen folgen gegen den Uhrzeigersinn im Abstand von $60°$.
    Begründen Sie das Ergebnis geometrisch.
 3. Der Flansch wurde versehentlich um $15°$ verdreht eingespannt. Berechnen
    Sie die tatsächlichen Positionen mit einer einzigen Transformation und
-   stellen Sie Soll- und Ist-Positionen mit `ax.scatter` in einem Diagramm
+   stellen Sie Soll- und Ist-Positionen mit `ax.scatter()` in einem Diagramm
    dar. Damit der Lochkreis rund aussieht, ergänzen Sie
    `ax.set_aspect('equal')`. Um wie viele Millimeter liegt jede Bohrung neben
    ihrer Sollposition?
@@ -599,8 +599,8 @@ Matrizen berechnen.
 2. Schreiben Sie eine Funktion `greifer_formel(alpha, beta)` mit Docstring, die
    die Greiferposition für Winkel in Radiant als Array zurückgibt.
 3. Vergleichen Sie Ihre Funktion für die Winkelpaare $(30°, 60°)$,
-   $(9°, 99°)$, $(120°, 45°)$ und $(180°, 150°)$ mit `np.allclose` mit dem
-   Greifer aus `stellung`.
+   $(9°, 99°)$, $(120°, 45°)$ und $(180°, 150°)$ mit `np.allclose()` mit dem
+   Greifer aus `stellung()`.
 4. Die Formel ist viel kürzer als die Kette aus Transformationsmatrizen.
    Warum rechnen Robotersteuerungen trotzdem mit Matrizen?
 
@@ -655,7 +655,7 @@ Greifer noch $l_2$ weiter in Richtung $\alpha + \beta$:
 $$x = l_1 \cos\alpha + l_2 \cos(\alpha + \beta), \qquad
 y = l_1 \sin\alpha + l_2 \sin(\alpha + \beta).$$
 
-Für alle vier Winkelpaare stimmt die Formel mit `stellung` überein. Für den
+Für alle vier Winkelpaare stimmt die Formel mit `stellung()` überein. Für den
 Greifer allein ist sie tatsächlich kürzer. Die Steuerung braucht aber auch
 die Ecken des Bauteils, und viele Roboter haben mehr als zwei Gelenke, die
 sich im Raum drehen. Jede weitere Größe bräuchte eine eigene, immer längere
@@ -670,11 +670,11 @@ Welche Punkte kann der Greifer des SCARA-Roboters überhaupt erreichen? Die
 Menge dieser Punkte heißt **Arbeitsraum** des Roboters. Gelenk 1 dreht wie in
 Kapitel 5.4 zwischen $0°$ und $180°$, Gelenk 2 zwischen $0°$ und $150°$.
 
-1. Berechnen Sie mit `stellung` die Greiferposition für alle Winkel $\alpha$
+1. Berechnen Sie mit `stellung()` die Greiferposition für alle Winkel $\alpha$
    von $0°$ bis $180°$ und $\beta$ von $0°$ bis $150°$ in Schritten von $5°$.
    Speichern Sie die Positionen in einem Array `punkte` mit
    $37 \cdot 31 = 1147$ Zeilen und zwei Spalten. Legen Sie es vorher mit
-   `np.zeros` an und zählen Sie in den Schleifen einen Zeilenindex mit.
+   `np.zeros()` an und zählen Sie in den Schleifen einen Zeilenindex mit.
 2. Stellen Sie die Punkte mit `ax.scatter(..., s=2)` dar. Ergänzen Sie
    `ax.set_aspect('equal')`, damit Kreise rund aussehen.
 3. Berechnen Sie den kleinsten und den größten Abstand der Punkte vom
@@ -873,18 +873,18 @@ bestueckplaetze = np.array([[0.30, 0.35], [0.40, 0.40], [0.45, 0.30]])
 ```
 
 **Teil 1:** Schreiben Sie eine Funktion
-`stellung_mit_greiferachse(alpha, beta, gamma)`, die wie `stellung` die Punkte
+`stellung_mit_greiferachse(alpha, beta, gamma)`, die wie `stellung()` die Punkte
 des Arms und die Ecken des Bauteils zurückgibt. Das Bauteil transformieren
 Sie mit $\mathbf{T}_\alpha \cdot \mathbf{T}_\beta \cdot \mathbf{T}_\gamma$,
 wobei $\mathbf{T}_\gamma$ um die Lage des Greifers in der Grundstellung dreht.
 Prüfen Sie für $\alpha = 30°$ und $\beta = 60°$: Mit $\gamma = 0$ liefert die
-Funktion dasselbe wie `stellung`. Mit $\gamma = 90°$ bleibt die Mitte des
+Funktion dasselbe wie `stellung()`. Mit $\gamma = 90°$ bleibt die Mitte des
 Bauteils beim Greifer. Die Mitte ist der Mittelpunkt der Diagonale, also
 `(ecken[0] + ecken[2]) / 2`.
 
 **Teil 2:** Berechnen Sie für jeden Platz den Winkel $\gamma$, der das Bauteil
 vom Winkel $\alpha + \beta$ auf den Sollwinkel dreht. Prüfen Sie mit
-`np.allclose`, dass die lange Kante `ecken[1] - ecken[0]` danach gleich
+`np.allclose()`, dass die lange Kante `ecken[1] - ecken[0]` danach gleich
 $0.08 \cdot (\cos\varphi_\text{soll}, \sin\varphi_\text{soll})$ ist.
 
 **Teil 3:** Die Greiferachse kann nur zwischen $-90°$ und $+90°$ drehen, damit

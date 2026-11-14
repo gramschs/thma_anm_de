@@ -27,7 +27,7 @@ erzeugt einen messbaren Strom.
 :class: attention
 * [ ] Sie können die Kirchhoffsche Knoten- und Maschenregel in ein LGS
   $\mathbf{A} \cdot \vec{x} = \vec{b}$ überführen.
-* [ ] Sie können mit `np.linalg.matrix_rank` den Rang einer Matrix bestimmen
+* [ ] Sie können mit `np.linalg.matrix_rank()` den Rang einer Matrix bestimmen
   und daraus ablesen, ob ein LGS genau eine, keine oder unendlich viele
   Lösungen hat.
 * [ ] Sie können eine Parameterstudie über einen Widerstand durchführen und
@@ -154,7 +154,7 @@ eindeutig lösbares System *keine* oder *unendlich viele* Lösungen hat.
 
 Dafür brauchen wir neben $\mathbf{A}$ auch die **erweiterte
 Koeffizientenmatrix** $[\mathbf{A} \mid \vec{b}]$: die Matrix $\mathbf{A}$ mit
-$\vec{b}$ als zusätzlicher Spalte. In NumPy hängt `np.column_stack` sie an,
+$\vec{b}$ als zusätzlicher Spalte. In NumPy hängt `np.column_stack()` sie an,
 wobei wir die zu verbindenden Arrays gemeinsam in einem zusätzlichen
 Klammerpaar übergeben. Den Rang berechnen wir mit `np.linalg.matrix_rank()`.
 
@@ -222,8 +222,8 @@ $$\mathbf{A} = \begin{pmatrix} 1 & 1 & 2 \\ 3 & 3 & 6 \\ 1 & 0 & 1 \end{pmatrix}
 1. Beantworten Sie ohne Code: Welche zwei Zeilen von $\mathbf{A}$ sind
    voneinander abhängig?
 2. Bestimmen Sie $\text{rang}(\mathbf{A})$ und
-   $\text{rang}([\mathbf{A} \mid \vec{b}])$ mit `np.linalg.matrix_rank`. Welcher
-   der drei Fälle liegt vor?
+   $\text{rang}([\mathbf{A} \mid \vec{b}])$ mit `np.linalg.matrix_rank()`.
+   Welcher der drei Fälle liegt vor?
 ```
 
 ```{code-cell} python
@@ -316,7 +316,7 @@ print(f'numerisch:   R4* = {r4_abgleich:.1f} Ohm')
 print(f'analytisch:  R4* = {r4_analytisch:.1f} Ohm')
 ```
 
-Der numerische Wert weicht leicht vom analytischen ab, weil `np.linspace` die
+Der numerische Wert weicht leicht vom analytischen ab, weil `np.linspace()` die
 Nullstelle nicht exakt trifft. Ein feineres Gitter verkleinert die Abweichung.
 
 ```{admonition} Mini-Übung (✩)
@@ -356,10 +356,10 @@ Das Modell der Wheatstone-Brücke besteht aus sechs Kirchhoff-Gleichungen für
 sechs unbekannte Ströme. Der **Rang** von $\mathbf{A}$ und der erweiterten
 Matrix $[\mathbf{A} \mid \vec{b}]$ sagt, ob ein Gleichungssystem genau eine,
 keine oder unendlich viele Lösungen hat, und ist damit allgemeiner als der
-Determinanten-Test. Mit einer Parameterstudie über $R_4$ und `np.argmin` haben
+Determinanten-Test. Mit einer Parameterstudie über $R_4$ und `np.argmin()` haben
 wir den Abgleichpunkt der Brücke bestimmt und mit der analytischen Formel
 bestätigt.
 
 Der zweite Exkurs in Kapitel 3.7 wechselt die Perspektive: Dort untersuchen
-wir, wie die Rechenzeit von `np.linalg.solve` mit der Größe des
+wir, wie die Rechenzeit von `np.linalg.solve()` mit der Größe des
 Gleichungssystems wächst.

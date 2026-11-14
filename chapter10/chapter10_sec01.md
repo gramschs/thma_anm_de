@@ -463,6 +463,6 @@ T_i)$ berechnet und ein Schritt der Länge $\Delta t$ ausgeführt. Das Verfahren
 ist einfach zu implementieren, hat aber Konvergenzordnung 1: für eine zehnfache
 Genauigkeit braucht man zehnmal mehr Schritte.
 
-Im nächsten Abschnitt lernen wir `scipy.integrate.solve_ivp` kennen, das mit
+Im nächsten Abschnitt lernen wir `scipy.integrate.solve_ivp()` kennen, das mit
 einem Runge-Kutta-Verfahren arbeitet und bei gleichem Rechenaufwand eine
 vielfach höhere Genauigkeit erreicht.

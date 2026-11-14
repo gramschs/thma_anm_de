@@ -126,7 +126,7 @@ Schritt von $t = 10$ auf $t = 15$ min fehlt.
 
 Zu Frage 2: Die letzte Zeile gibt `t = 0.0 min, T = 0.0000 °C` aus.
 Beide Einträge `t[3]` und `T[3]` wurden nie beschrieben. NumPy-Arrays
-werden bei der Erzeugung mit `np.zeros` auf null initialisiert. Da der
+werden bei der Erzeugung mit `np.zeros()` auf null initialisiert. Da der
 dritte Schritt in der Schleife nicht ausgeführt wird, stehen in diesen
 Feldern weiterhin die Initialwerte 0.0.
 

@@ -220,7 +220,7 @@ zeichne_halle(umriss_W, koordinatensysteme=T_WF, umgebung=halle,
 Rechnen Sie die Messungen wie im zweiten Abschnitt von Kapitel 6.1 in
 kartesische Koordinaten um. Weil die Winkel gegen die $x_S$-Achse gemessen
 sind, erhalten Sie Scannerkoordinaten `punkte_S`, eine Zeile pro Messung.
-Bestimmen Sie mit `np.argmin` die kürzeste Entfernung und ihren Winkel.
+Bestimmen Sie mit `np.argmin()` die kürzeste Entfernung und ihren Winkel.
 Zeichnen Sie den Scan mit
 
 `zeichne_halle(messpunkte=punkte_S, scanner=[0, 0], bereich=(-1, 5, -4.5, 6), titel='Scan in Scannerkoordinaten')`.
@@ -295,15 +295,15 @@ die Pose des Fahrzeugs in der Halle.
 
 ```{admonition} Teil 2: Der Scan in der Halle
 :class: tip
-Bauen Sie mit `transformationsmatrix` die Matrix $\mathbf{T}_{FS}$ auf, die von
-S nach F rechnet. Rechnen Sie die Messpunkte in zwei Schritten um: mit
+Bauen Sie mit `transformationsmatrix()` die Matrix $\mathbf{T}_{FS}$ auf, die
+von S nach F rechnet. Rechnen Sie die Messpunkte in zwei Schritten um: mit
 $\mathbf{T}_{FS}$ in `punkte_F`, danach mit $\mathbf{T}_{WF}$ in `punkte_W`.
 Wie in Kapitel 5.3 lassen sich beide Schritte verketten:
 
 $$\mathbf{T}_{WS} = \mathbf{T}_{WF} \cdot \mathbf{T}_{FS}.$$
 
 Die Indizes greifen wie Kettenglieder ineinander: von S über F nach W. Prüfen
-Sie mit `np.allclose`, ob `transformiere(T_WS, punkte_S)` dasselbe liefert wie
+Sie mit `np.allclose()`, ob `transformiere(T_WS, punkte_S)` dasselbe liefert wie
 die zwei Schritte. Zeichnen Sie Fahrzeug, Scan und Hallenkarte. Die Lage des
 Scanners steht in der dritten Spalte von $\mathbf{T}_{WS}$.
 
@@ -319,8 +319,8 @@ sie?
 :class: tip
 :class: dropdown
 Der Scanner ist gegenüber dem Fahrzeug nur verschoben, nicht gedreht.
-`transformationsmatrix` aus Kapitel 5.3 bekommt deshalb den Winkel 0. Die
-beiden Umrechnungen erledigt `transformiere` wie beim Umriss in Kapitel 6.1,
+`transformationsmatrix()` aus Kapitel 5.3 bekommt deshalb den Winkel 0. Die
+beiden Umrechnungen erledigt `transformiere()` wie beim Umriss in Kapitel 6.1,
 die Verkettung schreiben wir wie in Kapitel 5.3 mit `@`.
 ```python
 # Scanner in der Mitte der Vorderkante, nicht gedreht
@@ -550,7 +550,7 @@ nur der Gierwinkel unbekannt ist.
    aus. Berechnen Sie für jeden Winkel mit
    $\mathbf{T}_{WF} \cdot \mathbf{T}_{FS}$, wo der Reflektor in der Halle läge,
    und seinen Abstand zur Lage laut Hallenkarte.
-2. Bestimmen Sie mit `np.argmin` den Gierwinkel mit dem kleinsten Abstand.
+2. Bestimmen Sie mit `np.argmin()` den Gierwinkel mit dem kleinsten Abstand.
    Zeichnen Sie den Abstand über dem Gierwinkel.
 3. Beantworten Sie ohne Code: Warum genügt ein einziger Reflektor nicht mehr,
    wenn auch die Position des Fahrzeugs unbekannt ist?

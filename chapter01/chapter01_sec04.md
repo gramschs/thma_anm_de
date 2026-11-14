@@ -154,7 +154,7 @@ Zeilen verteilt werden, solange jede Teilzeichenkette mit einem `f` beginnt.
 ````{admonition} Aufgabe D (✩✩)
 :class: tip
 Ergänzen Sie die Funktion und den Aufruf an den `___`-Stellen. Die Funktion
-`kmh_zu_ms` soll eine Geschwindigkeit von km/h in m/s umrechnen, indem sie
+`kmh_zu_ms()` soll eine Geschwindigkeit von km/h in m/s umrechnen, indem sie
 durch 3.6 teilt. Danach wird sie in einer Schleife für jede Messung
 aufgerufen.
 

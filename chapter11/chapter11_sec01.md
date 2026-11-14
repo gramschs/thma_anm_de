@@ -11,7 +11,7 @@ kernelspec:
 Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
 ```
 
-In Kapitel 10 haben wir `solve_ivp` eingesetzt, um die Temperatur eines
+In Kapitel 10 haben wir `solve_ivp()` eingesetzt, um die Temperatur eines
 abkühlenden Metallstabs zu berechnen. Der Zustandsvektor hatte genau einen
 Eintrag: die Temperatur $T$. Nun stellen wir die Frage anders: Ein Fahrzeug
 trifft auf eine Bodenwelle und wird dabei einmalig um $x_0$ ausgelenkt. Nach dem
@@ -22,10 +22,10 @@ kleinen Auslenkungen um die Gleichgewichtslage
 $$m\,\ddot{x}(t) + k\,x(t) = 0.$$
 
 Das ist eine **Differentialgleichung zweiter Ordnung**: Es taucht $\ddot{x}$
-auf. `solve_ivp` erwartet aber Systeme erster Ordnung. Wir zeigen in diesem
+auf. `solve_ivp()` erwartet aber Systeme erster Ordnung. Wir zeigen in diesem
 Abschnitt, wie wir jede skalare DGL 2. Ordnung durch eine einfache Substitution
 in zwei skalare Differentialgleichungen 1. Ordnung umschreiben und damit
-`solve_ivp` ohne weitere Anpassungen einsetzen können.
+`solve_ivp()` ohne weitere Anpassungen einsetzen können.
 
 ## Lernziele
 
@@ -35,7 +35,7 @@ in zwei skalare Differentialgleichungen 1. Ordnung umschreiben und damit
   x$, $y_2 = \dot{x}$ in ein System zweier Differentialgleichungen 1. Ordnung
   überführen und den **Zustandsvektor** $\mathbf{y} = [x,\, \dot{x}]^\top$
   benennen.
-* [ ] Sie können `solve_ivp` für ein zweidimensionales System aufrufen, die
+* [ ] Sie können `solve_ivp()` für ein zweidimensionales System aufrufen, die
   Anfangsbedingung als `y0=[x0, v0]` angeben und `sol.y[0]` (Position) sowie
   `sol.y[1]` (Geschwindigkeit) korrekt auslesen.
 * [ ] Sie kennen die **Eigenkreisfrequenz** $\omega_0 = \sqrt{k/m}$ und können
@@ -48,9 +48,9 @@ in zwei skalare Differentialgleichungen 1. Ordnung umschreiben und damit
 
 ## Von der DGL 2. Ordnung zum System 1. Ordnung
 
-*Warum kann `solve_ivp` eine DGL zweiter Ordnung nicht direkt lösen?*
-`solve_ivp` erwartet die Signatur `f(t, y)`, wobei `y` ein Vektor von
-Zustandsgrößen ist und `f` deren zeitliche Ableitungen zurückgibt. Das
+*Warum kann `solve_ivp()` eine DGL zweiter Ordnung nicht direkt lösen?*
+`solve_ivp()` erwartet die Signatur `f(t, y)`, wobei `y` ein Vektor von
+Zustandsgrößen ist und `f()` deren zeitliche Ableitungen zurückgibt. Das
 funktioniert nur für Systeme erster Ordnung. Wir müssen $\ddot{x}$ also
 loswerden.
 
@@ -405,7 +405,7 @@ ausschließlich in $\dot{x}$-Richtung breiter.
 
 Eine DGL 2. Ordnung wie $m\ddot{x} + kx = 0$ wird durch die Substitution $y_1 =
 x$, $y_2 = \dot{x}$ in ein System zweier Differentialgleichungen 1. Ordnung
-umgeschrieben. `solve_ivp` löst das System ohne jede Anpassung: `y0` bekommt
+umgeschrieben. `solve_ivp()` löst das System ohne jede Anpassung: `y0` bekommt
 zwei Einträge `[x0, v0]`, `f(t, y)` gibt zwei Werte zurück. `sol.y[0]` enthält
 die Position, `sol.y[1]` die Geschwindigkeit. Die Eigenkreisfrequenz $\omega_0 =
 \sqrt{k/m}$ bestimmt, wie schnell der ungedämpfte Schwinger schwingt. Das

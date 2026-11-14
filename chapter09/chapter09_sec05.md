@@ -37,12 +37,12 @@ print(f"np.trapezoid:   {np.trapezoid(v, t):.1f} m")
 1. Über welche Indizes läuft `range(n - 2)` für `n = 5`?
    Welches Intervall wird dadurch nicht berücksichtigt?
    Antworten Sie ohne Code.
-2. Um wie viel weicht das Ergebnis von `trapez_falsch` vom korrekten
+2. Um wie viel weicht das Ergebnis von `trapez_falsch()` vom korrekten
    Wert ab? Berechnen Sie die fehlende Trapezfläche von Hand.
 3. Nennen Sie den Typ des Fehlers in Zeile A in einem Satz und geben
    Sie die Korrektur an.
 4. Führen Sie den Code aus, korrigieren Sie Zeile A und überprüfen Sie,
-   dass das korrigierte Ergebnis mit `np.trapezoid` übereinstimmt.
+   dass das korrigierte Ergebnis mit `np.trapezoid()` übereinstimmt.
 ````
 
 ```{code-cell} python
@@ -92,7 +92,7 @@ Das letzte Intervall [3,4] wird nicht berücksichtigt.
 
 Zu Frage 2: Die fehlende Trapezfläche ist
 $(v[3] + v[4]) / 2 \cdot 1.0 = (5 + 0) / 2 = 2.5$ m.
-`trapez_falsch` liefert $37.5$ m statt $40.0$ m, also $2.5$ m zu wenig.
+`trapez_falsch()` liefert $37.5$ m statt $40.0$ m, also $2.5$ m zu wenig.
 
 Zu Frage 3: Es handelt sich um einen **Off-by-One-Fehler** (Zaunpfahlfehler).
 Ein Array mit $n$ Punkten hat $n - 1$ Intervalle, nicht $n - 2$.
@@ -113,10 +113,10 @@ $$Q = 2\pi \int_0^R v(r)\cdot r\,\mathrm{d}r.$$
 
 Gegeben: $v_\text{max} = 2.0$ m/s, $R = 0.05$ m.
 
-1. Berechnen Sie $Q$ numerisch mit `np.trapezoid`. Verwenden Sie 101
+1. Berechnen Sie $Q$ numerisch mit `np.trapezoid()`. Verwenden Sie 101
    gleichmäßig verteilte Stützstellen von $r = 0$ bis $r = R$.
    Geben Sie das Ergebnis in m³/s aus.
-2. Berechnen Sie $Q$ mit `scipy.integrate.quad`.
+2. Berechnen Sie $Q$ mit `scipy.integrate.quad()`.
 3. Das analytische Ergebnis lautet $Q = \frac{1}{2}\,v_\text{max}\,\pi R^2$.
    Berechnen Sie den relativen Fehler beider Methoden in Prozent.
 4. Zeigen Sie die Herleitung des analytischen Ergebnisses in drei
@@ -202,10 +202,10 @@ Gegeben: $R_i = 0.05$ m, $R_a = 0.15$ m, $\rho = 7800$ kg/m³.
 
 Für eine konstante Wanddicke $h = 10$ mm:
 
-1. Berechnen Sie $I_p$ mit `scipy.integrate.quad`.
+1. Berechnen Sie $I_p$ mit `scipy.integrate.quad()`.
 2. Die analytische Lösung lautet
    $I_p = \frac{\pi\,\rho\,h}{2}(R_a^4 - R_i^4)$.
-   Berechnen Sie damit den Referenzwert und überprüfen Sie, dass `quad`
+   Berechnen Sie damit den Referenzwert und überprüfen Sie, dass `quad()`
    ihn reproduziert.
 
 **Teil 2: Variables Wanddickenprofil**
@@ -217,10 +217,10 @@ veränderliche Wanddicke. Die folgende Tabelle gibt die gemessenen Werte an:
 |----------|-------|-------|-------|-------|-------|-------|-------|-------|-------|-------|-------|
 | $h$ in mm | 15.0 | 14.2 | 13.1 | 11.8 | 10.3 | 8.5 | 6.8 | 5.9 | 5.2 | 5.0 | 5.0 |
 
-3. Berechnen Sie $I_p$ für dieses Profil mit `np.trapezoid`.
+3. Berechnen Sie $I_p$ für dieses Profil mit `np.trapezoid()`.
 4. Vergleichen Sie das Ergebnis mit dem Wert aus Teil 1. Wie groß ist
    der Unterschied in Prozent, und warum ist er so groß?
-5. Warum kann `scipy.integrate.quad` hier nicht direkt eingesetzt werden,
+5. Warum kann `scipy.integrate.quad()` hier nicht direkt eingesetzt werden,
    und welche Voraussetzung müsste erfüllt sein, damit es möglich wäre?
 ````
 
@@ -287,9 +287,9 @@ Zu Frage 4: Das Profil ist außen deutlich dünner als innen (5 mm statt
 stark zum Trägheitsmoment beitragen, verringert die dünnere Wand außen
 $I_p$ überproportional stark, was die Abweichung von rund 33 % erklärt.
 
-Zu Frage 5: `scipy.integrate.quad` erwartet eine auswertbare Funktion
+Zu Frage 5: `scipy.integrate.quad()` erwartet eine auswertbare Funktion
 $h(r)$. Die Tabelle liefert $h$ nur an elf diskreten Stellen ohne
-bekannte Formel dahinter. Man könnte `quad` einsetzen, wenn man die
+bekannte Formel dahinter. Man könnte `quad()` einsetzen, wenn man die
 Tabelle zunächst durch eine Interpolationsfunktion (zum Beispiel
-`scipy.interpolate.interp1d`) annähert und diese als Argument übergibt.
+`scipy.interpolate.interp1d()`) annähert und diese als Argument übergibt.
 ````

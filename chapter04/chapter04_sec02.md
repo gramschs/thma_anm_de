@@ -48,7 +48,7 @@ einen runden Querschnitt mit $1\,\text{cm}$ Durchmesser.
 
 Führen Sie zuerst die beiden folgenden Zellen aus. Die erste enthält die
 vorgegebene Zeichenfunktion, die zweite die Importe und die Funktion
-`baue_steifigkeitsmatrix` aus Kapitel 4.1.
+`baue_steifigkeitsmatrix()` aus Kapitel 4.1.
 
 ```{code-cell} python
 :tags: [hide-input]
@@ -183,7 +183,7 @@ def baue_steifigkeitsmatrix(knoten_pos, staebe, elastizitaetsmodul, querschnitt)
 :class: tip
 Legen Sie `knoten_pos`, `lager_indizes`, `staebe` und `kraft_vektor` an.
 Halten Sie bei der Stabliste die Reihenfolge aus der Tabelle ein. Zeichnen Sie
-das Fachwerk mit `zeichne_fachwerk` und vergleichen Sie den Plot mit der
+das Fachwerk mit `zeichne_fachwerk()` und vergleichen Sie den Plot mit der
 Skizze.
 
 Beantworten Sie außerdem: Wie viele Freiheitsgrade hat die Konsole, wenn wir
@@ -288,7 +288,7 @@ längsten.
 ```{admonition} Teil 3: Die Steifigkeitsmatrix aufbauen
 :class: tip
 Bauen Sie die Steifigkeitsmatrix `K` mit der Funktion
-`baue_steifigkeitsmatrix` auf. Geben Sie ihre Form und die Matrix in kN/mm
+`baue_steifigkeitsmatrix()` auf. Geben Sie ihre Form und die Matrix in kN/mm
 aus, gerundet auf eine Nachkommastelle.
 
 Prüfen Sie anschließend mit `np.allclose(K, K.T)`, ob `K` symmetrisch ist.
@@ -394,7 +394,7 @@ Konsole, bei denen keine Kraft entsteht.
 ````{admonition} Lösung Abschlussfrage
 :class: tip
 :class: dropdown
-Die Funktion `baue_steifigkeitsmatrix` bekommt `lager_indizes` gar nicht
+Die Funktion `baue_steifigkeitsmatrix()` bekommt `lager_indizes` gar nicht
 übergeben. Die Matrix `K` beschreibt deshalb die Konsole, als wäre sie nicht
 an der Wand befestigt. Eine solche freie Konsole können wir als Ganzes nach
 rechts oder links schieben, nach oben oder unten schieben oder ein kleines

@@ -402,10 +402,10 @@ Zeichnen Sie das FTF an diesem Bahnpunkt mit `bereich=(3.5, 6, 1, 3.5)`.
 :class: tip
 :class: dropdown
 Im dritten Abschnitt von Kapitel 6.1 haben wir die Übergabestation mit
-`np.linalg.inv` in Fahrzeugkoordinaten umgerechnet. In Teil 3 von Kapitel 6.2
+`np.linalg.inv()` in Fahrzeugkoordinaten umgerechnet. In Teil 3 von Kapitel 6.2
 haben wir Punkte mit Vergleichen und `and` geprüft und Abstände in einer Liste
 gesammelt. Hier kommt beides in der Schleife aus Teil 2 zusammen. Den Index der
-kleinsten Lücke liefert `np.argmin`.
+kleinsten Lücke liefert `np.argmin()`.
 ```python
 # Regalecke für jeden Bahnpunkt in Fahrzeugkoordinaten umrechnen
 luecken = []
@@ -557,7 +557,7 @@ $$\mathbf{T}_{WF,\text{neu}} = \mathbf{T}_{WF,\text{alt}} \cdot \mathbf{T}_{\tex
 
 1. Starten Sie mit der Pose $(3, 1.2, 0°)$ am Anfang des Viertelkreises und
    wenden Sie den Abschnitt in einer Schleife neunmal an. Prüfen Sie mit
-   `np.allclose`, ob die berechnete Matrix zur Pose $(5, 3.2, 90°)$ am Ende
+   `np.allclose()`, ob die berechnete Matrix zur Pose $(5, 3.2, 90°)$ am Ende
    des Viertelkreises passt.
 2. Ein Antriebsrad rutscht in der Kurve etwas durch. Wir vereinfachen den
    Schlupf so: Die Steuerung nimmt weiterhin für jeden Abschnitt einen
@@ -570,7 +570,7 @@ $$\mathbf{T}_{WF,\text{neu}} = \mathbf{T}_{WF,\text{alt}} \cdot \mathbf{T}_{\tex
    $3\,\text{m}$ an, `transformationsmatrix(0, 3, 0)`. Wie weit liegen
    berechnete und wahre
    Endposition auseinander? Welchen Gierwinkel berechnet die Steuerung? Den
-   Gierwinkel liefert `np.arctan2` aus der ersten Spalte der Matrix, denn dort
+   Gierwinkel liefert `np.arctan2()` aus der ersten Spalte der Matrix, denn dort
    steht die Richtung der $x_F$-Achse.
 3. Beantworten Sie ohne Code: Auf der Geraden misst die Radmessung richtig.
    Warum wächst der Abstand zwischen berechneter und wahrer Position dort

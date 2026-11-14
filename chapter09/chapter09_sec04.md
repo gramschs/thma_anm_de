@@ -13,7 +13,7 @@ Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorle
 
 ````{admonition} Übung 9.3 (✩)
 :class: tip
-Gegeben ist der folgende Code. Die Funktion `simpson` entspricht der
+Gegeben ist der folgende Code. Die Funktion `simpson()` entspricht der
 Implementierung aus Abschnitt 9.3.
 
 ```python
@@ -66,7 +66,7 @@ print(f"Experiment C: {ergebnis_c:.4f},  Fehlerabschätzung: {fehler_c:.2e}")
 :class: dropdown
 
 Zu Frage 1: `np.linspace(0, 4, 8)` erzeugt 8 Punkte. Die Funktion
-`simpson` prüft `n % 2 == 0` und wirft einen `ValueError`, weil 8
+`simpson()` prüft `n % 2 == 0` und wirft einen `ValueError`, weil 8
 gerade ist. Der `ValueError` kann mit `try-except` folgendermaßen
 abgefangen werden:
 
@@ -119,7 +119,7 @@ Grades. Simpson macht also keinen Diskretisierungsfehler, unabhängig von der
 Anzahl der Punkte, solange die Schrittweite konstant ist und die Punktanzahl
 ungerade (Simpson-Voraussetzung).
 
-Zu Frage 3: `quad` liefert ebenfalls $21.3333$, identisch zum
+Zu Frage 3: `quad()` liefert ebenfalls $21.3333$, identisch zum
 analytischen Wert. Die Fehlerabschätzung $2.37 \cdot 10^{-13}$ liegt
 im Bereich der Maschinengenauigkeit und ist kein Zeichen für eine
 ungenaue Berechnung, sondern für eine sehr gute. Ein Problem wäre
@@ -158,18 +158,18 @@ F_mess  = F_exakt + np.random.normal(0, 0.4, size=len(x_mess))
 F_mess[0] = 0.0   # Federkraft bei x = 0 ist null
 ```
 
-1. Berechnen Sie die geleistete Arbeit $W$ mit `np.trapezoid` auf den Messdaten.
-   Geben Sie das Ergebnis in Joule aus.
-2. Berechnen Sie $W$ mit `scipy.integrate.quad` auf dem analytischen Modell
+1. Berechnen Sie die geleistete Arbeit $W$ mit `np.trapezoid()` auf den
+   Messdaten. Geben Sie das Ergebnis in Joule aus.
+2. Berechnen Sie $W$ mit `scipy.integrate.quad()` auf dem analytischen Modell
    $F(x) = k_1\,x + k_3\,x^3$ mit den gegebenen Parametern.
 3. Das exakte Integral lautet $W_\text{exakt} = k_1 x_\text{max}^2/2 + k_3
    x_\text{max}^4/4$. Berechnen Sie den relativen Fehler beider Methoden in
    Prozent.
 4. Stellen Sie `F_exakt` und `F_mess` im selben Plot über $x$ dar. Beschriften
    Sie Achsen mit Einheiten und fügen Sie eine Legende ein.
-5. Warum stimmt `quad` mit dem analytischen Wert praktisch exakt überein,
-   während `np.trapezoid` einen kleinen Fehler hat? Antworten Sie in zwei Sätzen
-   ohne Code.
+5. Warum stimmt `quad()` mit dem analytischen Wert praktisch exakt überein,
+   während `np.trapezoid()` einen kleinen Fehler hat? Antworten Sie in zwei
+   Sätzen ohne Code.
 6. Verwenden Sie die in Abschnitt 9.3 implementierte Funktion `simpson(t, v)`,
    um die Arbeit $W$ auf der **glatten** Modellkennlinie `F_exakt` zu
    berechnen (setzen Sie dazu `t = x_mess`, `v = F_exakt`). Vergleichen Sie den
@@ -253,9 +253,9 @@ Die geleistete Arbeit beim Einfedern auf 30 cm beträgt rund 10 J.
 Der kubische Term trägt dabei etwa $k_3\,x_\text{max}^4/4 \approx 1.0$ J
 bei, also rund 10 % der Gesamtarbeit.
 
-Zu Frage 5: `quad` übergibt das analytische Modell direkt an den
+Zu Frage 5: `quad()` übergibt das analytische Modell direkt an den
 Integrator, der intern adaptiv auswertet und die Genauigkeit bis zur
-Maschinengenauigkeit treibt. `np.trapezoid` kann nur auf den 13
+Maschinengenauigkeit treibt. `np.trapezoid()` kann nur auf den 13
 Messpunkten arbeiten und macht daher einen kleinen Diskretisierungsfehler,
 der zudem das Messrauschen widerspiegelt.
 

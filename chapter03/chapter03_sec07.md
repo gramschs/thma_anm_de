@@ -6,11 +6,11 @@ kernelspec:
 
 # Exkurs: Rechenzeit und Skalierung
 
-Dieses Kapitel ist ein optionaler Exkurs. Bisher haben wir `np.linalg.solve`
+Dieses Kapitel ist ein optionaler Exkurs. Bisher haben wir `np.linalg.solve()`
 für Systeme mit 3 oder 6 Unbekannten benutzt. In der Ingenieurpraxis entstehen
 bei einer Finite-Elemente-Simulation Systeme mit Tausenden bis Millionen von
 Unbekannten. *Wie schnell wächst die Rechenzeit mit der Systemgröße, und wo
-stößt `np.linalg.solve` an seine Grenzen?*
+stößt `np.linalg.solve()` an seine Grenzen?*
 
 ## Lernziele
 
@@ -21,7 +21,7 @@ stößt `np.linalg.solve` an seine Grenzen?*
 * [ ] Sie können mit `time.perf_counter()` die Rechenzeit einer Operation
   messen.
 * [ ] Sie können die Rechenzeit über der Systemgröße in einem log-log-Diagramm
-  darstellen und den Skalierungsexponenten mit `np.polyfit` schätzen.
+  darstellen und den Skalierungsexponenten mit `np.polyfit()` schätzen.
 * [ ] Sie können die theoretische $O(n^3)$-Skalierung erklären, mit der
   Messung vergleichen und ihre Konsequenzen für große Systeme abschätzen.
 ```
@@ -76,7 +76,7 @@ Zuschlag würde bei großen $n$ nicht ausreichen.
 ```{admonition} Mini-Übung (✩)
 :class: tip
 1. Rufen Sie `erzeuge_lgs(5, seed=0)` zweimal auf und prüfen Sie mit
-   `np.allclose`, ob beide Aufrufe dieselbe Matrix liefern.
+   `np.allclose()`, ob beide Aufrufe dieselbe Matrix liefern.
 2. Beantworten Sie ohne Code: Warum ist es beim Messen von Rechenzeiten
    sinnvoll, immer denselben `seed` zu verwenden?
 ```
@@ -103,8 +103,8 @@ liegen dann am Rechner und nicht an anderen Matrizen.
 ## Rechenzeit messen und darstellen
 
 `time.perf_counter()` gibt einen Zeitstempel in Sekunden zurück. Die Differenz
-zweier Aufrufe ist die vergangene Zeit. Wir messen, wie lange `np.linalg.solve`
-für verschiedene Systemgrößen braucht.
+zweier Aufrufe ist die vergangene Zeit. Wir messen, wie lange
+`np.linalg.solve()` für verschiedene Systemgrößen braucht.
 
 ```{code-cell} python
 def messe_rechenzeit(n):
@@ -124,11 +124,11 @@ for i, n in enumerate(n_werte):
 
 Die absoluten Zeiten hängen von der Hardware ab und schwanken bei jedem
 Durchlauf etwas. Für die Frage nach der Skalierung stellen wir die Zeiten über
-der Systemgröße dar, und zwar mit `ax.loglog`: Beide Achsen sind logarithmisch.
-Ein Potenzgesetz $t \propto n^\alpha$ erscheint dann als Gerade, deren Steigung
-der Exponent $\alpha$ ist. Mit `marker='o'` wird jeder Messpunkt zusätzlich
-mit einem Kreis markiert. Zum Vergleich zeichnen wir eine Referenzlinie, die
-genau mit $n^3$ wächst und am ersten Messpunkt beginnt.
+der Systemgröße dar, und zwar mit `ax.loglog()`: Beide Achsen sind
+logarithmisch. Ein Potenzgesetz $t \propto n^\alpha$ erscheint dann als Gerade,
+deren Steigung der Exponent $\alpha$ ist. Mit `marker='o'` wird jeder Messpunkt
+zusätzlich mit einem Kreis markiert. Zum Vergleich zeichnen wir eine
+Referenzlinie, die genau mit $n^3$ wächst und am ersten Messpunkt beginnt.
 `grid(True, which='both')` zeichnet auch Gitterlinien zwischen den
 Zehnerpotenzen.
 
@@ -154,7 +154,8 @@ Rechenzeit ungefähr mit $n^3$.
 
 ```{admonition} Mini-Übung (✩)
 :class: tip
-1. Stellen Sie dieselben Daten zusätzlich mit `ax.plot` statt `ax.loglog` dar.
+1. Stellen Sie dieselben Daten zusätzlich mit `ax.plot()` statt `ax.loglog()`
+   dar.
 2. Beantworten Sie ohne Code: In welcher der beiden Darstellungen können Sie
    den Skalierungsexponenten leichter ablesen, und warum?
 ```
@@ -186,7 +187,7 @@ log-log-Darstellung daher besser geeignet.
 
 Im log-log-Raum gilt $\log t = \alpha \cdot \log n + \text{const}$. Der
 Exponent $\alpha$ ist also die Steigung einer Geraden durch die Punkte
-$(\log n,\ \log t)$. Diese Steigung liefert `np.polyfit`. Um nur die obere
+$(\log n,\ \log t)$. Diese Steigung liefert `np.polyfit()`. Um nur die obere
 Hälfte der Punkte zu verwenden, berechnen wir den mittleren Index mit der
 Ganzzahldivision `//`, die das Ergebnis auf eine ganze Zahl abrundet.
 
@@ -207,7 +208,7 @@ print('theoretischer Wert:   3.00')
 
 Der gemessene Exponent liegt typischerweise zwischen etwa 2.5 und 3, die genaue
 Zahl schwankt von Messung zu Messung. Die Theorie sagt $O(n^3)$ voraus:
-`np.linalg.solve` zerlegt die Matrix intern in ein Produkt zweier
+`np.linalg.solve()` zerlegt die Matrix intern in ein Produkt zweier
 Dreiecksmatrizen (LU-Zerlegung), und dieser Schritt kostet in der Größenordnung
 $n^3$ Rechenoperationen. Dass der gemessene Wert oft etwas unter 3 liegt, hat
 einen praktischen Grund: Bei mittelgroßen Systemen schafft die Bibliothek umso
@@ -223,7 +224,7 @@ Systemgröße, steigt die Rechenzeit um den Faktor $2^3 = 8$.
    $n = 20\,000$, wobei $n_0$ und $t(n_0)$ der größte gemessene Punkt sind
    (`n_werte[-1]` und `t_werte[-1]`).
 2. Beantworten Sie ohne Code: Eine Finite-Elemente-Simulation hat oft
-   $n = 10^6$ Unbekannte. Ist `np.linalg.solve` dafür geeignet? Recherchieren
+   $n = 10^6$ Unbekannte. Ist `np.linalg.solve()` dafür geeignet? Recherchieren
    Sie die Stichwörter *dünnbesetzte Matrix* und *iterativer Löser*.
 ```
 
@@ -242,17 +243,18 @@ t_neu = t0 * (n_neu / n0)**3
 print(f'geschätzte Rechenzeit für n = {n_neu}: {t_neu:.1f} s ({t_neu / 60:.1f} min)')
 ```
 Für $n = 20\,000$ ergeben sich je nach Rechner einige Sekunden bis Minuten.
-Für $n = 10^6$ wäre die Rechenzeit mit `np.linalg.solve` nicht mehr praktikabel
-und der Speicherbedarf einer vollen $10^6 \times 10^6$-Matrix gigantisch. In
-der Praxis sind die Matrizen großer Ingenieurprobleme **dünnbesetzt**, das
-heißt fast alle Einträge sind null. Dafür gibt es spezielle iterative Löser
-(zum Beispiel in `scipy.sparse.linalg`), die nur die von null verschiedenen
-Einträge speichern und deutlich weniger Rechenoperationen brauchen.
+Für $n = 10^6$ wäre die Rechenzeit mit `np.linalg.solve()` nicht mehr
+praktikabel und der Speicherbedarf einer vollen $10^6 \times 10^6$-Matrix
+gigantisch. In der Praxis sind die Matrizen großer Ingenieurprobleme
+**dünnbesetzt**, das heißt fast alle Einträge sind null. Dafür gibt es spezielle
+iterative Löser (zum Beispiel in `scipy.sparse.linalg`), die nur die von null
+verschiedenen Einträge speichern und deutlich weniger Rechenoperationen
+brauchen.
 ````
 
 ## Zusammenfassung
 
-Theoretisch wächst die Rechenzeit von `np.linalg.solve` mit der dritten Potenz
+Theoretisch wächst die Rechenzeit von `np.linalg.solve()` mit der dritten Potenz
 der Systemgröße, $O(n^3)$, weil intern eine LU-Zerlegung durchgeführt wird.
 Bei mittelgroßen Systemen ist der gemessene Exponent oft etwas kleiner. Für
 kleine und mittlere Systeme bis einige Tausend Unbekannte ist das kein Problem.

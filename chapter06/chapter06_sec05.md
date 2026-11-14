@@ -194,7 +194,7 @@ Notieren Sie Ihre Vermutung in einer Markdown-Zelle, bevor Sie den Code
 ausführen.
 
 1. Wo steht die Fahrzeugmitte, und in welche Richtung der Halle zeigt die
-   $x_F$-Achse? Welchen Gierwinkel gibt die erste `print`-Zeile aus?
+   $x_F$-Achse? Welchen Gierwinkel gibt die erste `print()`-Zeile aus?
 2. Was gibt `np.linalg.det(T_WF)` aus? Begründen Sie Ihre Antwort.
 3. Der Scanner meldet einen Gegenstand in $2\,\text{m}$ Entfernung unter dem
    Winkel $\varphi = 90°$. Wo liegt er im Fahrzeugkoordinatensystem? In welche
@@ -239,14 +239,14 @@ Ausgabe:
 Die dritte Spalte von $\mathbf{T}_{WF}$ ist die Lage der Fahrzeugmitte, also
 $(6, 3)$. In der ersten Spalte steht die Richtung der $x_F$-Achse in
 Hallenkoordinaten, hier $(0, -1)$. Das FTF zeigt also in negative
-$y_W$-Richtung, zur Hallenwand hin. `np.arctan2` bekommt wie in Kapitel 6.3
+$y_W$-Richtung, zur Hallenwand hin. `np.arctan2()` bekommt wie in Kapitel 6.3
 zuerst die $y$- und dann die $x$-Komponente dieser Richtung und liefert
 $\psi = -90°$. Die Determinante ist 1 wie bei jeder homogenen
 Transformationsmatrix, die nur dreht und verschiebt.
 
 Der Gegenstand liegt im Fahrzeugkoordinatensystem bei $(0, 2)$, also
 $2\,\text{m}$ links von der Fahrzeugmitte. Der winzige Rest von
-$\cos 90° \approx 6 \cdot 10^{-17}$ verschwindet durch `np.round`. Die zweite
+$\cos 90° \approx 6 \cdot 10^{-17}$ verschwindet durch `np.round()`. Die zweite
 Spalte $(1, 0)$ verrät, dass die $y_F$-Achse in $x_W$-Richtung zeigt: Wer in
 negative $y_W$-Richtung schaut, hat die positive $x_W$-Richtung zu seiner
 Linken. Der Gegenstand liegt deshalb $2\,\text{m}$ weiter in $x_W$-Richtung
@@ -257,8 +257,8 @@ als die Fahrzeugmitte, bei $(8, 3)$.
 :class: tip
 Das FTF steht bei $(4, 2)$ und zeigt mit $\psi = 90°$ in $y_W$-Richtung. In
 Kapitel 6.1 haben wir die Umrechnung von Hallen- in Fahrzeugkoordinaten mit
-`np.linalg.inv` berechnet. Der folgende Code enthält drei Versuche, die
-inverse Matrix ohne `np.linalg.inv` aus einer Drehung und einer Verschiebung
+`np.linalg.inv()` berechnet. Der folgende Code enthält drei Versuche, die
+inverse Matrix ohne `np.linalg.inv()` aus einer Drehung und einer Verschiebung
 zusammenzusetzen:
 
 ```python
@@ -324,7 +324,7 @@ True
 ```
 
 In einem Matrixprodukt wirkt die rechte Matrix zuerst. `T_b` dreht also zuerst
-und verschiebt dann, genau wie `transformationsmatrix` selbst. Deshalb sind
+und verschiebt dann, genau wie `transformationsmatrix()` selbst. Deshalb sind
 `T_a` und `T_b` dieselbe Matrix, die naheliegende, aber falsche Umkehrung aus
 Kapitel 6.1. `T_c` verschiebt zuerst und dreht dann. $\mathbf{T}_{WF}$ hat
 zuerst gedreht und zuletzt verschoben. Die Umkehrung muss die Schritte in
@@ -454,11 +454,11 @@ ausführen.
 
 1. In welche Richtung der Halle zeigt das FTF auf der ganzen Fahrt ungefähr?
    Welche Werte erwarten Sie in `psi_grad`? Denken Sie daran, dass
-   `np.arctan2` Winkel von $-180°$ bis $180°$ liefert. Tipp: Zur Steigung
+   `np.arctan2()` Winkel von $-180°$ bis $180°$ liefert. Tipp: Zur Steigung
    $0.2$ gehört der Winkel $11.3°$.
 2. Skizzieren Sie die Bahn. Dreht sich das FTF von Abschnitt zu Abschnitt nach
    links oder nach rechts, und um wie viel Grad?
-3. Welche Werte gibt die zweite `print`-Zeile aus? Dreht sich das FTF zwischen
+3. Welche Werte gibt die zweite `print()`-Zeile aus? Dreht sich das FTF zwischen
    Bahnpunkt 1 und Bahnpunkt 2 wirklich so weit? Wie lässt sich der Wert
    korrigieren?
 4. Führen Sie den Code aus und überprüfen Sie Ihre Vorhersagen.
@@ -499,7 +499,7 @@ Das FTF fährt nach links und zeigt deshalb ungefähr in negative
 $x_W$-Richtung, also um $180°$. Der erste Abschnitt $(-1, 0.2)$ steigt leicht
 an, das ergibt $180° - 11.3° = 168.7°$. Der zweite Abschnitt verläuft genau
 nach links, $180°$. Der dritte Abschnitt $(-1, -0.2)$ fällt leicht ab. Seine
-Richtung liegt bei $180° + 11.3° = 191.3°$. Weil `np.arctan2` nur Werte bis
+Richtung liegt bei $180° + 11.3° = 191.3°$. Weil `np.arctan2()` nur Werte bis
 $180°$ liefert, erhalten wir stattdessen $-168.7°$. Beide Winkel beschreiben
 dieselbe Richtung, sie unterscheiden sich um eine volle Umdrehung.
 
@@ -538,7 +538,7 @@ Station fährt.
    seinen Abstand $d$ von der Fahrzeugmitte sowie den Winkel $\varphi$ in Grad
    zurückgeben, unter dem das Ziel gegen die $x_F$-Achse liegt. $d$ und
    $\varphi$ sind die Polarkoordinaten aus Kapitel 6.1, nur in umgekehrter
-   Richtung berechnet. Tipp: Pythagoras und `np.arctan2`.
+   Richtung berechnet. Tipp: Pythagoras und `np.arctan2()`.
 2. Berechnen Sie für jedes FTF $d$, $\varphi$ und die geschätzte Zeit. Welches
    FTF schickt die Leitsteuerung?
 3. Zeichnen Sie die drei FTF mit der Station und der Hallenkarte.
@@ -623,7 +623,7 @@ berechnen. Bei FTF 3 liefert `np.arctan2(-0.5, 1.5)` die Richtung $-18.4°$,
 und $-18.4° - 180° = -198.4°$. Das ist dieselbe Richtung wie $161.6°$, aber
 außerhalb des Bereichs von $-180°$ bis $180°$. Wie in Aufgabe 6.4 müssten wir
 $360°$ addieren, sonst würde die Leitsteuerung mit einer Drehung über $198°$
-rechnen. In Fahrzeugkoordinaten liefert `np.arctan2` den Winkel dagegen
+rechnen. In Fahrzeugkoordinaten liefert `np.arctan2()` den Winkel dagegen
 direkt im richtigen Bereich.
 ````
 

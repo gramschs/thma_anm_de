@@ -13,7 +13,7 @@ Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorle
 
 ````{admonition} Übung 8.3 (✩)
 :class: tip
-Gegeben ist der folgende Code, der `scipy.optimize.minimize` auf eine
+Gegeben ist der folgende Code, der `scipy.optimize.minimize()` auf eine
 zweidimensionale Kostenfunktion anwendet.
 
 ```python
@@ -113,7 +113,7 @@ S_mess = S_wahr * (1 + np.random.normal(0, 0.05, len(N_mess)))
 ```
 
 1. Plotten Sie `N_mess` gegen `S_mess` in einem Log-Log-Diagramm
-   (`ax.loglog`). Beschriften Sie die Achsen mit Einheiten. Warum
+   (`ax.loglog()`). Beschriften Sie die Achsen mit Einheiten. Warum
    erscheint die Wöhlerkurve im Log-Log-Diagramm als Gerade?
 2. Implementieren Sie Kostenfunktion und numerische Gradienten für die
    Parameter $a$ und $b$. Wählen Sie `alpha_a = 0.5` und
@@ -121,7 +121,7 @@ S_mess = S_wahr * (1 + np.random.normal(0, 0.05, len(N_mess)))
    Führen Sie 10000 Iterationen durch und geben Sie die gefundenen
    Parameter aus.
 3. Plotten Sie die angepasste Kurve über die Messdaten (Log-Log).
-4. Wiederholen Sie die Anpassung mit `scipy.optimize.minimize` und
+4. Wiederholen Sie die Anpassung mit `scipy.optimize.minimize()` und
    vergleichen Sie die Ergebnisse.
 5. Warum ist $\alpha_b$ so viel kleiner als $\alpha_a$? Berechnen Sie
    die numerischen Gradienten am Startpunkt und begründen Sie das

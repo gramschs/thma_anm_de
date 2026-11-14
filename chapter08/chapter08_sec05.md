@@ -128,7 +128,7 @@ N_mess  = N_wahr + np.random.normal(0, 10, len(t_mess))
 
 1. Plotten Sie die Messdaten `N_mess` gegen `t_mess`. Stellen Sie
    dieselben Daten zusätzlich in einem Semilog-Diagramm dar
-   (`ax.semilogy`). Was beobachten Sie im Semilog-Diagramm?
+   (`ax.semilogy()`). Was beobachten Sie im Semilog-Diagramm?
 2. Implementieren Sie das Modell $N(t, r)$ und die Kostenfunktion
    `kosten(r)` als MSE. Plotten Sie `kosten(r)` für
    $r \in [0.05,\; 0.60]$, um das Minimum zu lokalisieren.
@@ -137,7 +137,7 @@ N_mess  = N_wahr + np.random.normal(0, 10, len(t_mess))
    Probieren Sie verschiedene Werte für `alpha` aus und wählen Sie einen,
    der zuverlässig konvergiert. Geben Sie das geschätzte $r$ aus.
 4. Plotten Sie die angepasste Kurve über die Messdaten.
-5. Bestimmen Sie $r$ alternativ mit `scipy.optimize.minimize` und
+5. Bestimmen Sie $r$ alternativ mit `scipy.optimize.minimize()` und
    vergleichen Sie das Ergebnis.
 ````
 
@@ -283,7 +283,7 @@ x_mess = x_wahr + np.random.normal(0, 0.5, len(t_mess))
 3. Setzen Sie den Startwert für $\omega$ auf `omega=8` (weit vom wahren
    Wert). Was beobachten Sie? Konvergiert der Algorithmus zum selben
    Ergebnis?
-4. Lösen Sie das Problem mit `scipy.optimize.minimize` von beiden
+4. Lösen Sie das Problem mit `scipy.optimize.minimize()` von beiden
    Startwerten aus. Vergleichen Sie die Robustheit von GD und scipy.
 5. Begründen Sie: Warum hat die Kostenfunktion $K(A, \delta, \omega)$
    mehrere lokale Minima, während die Kostenfunktionen der Abkühlkurve
@@ -359,7 +359,7 @@ def gradient_descent_3d(A_start, delta_start, omega_start,
     return A, delta, omega
 ```
 
-In der obigen Funktion `gradient_descent_3d` werden die drei Parameter $A$,
+In der obigen Funktion `gradient_descent_3d()` werden die drei Parameter $A$,
 $\delta$ und $\omega$ nacheinander aktualisiert. Dabei wird die Ableitung von
 $K$ nach $\delta$ und $\omega$ bereits mit den zuvor aktualisierten Werten von
 $A$ bzw. $\delta$ berechnet.

@@ -116,7 +116,7 @@ Ausgabe:
 Probe: True
 ```
 Die Determinante ist $2 \cdot 3 - 1 \cdot 5 = 1$, also ungleich null: genau eine
-Lösung. `np.linalg.solve` gibt $x = (5,\ -2)$ zurück. Die Probe von Hand:
+Lösung. `np.linalg.solve()` gibt $x = (5,\ -2)$ zurück. Die Probe von Hand:
 $2 \cdot 5 + 1 \cdot (-2) = 8$ und $5 \cdot 5 + 3 \cdot (-2) = 19$, beide
 Gleichungen stimmen.
 ````
@@ -176,7 +176,7 @@ Matrix ist singulär.
 ```
 Die zweite Zeile ist genau die Hälfte der ersten ($[1, 2] = 0.5 \cdot [2, 4]$),
 sie enthält also keine neue Information. Die Determinante ist null,
-`np.linalg.solve` wirft einen `LinAlgError`, und der `except`-Zweig gibt
+`np.linalg.solve()` wirft einen `LinAlgError`, und der `except`-Zweig gibt
 `Matrix ist singulär.` aus.
 ````
 
@@ -197,7 +197,7 @@ Gesucht sind die monatlichen Gesamtkosten $M$, $S$, $I$ der drei Posten.
 1. Schreiben Sie das Gleichungssystem als $\mathbf{A} \cdot \vec{x} = \vec{b}$
    mit $\vec{x} = (M,\ S,\ I)^\top$.
 2. Prüfen Sie mit der Determinante die Lösbarkeit.
-3. Lösen Sie das System mit `np.linalg.solve` und geben Sie die drei Kosten
+3. Lösen Sie das System mit `np.linalg.solve()` und geben Sie die drei Kosten
    aus.
 4. Führen Sie eine Probe durch.
 

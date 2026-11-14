@@ -172,7 +172,7 @@ tau = R * C        # Zeitkonstante in s
    ($U_0 = 12\,V$, autonom) und lösen Sie die DGL für $5\tau$ Sekunden.
    Stellen Sie $U_C(t)$ dar. Zeichnen Sie $\tau$ auf der $t$-Achse und
    $U_0(1 - 1/e) \approx 7.58\,V$ auf der $y$-Achse als Hilfslinie ein.
-2. Bestimmen Sie numerisch mit `np.searchsorted`, wann $U_C$ erstmals
+2. Bestimmen Sie numerisch mit `np.searchsorted()`, wann $U_C$ erstmals
    99 % von $U_0$ erreicht. Vergleichen Sie mit der analytischen Formel
    $t_{99} = -\tau\,\ln(0.01)$.
 3. Implementieren Sie `f_rc_nichtautonom(t, y)` als nichtautonome DGL:
@@ -327,7 +327,7 @@ k_q  = 0.006   # spezifischer Luftwiderstandsbeiwert in 1/m
    numerischen Endwert $v(60\,\text{s})$ damit.
 2. Überlagern Sie die analytische Lösung
    $v_\text{ana}(t) = v_\infty\,\tanh(g\,t/v_\infty)$ im selben Plot.
-   Berechnen Sie den maximalen absoluten Fehler zwischen `solve_ivp` und
+   Berechnen Sie den maximalen absoluten Fehler zwischen `solve_ivp()` und
    der analytischen Lösung.
 
 **Teil 2 – Parameterstudie**
@@ -340,7 +340,7 @@ k_q  = 0.006   # spezifischer Luftwiderstandsbeiwert in 1/m
 **Teil 3 – Zurückgelegte Strecke**
 
 4. Berechnen Sie die zurückgelegte Strecke $h(t) = \int_0^t v(\xi)\,\mathrm{d}\xi$
-   mit `scipy.integrate.cumulative_trapezoid` auf der `solve_ivp`-Ausgabe
+   mit `scipy.integrate.cumulative_trapezoid()` auf der `solve_ivp()`-Ausgabe
    (kein neues Gleichungssystem nötig). Stellen Sie $h(t)$ in einem zweiten
    Plot dar. Lesen Sie ab: Nach wie vielen Sekunden hat der Springer
    1000 m zurückgelegt?

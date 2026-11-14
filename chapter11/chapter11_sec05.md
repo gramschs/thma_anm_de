@@ -15,7 +15,7 @@ Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorle
 :class: tip
 Der folgende Code soll ein nichtlineares Pendel ($L = 1\,\text{m}$,
 $g = 9.81\,\text{m/s}^2$) mit $\phi_0 = 45°$ simulieren. Er enthält
-zwei Fehler in der Funktion `f`. Die Simulation läuft fehlerfrei durch,
+zwei Fehler in der Funktion `f()`. Die Simulation läuft fehlerfrei durch,
 liefert aber physikalisch unsinnige Ergebnisse.
 
 ```python
@@ -303,7 +303,7 @@ $\omega_0 = 8\,\text{rad/s}$.
 3. Berechnen Sie die Verlustleistung $P(t) = c\,\dot{x}(t)^2$ aus
    `sol.y[1]` und die kumulierte dissipierte Energie
    $E_\text{diss}(t) = \int_0^t P\,\mathrm{d}t$ mit
-   `scipy.integrate.cumulative_trapezoid`. Vergleichen Sie
+   `scipy.integrate.cumulative_trapezoid()`. Vergleichen Sie
    $E_\text{diss}(30\,\text{s})$ für $D = 0.1$ und $D = 1.0$ bei
    Anregung mit $\Omega = \omega_0$. Welcher Wert ist größer, und warum?
 

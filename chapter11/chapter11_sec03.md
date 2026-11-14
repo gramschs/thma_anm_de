@@ -41,7 +41,7 @@ m\,\ddot{x} + c\,\dot{x} + k\,x = F_0\sin(\Omega t).
   und $D > 1$ (Kriechfall) im Zeitsignal $x(t)$ unterscheiden.
 * [ ] Sie können erklären, warum $D = 1$ die kürzeste Einschwingzeit ohne
   Überschwingen liefert.
-* [ ] Sie können eine erzwungene Schwingung mit `solve_ivp` lösen und die
+* [ ] Sie können eine erzwungene Schwingung mit `solve_ivp()` lösen und die
   **stationäre Amplitude** aus dem eingeschwungenen Zustand als
   `max(|x|)` im letzten Zeitdrittel ablesen.
 * [ ] Sie erkennen **Resonanz** als das Amplitudenmaximum bei
@@ -114,7 +114,7 @@ def f_gedaempft(t, y, c):
 ```
 
 Wir wählen nacheinander die Dämpfungsgrade $D = 0.2$, $D = 0.5$, $D = 1.0$ und
-$D = 2.0$ und lösen mit `solve_ivp` die Differentialgleichung. Danach
+$D = 2.0$ und lösen mit `solve_ivp()` die Differentialgleichung. Danach
 visualisieren wir die vier Schwingungen in einem gemeinsamen Diagramm.
 
 ```{code-cell} python
@@ -220,7 +220,7 @@ Einfachheit halber eine Kraftanregung. Sie bildet die wesentlichen Phänomene wi
 Resonanz und Einschwingvorgang dennoch korrekt ab.
 
 Die DGL $m\ddot{x} + c\dot{x} + kx = F_0\sin(\Omega t)$ ist
-**nicht-autonom**: die rechte Seite hängt explizit von $t$ ab. `solve_ivp`
+**nicht-autonom**: die rechte Seite hängt explizit von $t$ ab. `solve_ivp()`
 kann das ohne Anpassung lösen, weil `f(t, y)` den Zeitpunkt `t` immer als
 erstes Argument erhält. Wir implementieren die neue rechte Seite.
 
@@ -243,7 +243,7 @@ def f_erzwungen(t, y, Omega):
     return [x_dot, x_ddot]
 ```
 
-Mit dieser Funktion `f_erzwungen` können wir nun die erzwungene Schwingung untersuchen.
+Mit dieser Funktion `f_erzwungen()` können wir nun die erzwungene Schwingung untersuchen.
 
 Im ersten Schritt wählen wir eine Anregungsfrequenz $\Omega$ nahe der
 Eigenkreisfrequenz $\omega_0$ und starten aus der Ruhelage $x(0)=0$,
@@ -326,7 +326,7 @@ statischen Auslenkung $F_0/k$ betragen.
 
 ```{admonition} Mini-Übung
 :class: tip
-1. Ist `f_erzwungen` autonom oder nicht-autonom? Woran erkennen Sie das im
+1. Ist `f_erzwungen()` autonom oder nicht-autonom? Woran erkennen Sie das im
    Code?
 2. Warum muss `t_end` für die erzwungene Schwingung länger gewählt werden
    als für die freie Schwingung in Abschnitt 11.1?
@@ -341,7 +341,7 @@ statischen Auslenkung $F_0/k$ betragen.
 ````{admonition} Lösung
 :class: tip
 :class: dropdown
-Zu Frage 1: `f_erzwungen` ist nicht-autonom: `F0 * np.sin(Omega * t)`
+Zu Frage 1: `f_erzwungen()` ist nicht-autonom: `F0 * np.sin(Omega * t)`
 enthält `t` explizit. Eine autonome DGL würde nur von `y` abhängen, nicht
 von `t`.
 
@@ -361,8 +361,8 @@ unbegrenzt.
 ## Methodenübersicht: DGL in Kapitel 10 und 11
 
 Alle Differentialgleichungen, die wir in Kapitel 10 und 11 gelöst haben, folgen
-demselben Muster: `f(t, y)` zurückgeben, `y0` angeben, `solve_ivp` aufrufen. Der
-einzige Unterschied ist die Länge von `y0` und die Anzahl der Rückgabewerte.
+demselben Muster: `f(t, y)` zurückgeben, `y0` angeben, `solve_ivp()` aufrufen.
+Der einzige Unterschied ist die Länge von `y0` und die Anzahl der Rückgabewerte.
 
 ```{admonition} Methodenübersicht
 :class: note
@@ -371,12 +371,12 @@ einzige Unterschied ist die Länge von `y0` und die Anzahl der Rückgabewerte.
 | Abkühlung, Zerfall (Kap. 10) | $y = [T]$ | `[T0]` | `sol.y[0]`: Zustand |
 | Federschwinger (Abschn. 11.1) | $y = [x,\,\dot{x}]$ | `[x0, v0]` | `sol.y[0]`: Pos., `sol.y[1]`: Geschw. |
 | Gedämpfter Schwinger | $y = [x,\,\dot{x}]$ | `[x0, v0]` | wie oben |
-| Erzwungene Schwingung | $y = [x,\,\dot{x}]$ | `[x0, v0]` | wie oben; `f` nutzt `t` |
+| Erzwungene Schwingung | $y = [x,\,\dot{x}]$ | `[x0, v0]` | wie oben; `f()` nutzt `t` |
 ```
 
-Der Code für `solve_ivp` ist in allen vier Fällen identisch. Wächst ein
+Der Code für `solve_ivp()` ist in allen vier Fällen identisch. Wächst ein
 System auf drei oder mehr Zustände (zum Beispiel zwei gekoppelte Massen),
-verlängert sich nur `y0` und die Rückgabeliste von `f`.
+verlängert sich nur `y0` und die Rückgabeliste von `f()`.
 
 ```{code-cell} python
 import numpy as np
@@ -405,8 +405,8 @@ print(f"Schwinger:  sol.y.shape = {sol_sch.y.shape}  (2 Zustände)")
 :class: tip
 1. Was würde `sol.y.shape` für ein System mit drei gekoppelten Massen
    ausgeben (drei Positionen und drei Geschwindigkeiten)?
-2. Nennen Sie einen konkreten Grund, warum `f` für die erzwungene
-   Schwingung nicht-autonom ist, während `f` für den gedämpften
+2. Nennen Sie einen konkreten Grund, warum `f()` für die erzwungene
+   Schwingung nicht-autonom ist, während `f()` für den gedämpften
    Schwinger autonom ist.
 3. In welchem Abschnitt der Tabelle ist die Ähnlichkeit zur
    Kirchhoff-Gleichung eines RC-Kreises ($\dot{U}_C = -U_C/(RC)$) am
@@ -424,7 +424,7 @@ Zu Frage 1: Sechs Zustände ($x_1, \dot{x}_1, x_2, \dot{x}_2, x_3,
 \dot{x}_3$), also `sol.y.shape = (6, n_zeitpunkte)`.
 
 Zu Frage 2: Beim erzwungenen Schwinger taucht $F_0\sin(\Omega t)$ in
-`f` auf; dieser Term hängt explizit von `t` ab. Beim gedämpften Schwinger
+`f()` auf; dieser Term hängt explizit von `t` ab. Beim gedämpften Schwinger
 ohne Anregung steht auf der rechten Seite nur $(-kx - c\dot{x})/m$, das
 ist eine Funktion nur von `y`, nicht von `t`.
 
@@ -441,7 +441,7 @@ Der Dämpfungsgrad $D = c/(2\sqrt{km})$ bestimmt das qualitative Verhalten:
 Für $D < 1$ schwingt das System aus, für $D = 1$ kehrt es am schnellsten
 ohne Überschwingen zurück, für $D > 1$ kriecht es monoton in das
 Gleichgewicht. Die erzwungene Schwingung ist nicht-autonom, weil
-$F_0\sin(\Omega t)$ explizit von $t$ abhängt. `solve_ivp` löst sie ohne
+$F_0\sin(\Omega t)$ explizit von $t$ abhängt. `solve_ivp()` löst sie ohne
 Anpassung. Die stationäre Amplitude lässt sich aus dem letzten Zeitdrittel
 als `max(|x|)` ablesen. Bei $\Omega = \omega_0$ gilt für die stationäre
 Amplitude die einfache Formel $A = F_0/(2Dk)$. Resonanz tritt auf, wenn

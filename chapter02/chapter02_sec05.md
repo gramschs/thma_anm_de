@@ -205,7 +205,7 @@ ausführen.
 
 1. Welchen Linienstil hat die obere Kurve und wie viele volle Schwingungen
    zeigt sie im dargestellten Bereich?
-2. Der obere `plot`-Aufruf hat `label='3 Hz'`, aber es gibt keinen Aufruf von
+2. Der obere `plot()`-Aufruf hat `label='3 Hz'`, aber es gibt keinen Aufruf von
    `ax[0].legend()`. Was ist dadurch im Diagramm zu sehen?
 3. Wie viele Subplots erzeugt `plt.subplots(nrows=2, ncols=1)` und wie sprechen
    Sie den unteren an?

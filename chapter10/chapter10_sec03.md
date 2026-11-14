@@ -15,7 +15,7 @@ In Abschnitt 10.1 haben wir das Euler-Verfahren als Schleife implementiert.
 In Abschnitt 10.2 haben wir gesehen, dass zu große Schrittweiten
 unphysikalische Ergebnisse erzeugen, und dass selbst bei kleinen Schrittweiten
 ein merklicher Fehler bleibt. Beide Probleme lassen sich mit
-`scipy.integrate.solve_ivp` lösen. Die Funktion löst dieselbe DGL, wählt die
+`scipy.integrate.solve_ivp()` lösen. Die Funktion löst dieselbe DGL, wählt die
 Schrittweite aber automatisch und nutzt intern das
 **Runge-Kutta-Verfahren der Ordnung 4/5** (RK45): ein Verfahren, das pro Schritt
 zwar mehr Rechenaufwand kostet als Euler, aber eine drastisch höhere Genauigkeit
@@ -25,14 +25,14 @@ erreicht.
 
 ```{admonition} Lernziele
 :class: attention
-* [ ] Sie können `scipy.integrate.solve_ivp` mit dem Solver `RK45` aufrufen
+* [ ] Sie können `scipy.integrate.solve_ivp()` mit dem Solver `RK45` aufrufen
   und die Rückgabefelder `sol.t`, `sol.y` und `sol.success` auslesen.
 * [ ] Sie wissen, warum `f(t, y)` eine bestimmte Signatur haben muss, und
   können diese Funktion für eine skalare DGL korrekt schreiben.
 * [ ] Sie können erklären, was **adaptive Schrittweite** bedeutet, und
   begründen, warum sie effizienter ist als eine feste Schrittweite.
 * [ ] Sie können eine **nicht-autonome Differentialgleichung** (rechte Seite
-  hängt explizit von $t$ ab) mit `solve_ivp` lösen.
+  hängt explizit von $t$ ab) mit `solve_ivp()` lösen.
 ```
 
 +++
@@ -40,7 +40,7 @@ erreicht.
 ## solve_ivp für das Abkühlproblem
 
 *Wie viel einfacher kann man eine DGL lösen?* Wir nehmen dasselbe Kühlproblem
-aus Abschnitt 10.1 und lösen es mit `solve_ivp`. Dazu importieren wir zunächst
+aus Abschnitt 10.1 und lösen es mit `solve_ivp()`. Dazu importieren wir zunächst
 die notwendigen Module und definieren die Abkühlung als Funktion.
 
 ```{code-cell} python
@@ -65,7 +65,7 @@ def f_abkuehlung(t, y):
     return [dTdt]                         # Rückgabe als Liste mit einem Eintrag
 ```
 
-`solve_ivp` erfordert einige Argumente. Wir übergeben nicht nur die
+`solve_ivp()` erfordert einige Argumente. Wir übergeben nicht nur die
 Differentialgleichung als Funktion `f_abkuehlung`, sondern auch das
 Integrationsintervall `t_span`, die Anfangsbedingung `y0` und die Zeitpunkte
 `t_eval`, zu denen die Lösung der Differentialgleichung ausgewertet werden soll.
@@ -115,9 +115,9 @@ print(f"  Euler (dt = 5 min): {T_euler_10:.4f} °C  "
       f"  Fehler: {abs(T_euler_10 - T_exakt_10):.4f} °C")
 ```
 
-Das Ergebnis ist eindeutig: `solve_ivp` erreicht einen Fehler von unter
+Das Ergebnis ist eindeutig: `solve_ivp()` erreicht einen Fehler von unter
 0.01 °C, während Euler mit $\Delta t = 5\,\text{min}$ mehr als 7 °C daneben
-liegt. Wie viele Schritte `solve_ivp` dafür intern benötigt, sehen wir im
+liegt. Wie viele Schritte `solve_ivp()` dafür intern benötigt, sehen wir im
 nächsten Unterabschnitt.
 
 ```{code-cell} python
@@ -149,9 +149,9 @@ plt.show()
 ```
 
 Die Euler-Linie (durchgezogen mit Kreismarkern) weicht sichtbar von der
-analytischen Referenz ab; die gepunktete `solve_ivp`-Linie liegt darauf.
+analytischen Referenz ab; die gepunktete `solve_ivp()`-Linie liegt darauf.
 
-**Hinweis**: `solve_ivp` erwartet immer die Signatur `f(t, y)`, wobei `t` an
+**Hinweis**: `solve_ivp()` erwartet immer die Signatur `f(t, y)`, wobei `t` an
 erster Stelle steht und `y` ein Array ist. Für eine skalare DGL ist `y` ein
 Array mit einem Element. Häufige Fehler sind:
 
@@ -167,7 +167,7 @@ Array mit einem Element. Häufige Fehler sind:
 2. Was erwartet man für den Temperaturverlauf, wenn die Anfangstemperatur
    unter der Umgebungstemperatur liegt? Probieren Sie `y0=[5.0]` aus.
    Sagen Sie das Ergebnis zuerst voraus, bevor Sie den Code ausführen.
-3. Warum gibt `f_abkuehlung` eine Liste `[dTdt]` zurück und keinen Skalar `dTdt`,
+3. Warum gibt `f_abkuehlung()` eine Liste `[dTdt]` zurück und keinen Skalar `dTdt`,
    obwohl die DGL nur eine Zustandsgröße hat?
 ```
 
@@ -208,7 +208,7 @@ T(0) = 5.0 °C
 T(30) = 19.25 °C
 ```
 
-Zu Frage 3: `solve_ivp` ist für Systeme von Differentialgleichungen ausgelegt.
+Zu Frage 3: `solve_ivp()` ist für Systeme von Differentialgleichungen ausgelegt.
 Es erwartet immer eine Liste oder ein Array als Rückgabe, auch wenn nur eine
 Zustandsgröße vorliegt. Das ermöglicht dieselbe Schnittstelle für skalare
 Differentialgleichungen und für Systeme wie in Kapitel 11.
@@ -285,7 +285,7 @@ print(f"{'solve_ivp (RK45)'}           {len(sol_10.t)}            "
       f"{abs(sol_10.y[0, -1] - T_exakt_10):.4f}")
 ```
 
-Schon mit 4 internen Schritten liegt `solve_ivp` deutlich näher an der
+Schon mit 4 internen Schritten liegt `solve_ivp()` deutlich näher an der
 analytischen Lösung als Euler selbst mit $\Delta t = 0{,}1$ min (100 Schritte
 bis $t = 10$ min). Der Unterschied liegt im Algorithmus: Euler
 approximiert die Ableitung durch einen einzigen Wert am linken Intervallrand.
@@ -299,7 +299,7 @@ als beim Euler-Verfahren $O(\Delta t)$.
 | Methode | Konvergenzordnung | Schrittwahl |
 |---|---|---|
 | Euler | $O(\Delta t)$ | fest, manuell |
-| RK45 in `solve_ivp` | $O(\Delta t^5)$ (Lösung) | adaptiv, automatisch |
+| RK45 in `solve_ivp()` | $O(\Delta t^5)$ (Lösung) | adaptiv, automatisch |
 
 Halbiert man die Schrittweite, sinkt der Fehler bei Euler ungefähr auf die
 Hälfte, bei einem Verfahren 5. Ordnung etwa um den Faktor $2^5 =32$. RK45 liegt
@@ -316,7 +316,7 @@ tatsächliche Schrittweite zusätzlich.
 3. Euler benötigt $\Delta t = 0.1\,\text{min}$ für einen Fehler von rund
    $0.1\,°C$ bei $t = 10\,\text{min}$ (vgl. Tabelle oben). Bei dieser
    Schrittweite braucht Euler für das gesamte Intervall $[0, 50]$
-   500 Schritte. `solve_ivp` löst dasselbe Intervall mit 8 Schritten
+   500 Schritte. `solve_ivp()` löst dasselbe Intervall mit 8 Schritten
    (vgl. `len(sol_intern.t)` weiter oben). Um welchen Faktor ist das
    effizienter?
 ```
@@ -441,7 +441,7 @@ Wärmeleitung) oder einem schnellen Anstieg $r$ vergrößert sich der Rückstand
    `f_abkuehlung` ersetzen, ohne den Code anzupassen?
 3. Was würde passieren, wenn man die Aufwärmrate auf $r = 2.0\,°C/\text{min}$
    erhöht? Schätzen Sie den theoretischen Rückstand und überprüfen Sie mit
-   `solve_ivp`.
+   `solve_ivp()`.
 ```
 
 ```{code-cell} python
@@ -461,9 +461,9 @@ stationäre Rückstand $r/k$ gilt exakt erst für $t \to \infty$.
 Zu Frage 2: `f_abkuehlung(T)` nimmt nur den aktuellen Temperaturwert als
 Argument. Die Außentemperatur $T_\infty(t)$ ist darin fest auf 20 °C
 einprogrammiert. Die nicht-autonome DGL braucht jedoch $t$ als Eingabe,
-um $T_\infty(t) = T_{\infty,0} + r\,t$ berechnen zu können. `solve_ivp`
+um $T_\infty(t) = T_{\infty,0} + r\,t$ berechnen zu können. `solve_ivp()`
 übergibt bei jedem Auswertungsaufruf den aktuellen Zeitpunkt an $f(t, y)$;
-dieses $t$ steht in `f_abkuehlung` schlicht nicht zur Verfügung.
+dieses $t$ steht in `f_abkuehlung()` schlicht nicht zur Verfügung.
 
 ```python
 import numpy as np
@@ -495,7 +495,7 @@ weit hinterherhinkt.
 
 ## Zusammenfassung und Ausblick
 
-`scipy.integrate.solve_ivp` löst gewöhnliche Differentialgleichungen numerisch
+`scipy.integrate.solve_ivp()` löst gewöhnliche Differentialgleichungen numerisch
 mit dem adaptiven RK45-Verfahren. Es braucht nur die Signatur `f(t, y)`, das
 Integrationsintervall `t_span` und die Anfangsbedingung `y0` als Liste. Mit
 wenigen internen Schritten erreicht RK45 für das Kühlproblem eine Genauigkeit,
@@ -505,5 +505,5 @@ weil `f(t, y)` den Zeitpunkt immer als Argument erhält.
 
 In Kapitel 11 werden wir Differentialgleichungen zweiter Ordnung (zum Beispiel
 Schwingungsgleichungen) auf Systeme erster Ordnung zurückführen und mit
-`solve_ivp` lösen. Dafür wird der Zustandsvektor `y` dann zwei Einträge haben:
+`solve_ivp()` lösen. Dafür wird der Zustandsvektor `y` dann zwei Einträge haben:
 Position und Geschwindigkeit.

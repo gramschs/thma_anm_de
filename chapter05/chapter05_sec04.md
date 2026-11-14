@@ -33,8 +33,8 @@ gegen den Uhrzeigersinn abknicken, also zwischen $0°$ und $150°$.
 
 Führen Sie zuerst die beiden folgenden Zellen aus. Die erste enthält die
 vorgegebene Zeichenfunktion aus Kapitel 5.1. Die zweite enthält die Importe,
-die drei Funktionen `transformationsmatrix`, `transformiere` und
-`drehung_um_punkt` aus Kapitel 5.3 und die Daten aus der Tabelle.
+die drei Funktionen `transformationsmatrix()`, `transformiere()` und
+`drehung_um_punkt()` aus Kapitel 5.3 und die Daten aus der Tabelle.
 
 ```{code-cell} python
 :tags: [hide-input]
@@ -290,7 +290,7 @@ jetzt aber für zwei Winkel.
 
 Durchlaufen Sie in zwei verschachtelten Schleifen alle $\alpha$ von $0°$ bis
 $180°$ und alle $\beta$ von $0°$ bis $150°$ in Schritten von $1°$. Berechnen Sie
-jeweils mit `stellung` die Lage des Greifers und mit Pythagoras ihren Abstand
+jeweils mit `stellung()` die Lage des Greifers und mit Pythagoras ihren Abstand
 zu $P_1$. Merken Sie sich mit einer `if`-Abfrage den bisher kleinsten Abstand
 und die zugehörigen Winkel. Starten Sie mit `bester_abstand = 10.0`, also mit
 einem Wert, der größer ist als jeder mögliche Abstand.
@@ -309,7 +309,7 @@ $P_1$ entfernt? Zeichnen Sie die gefundene Stellung mit $P_1$ als Ziel.
 Die äußere Schleife läuft über $\alpha$, die innere über $\beta$. Den Abstand
 berechnen Sie wie in Teil 2 von Kapitel 5.2. Neu ist nur, dass wir nicht alle
 Abstände speichern, sondern mit `if` den bisher besten Wert mitführen.
-`stellung` erwartet die Winkel in Radiant.
+`stellung()` erwartet die Winkel in Radiant.
 ```python
 ziel = bestueckplaetze[0]
 
@@ -404,8 +404,8 @@ Stellungen mit ihren Bauteilen in ein Bild.
 ````{admonition} Tipp Teil 3
 :class: tip
 :class: dropdown
-Der Rumpf von `suche_winkel` ist die Doppelschleife aus Teil 2. Das Ziel wird
-zum Parameter, und statt der Ausgaben mit `print` gibt `return` die drei
+Der Rumpf von `suche_winkel()` ist die Doppelschleife aus Teil 2. Das Ziel wird
+zum Parameter, und statt der Ausgaben mit `print()` gibt `return` die drei
 Ergebnisse zurück. Die Schleife über die Plätze funktioniert wie die Schleife
 über die Winkelpaare in Teil 1.
 ```python
@@ -509,18 +509,18 @@ legt also nicht nur die Lage, sondern auch die Orientierung des Bauteils fest.
    beiden Koordinaten und den Drehwinkel. Um alle drei unabhängig einzustellen,
    braucht der Roboter eine dritte Drehachse. Viele SCARA-Roboter haben sie
    direkt am Greifer, sie dreht das Bauteil um seine eigene Mitte. Mit
-   `drehung_um_punkt` aus Kapitel 5.3 könnten wir auch diese Drehung als
+   `drehung_um_punkt()` aus Kapitel 5.3 könnten wir auch diese Drehung als
    homogene Matrix an die Kette anhängen.
 ````
 
 ```{admonition} Zusatzaufgabe: Fährt der Greifer geradeaus? (✩✩✩)
 :class: tip
 Die Steuerung bewegt den Greifer von der Zuführung zu $P_1$, indem sie beide
-Gelenke gleichzeitig und gleichmäßig dreht. Legen Sie dazu mit `np.linspace` je 21
+Gelenke gleichzeitig und gleichmäßig dreht. Legen Sie dazu mit `np.linspace()` je 21
 Werte für $\alpha$ von $0°$ bis $9°$ und für $\beta$ von $0°$ bis $99°$ an.
-Berechnen Sie für jedes Wertepaar mit `stellung` die Lage des Greifers und
+Berechnen Sie für jedes Wertepaar mit `stellung()` die Lage des Greifers und
 speichern Sie sie in einem Array `bahn` der Form `(21, 2)`. Zeichnen Sie die
-Bahn mit dem Parameter `bahn` von `zeichne_roboter` ein.
+Bahn mit dem Parameter `bahn` von `zeichne_roboter()` ein.
 
 Vergleichen Sie die Länge der Bahn mit der geraden Strecke zwischen ihrem
 Anfangs- und ihrem Endpunkt. Die Weglänge berechnen Sie wie in Teil 4 von

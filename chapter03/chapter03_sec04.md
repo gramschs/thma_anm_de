@@ -69,7 +69,7 @@ $$\begin{pmatrix}
 ```{admonition} Teil 2: Für eine feste Dämmung lösen
 :class: tip
 Legen Sie `A` und `b` für $R_C = 1.0\,\text{K/W}$ als NumPy-Arrays an. Prüfen
-Sie die Determinante, lösen Sie mit `np.linalg.solve` und geben Sie die drei
+Sie die Determinante, lösen Sie mit `np.linalg.solve()` und geben Sie die drei
 Grenzflächentemperaturen (in °C) und den Wärmestrom aus. Sichern Sie das
 Ergebnis mit einer Probe ab.
 ```

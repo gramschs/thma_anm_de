@@ -44,8 +44,8 @@ print(f"Ergebnis b: {trapez_paarweise(t_b, v_b):.1f} m")
 3. Für `n=6` läuft `range(0, n-1, 2)` über andere Indizes. Welche?
    Was ändert sich gegenüber `n=5`, und welchen Wert erwarten Sie für
    `Ergebnis b`?
-4. Vergleichen Sie beide Ergebnisse mit `np.trapezoid`. Was stellen Sie
-   fest? Was schlussfolgern Sie über `trapez_paarweise` als
+4. Vergleichen Sie beide Ergebnisse mit `np.trapezoid()`. Was stellen Sie
+   fest? Was schlussfolgern Sie über `trapez_paarweise()` als
    Integrationsmethode?
 5. Führen Sie den Code aus und überprüfen Sie Ihre Vorhersagen.
 ````
@@ -106,11 +106,11 @@ wird jetzt einbezogen:
 - Trapez [4, 5]: $(4 + 0) / 2 \cdot 1.0 = 2.0$ m
 - Gesamtergebnis: $18.0 + 10.0 + 2.0 = 30.0$ m
 
-Zu Frage 4: `np.trapezoid` liefert 48.0 m und 50.0 m, also deutlich mehr.
-`trapez_paarweise` überspringt bei ungerader Punktanzahl das letzte
+Zu Frage 4: `np.trapezoid()` liefert 48.0 m und 50.0 m, also deutlich mehr.
+`trapez_paarweise()` überspringt bei ungerader Punktanzahl das letzte
 Intervall und bei gerader Punktanzahl alle Intervalle mit ungeradem
 Startindex. Das Ergebnis hängt damit nicht nur von den Daten, sondern auch
-von der Parität von $n$ ab. `trapez_paarweise` ist keine korrekte
+von der Parität von $n$ ab. `trapez_paarweise()` ist keine korrekte
 Implementierung der Trapezregel.
 ````
 
@@ -142,7 +142,7 @@ rauschen = np.random.normal(0, 0.3, size=len(t_mess))  # normalverteiltes Sensor
 v_mess   = np.maximum(v_exakt + rauschen, 0.0)         # Geschwindigkeit >= 0
 ```
 
-1. Berechnen Sie den zurückgelegten Weg nach 8 Sekunden mit `np.trapezoid`.
+1. Berechnen Sie den zurückgelegten Weg nach 8 Sekunden mit `np.trapezoid()`.
    Geben Sie das Ergebnis in Metern aus.
 2. Berechnen Sie den analytischen zurückgelegten Weg $s_\text{exakt} = \int_0^T
    v_0\,e^{-k t}\,\mathrm{d}t = \frac{v_0}{k}(1 - e^{-kT})$ und vergleichen Sie

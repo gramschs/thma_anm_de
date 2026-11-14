@@ -14,9 +14,9 @@ Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorle
 ````{admonition} Übung 11.1 (✩)
 :class: tip
 Der folgende Code simuliert einen Federschwinger ($m = 250\,\text{kg}$,
-$k = 16000\,\text{N/m}$), enthält aber einen Fehler in der Funktion `f`.
+$k = 16000\,\text{N/m}$), enthält aber einen Fehler in der Funktion `f()`.
 Der Integrator löst das aufgestellte System mathematisch korrekt. Das
-Ergebnis ist dennoch falsch, weil `f` die DGL falsch modelliert: Es handelt
+Ergebnis ist dennoch falsch, weil `f()` die DGL falsch modelliert: Es handelt
 sich um einen Modellfehler, nicht um einen Numerikfehler.
 
 ```python
@@ -103,7 +103,7 @@ Anfangsgeschwindigkeit $\dot{\phi}(0) = 0$ für beide Fälle.
 
 1. Stellen Sie die DGL als System erster Ordnung auf. Definieren Sie
    $y_1 = \phi$ und $y_2 = \dot{\phi}$ und schreiben Sie `f(t, y)` auf.
-2. Lösen Sie mit `solve_ivp` für beide Anfangsbedingungen
+2. Lösen Sie mit `solve_ivp()` für beide Anfangsbedingungen
    $\phi_0 = 5°$ und $\phi_0 = 90°$ (Winkel zuerst in Bogenmaß umrechnen).
    Stellen Sie $\phi(t)$ für $t \in [0, 10\,\text{s}]$ dar.
 3. Lesen Sie die Schwingungsperiode für beide Fälle aus dem Plot ab und

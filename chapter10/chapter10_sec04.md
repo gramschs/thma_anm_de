@@ -13,7 +13,7 @@ Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorle
 
 ````{admonition} Übung 10.3 (✩)
 :class: tip
-Gegeben ist der folgende Code, der vier Experimente mit `solve_ivp`
+Gegeben ist der folgende Code, der vier Experimente mit `solve_ivp()`
 durchführt. Die DGL beschreibt dasselbe Abkühlungsgesetz wie in
 Abschnitt 10.1, aber mit anderen Parametern.
 
@@ -127,11 +127,11 @@ Ausgabezeitpunkte aus `t_eval`.
 
 Zu Frage 2: Analytisch: $T(5) = 25 + 35 \cdot e^{-1} = 37.8759\,°C$.
 Der Solver liefert 37.8643 °C. Die Abweichung von rund 0.01 °C liegt
-innerhalb der Standard-Toleranz von `solve_ivp` (rtol=1e-3). Die Lösung
+innerhalb der Standard-Toleranz von `solve_ivp()` (rtol=1e-3). Die Lösung
 ist korrekt, aber nicht exakt, weil numerische Integration nie fehlerfrei
 ist.
 
-Zu Frage 3: Ohne `t_eval` gibt `solve_ivp` die intern gewählten
+Zu Frage 3: Ohne `t_eval` gibt `solve_ivp()` die intern gewählten
 Auswertungspunkte zurück. Für dieses glatte Problem sind das nur wenige
 Schritte (hier 6); die adaptive Schrittweite erlaubt dem RK45-Solver,
 große Schritte zu machen, sobald sich die Lösung verlangsamt.
@@ -144,7 +144,7 @@ gäbe den ersten Zustand und `sol_c.y[-1, -1]` den dritten. Sie wären im
 Allgemeinen verschieden.
 
 Zu Frage 5: Zeile D gibt eine Liste mit zwei Elementen zurück, obwohl `y0`
-nur ein Element hat. `solve_ivp` erwartet, dass die Dimension der Rückgabe
+nur ein Element hat. `solve_ivp()` erwartet, dass die Dimension der Rückgabe
 mit der Dimension von `y0` übereinstimmt, und wirft einen `ValueError`.
 Korrektur: zweiten Eintrag entfernen, also `return [-k * (y[0] - T_inf)]`.
 ````
@@ -171,10 +171,10 @@ t_end   = 25.0   # Simulationsende in Wochen
 ```
 
 1. Schreiben Sie die Funktion `f_logistisch(t, y)` für die rechte Seite
-   der DGL und lösen Sie das Anfangswertproblem mit `solve_ivp` für 25
+   der DGL und lösen Sie das Anfangswertproblem mit `solve_ivp()` für 25
    Wochen. Stellen Sie $N(t)$ in einem Plot dar und markieren Sie die
    Kapazitätsgrenze $K$ als waagerechte gestrichelte Linie.
-2. Bestimmen Sie aus dem Plot oder mit `np.searchsorted` den Zeitpunkt,
+2. Bestimmen Sie aus dem Plot oder mit `np.searchsorted()` den Zeitpunkt,
    an dem $N$ erstmals die Hälfte der Kapazitätsgrenze ($K/2 = 100$)
    überschreitet. Vergleichen Sie mit der analytischen Formel für den
    Wendepunkt:

@@ -19,7 +19,7 @@ die Last überhaupt aus?*
 :class: attention
 * [ ] Sie können Lager in das Gleichungssystem einbauen, indem Sie die
   Gleichungen der gesperrten Freiheitsgrade ersetzen, und die Verschiebungen
-  mit `np.linalg.solve` berechnen.
+  mit `np.linalg.solve()` berechnen.
 * [ ] Sie können aus den Verschiebungen die **Lagerkräfte** und die
   **Stabkräfte** berechnen und Zug von Druck unterscheiden.
 * [ ] Sie können die Spannung in einem Stab mit der Streckgrenze vergleichen
@@ -29,7 +29,7 @@ die Last überhaupt aus?*
 
 ## Lager einbauen und das Gleichungssystem lösen
 
-Wir übernehmen das Schaukelgestell und die Funktion `baue_steifigkeitsmatrix`
+Wir übernehmen das Schaukelgestell und die Funktion `baue_steifigkeitsmatrix()`
 aus Kapitel 4.1. Die erste Zelle enthält wieder die vorgegebene
 Zeichenfunktion.
 
@@ -215,7 +215,7 @@ erscheinen die Einsen als `0.`, weil wir alle Einträge mit $10^{-6}$
 multiplizieren. Die letzte Ausgabe zeigt Zeile 0 ohne Umrechnung. Die
 Determinante ist jetzt nicht mehr null, das System ist lösbar. Weil wir nur
 Zeilen ersetzt haben, ist `K_lager` nicht mehr symmetrisch. Für
-`np.linalg.solve` spielt das keine Rolle.
+`np.linalg.solve()` spielt das keine Rolle.
 
 Die Methode `.copy()` ist wichtig. Ohne sie würden `K_lager` und `K`
 dasselbe Array bezeichnen, und wir würden die ursprüngliche
@@ -270,7 +270,7 @@ print('Verschiebungsvektor in mm:', np.round(u * 1000, 4))
 2. Beim Schaukeln greift an der Spitze zusätzlich zur Last eine Seitenkraft
    von $1200\,\text{N}$ nach rechts an. Legen Sie einen neuen Kraftvektor
    `kraft_vektor_seite` an und berechnen Sie die Verschiebungen mit
-   `berechne_verschiebungen`.
+   `berechne_verschiebungen()`.
 3. Beantworten Sie ohne Code: Die Spitze verschiebt sich weiter zur Seite als
    nach unten, obwohl die Seitenkraft kleiner ist als die Last. Warum?
 ```
@@ -573,13 +573,13 @@ $d^4$, also um den Faktor 16.
 
 Die Lager bauen wir ein, indem wir die Gleichungen der gesperrten
 Freiheitsgrade durch $u_d = 0$ ersetzen. Danach ist das Gleichungssystem
-lösbar, und `np.linalg.solve` liefert alle Verschiebungen. Setzen wir sie in
+lösbar, und `np.linalg.solve()` liefert alle Verschiebungen. Setzen wir sie in
 $\mathbf{K} \cdot \vec{u}$ ein, erhalten wir an den Lagern die Lagerkräfte.
 Die Stabkräfte folgen aus der Längenänderung jedes Stabs, positiv bedeutet
 Zug und negativ Druck. Für die Bemessung vergleichen wir die Spannung mit der
 Streckgrenze und prüfen alle Druckstäbe zusätzlich auf Knicken.
 
-Alle Schritte stecken jetzt in drei Funktionen: `baue_steifigkeitsmatrix`,
-`berechne_verschiebungen` und `berechne_stabkraefte`. Im nächsten Kapitel
+Alle Schritte stecken jetzt in drei Funktionen: `baue_steifigkeitsmatrix()`,
+`berechne_verschiebungen()` und `berechne_stabkraefte()`. Im nächsten Kapitel
 setzen wir sie in Partnerarbeit ein, um den Dachbinder einer Stahlhalle unter
 Schneelast zu berechnen und zu bewerten.

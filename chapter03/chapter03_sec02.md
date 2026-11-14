@@ -7,10 +7,11 @@ kernelspec:
 # 3.2 Auflagerkräfte an einem Träger
 
 In Kapitel 3.1 haben wir ein Gleichungssystem als Matrixgleichung geschrieben,
-seine Lösbarkeit geprüft und es mit `np.linalg.solve` gelöst. In diesem Kapitel
-wenden wir dasselbe Vorgehen auf ein Problem aus der Technischen Mechanik an:
-die Auflagerkräfte eines belasteten Trägers. Bearbeiten Sie die Teilaufgaben
-möglichst zu zweit und der Reihe nach, jeder Teil baut auf dem vorherigen auf.
+seine Lösbarkeit geprüft und es mit `np.linalg.solve()` gelöst. In diesem
+Kapitel wenden wir dasselbe Vorgehen auf ein Problem aus der Technischen
+Mechanik an: die Auflagerkräfte eines belasteten Trägers. Bearbeiten Sie die
+Teilaufgaben möglichst zu zweit und der Reihe nach, jeder Teil baut auf dem
+vorherigen auf.
 
 Wir betrachten den folgenden Träger mit Fest- und Loslager, auf den eine
 Seilkraft und eine Last wirken.
@@ -116,7 +117,7 @@ Auflagerreaktionen, wie zur Festlegung nötig sind.
 
 ```{admonition} Teil 3: Lösen und Probe
 :class: tip
-Lösen Sie das System mit `np.linalg.solve` und sichern Sie das Ergebnis mit
+Lösen Sie das System mit `np.linalg.solve()` und sichern Sie das Ergebnis mit
 einer Probe ab. Geben Sie die drei Auflagerkräfte in kN aus.
 ```
 
@@ -193,7 +194,7 @@ weiterhin drei Gleichgewichtsbedingungen. Die Belastung bleibt unverändert.
 1. Schreiben Sie die drei Gleichungen mit den zwei Unbekannten als
    $\mathbf{A} \cdot \vec{x} = \vec{b}$. Die Matrix `A` hat dann drei Zeilen
    und zwei Spalten.
-2. Versuchen Sie, das System mit `np.linalg.solve` zu lösen. Was meldet
+2. Versuchen Sie, das System mit `np.linalg.solve()` zu lösen. Was meldet
    Python?
 3. Betrachten Sie die erste Gleichung ($\sum F_x = 0$) für sich allein. Ist
    sie erfüllbar?
@@ -227,7 +228,7 @@ try:
 except np.linalg.LinAlgError as fehler:
     print('solve schlägt fehl:', fehler)
 ```
-`np.linalg.solve` verlangt eine quadratische Matrix und bricht bei der
+`np.linalg.solve()` verlangt eine quadratische Matrix und bricht bei der
 Form `(3, 2)` mit einem `LinAlgError` ab.
 
 Die erste Gleichung lautet $0 \cdot F_{Ay} + 0 \cdot F_{By} = -6$, also $0 = -6$.

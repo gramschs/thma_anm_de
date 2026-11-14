@@ -25,7 +25,7 @@ auf die rechte.
   Unbekannten auf der linken Seite stehen.
 * [ ] Sie können die Koeffizientenmatrix $\mathbf{A}$ und den Vektor $\vec{b}$
   aus den umgeformten Gleichungen ablesen.
-* [ ] Sie können das LGS mit `np.linalg.solve` lösen und das Ergebnis
+* [ ] Sie können das LGS mit `np.linalg.solve()` lösen und das Ergebnis
   physikalisch deuten, auch ein negatives Vorzeichen.
 ```
 
@@ -300,8 +300,8 @@ korrekt.
 
 Der Weg ist immer derselbe: physikalische Bilanzgleichungen umformen, alle
 Unbekannten nach links, alle bekannten Größen nach rechts, dann $\mathbf{A}$
-und $\vec{b}$ zeilenweise ablesen. `np.linalg.solve` liefert die Lösung,
-`np.allclose` sichert sie ab, und das Vorzeichen des Ergebnisses deuten wir
+und $\vec{b}$ zeilenweise ablesen. `np.linalg.solve()` liefert die Lösung,
+`np.allclose()` sichert sie ab, und das Vorzeichen des Ergebnisses deuten wir
 über die gewählte Richtungskonvention.
 
 Im nächsten Kapitel vertiefen wir dieses Beispiel: Wir erweitern die Wand um

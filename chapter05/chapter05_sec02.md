@@ -43,7 +43,7 @@ Führen Sie zuerst die beiden folgenden Zellen aus. Die erste enthält die
 vorgegebene Zeichenfunktion aus Kapitel 5.1. Zwei ihrer Parameter haben wir
 dort noch nicht genutzt: `umgebung` zeichnet Flächen wie Förderband und Kiste,
 `bahn` zeichnet eine Folge von Greiferpositionen. Die zweite Zelle enthält die
-Importe, die Funktion `drehmatrix` aus Kapitel 5.1 und die Punkte aus der
+Importe, die Funktion `drehmatrix()` aus Kapitel 5.1 und die Punkte aus der
 Tabelle.
 
 ```{code-cell} python
@@ -226,13 +226,13 @@ parallel zur $y$-Achse.
 
 ```{admonition} Teil 2: Den Ablagewinkel berechnen
 :class: tip
-Statt zu schätzen, probieren wir alle Winkel durch. Legen Sie mit `np.linspace`
-die Winkel von $0°$ bis $180°$ in Schritten von $1°$ an. Berechnen Sie in einer
-Schleife für jeden Winkel die Greiferposition und mit Pythagoras ihren Abstand
-zur Kistenmitte. Speichern Sie die Abstände in einem Array `abstaende`, das Sie
-vorher mit `np.zeros` anlegen.
+Statt zu schätzen, probieren wir alle Winkel durch. Legen Sie mit
+`np.linspace()` die Winkel von $0°$ bis $180°$ in Schritten von $1°$ an.
+Berechnen Sie in einer Schleife für jeden Winkel die Greiferposition und mit
+Pythagoras ihren Abstand zur Kistenmitte. Speichern Sie die Abstände in einem
+Array `abstaende`, das Sie vorher mit `np.zeros()` anlegen.
 
-`np.argmin` funktioniert wie `np.argmax` aus Kapitel 2.4, liefert aber den
+`np.argmin()` funktioniert wie `np.argmax()` aus Kapitel 2.4, liefert aber den
 Index des kleinsten Werts. Bestimmen Sie damit den Ablagewinkel. Wie weit ist
 der Greifer dort noch von der Kistenmitte entfernt? Zeichnen Sie den Arm in
 Ablagestellung mit der Kistenmitte als Ziel.
@@ -247,8 +247,8 @@ Ablagestellung mit der Kistenmitte als Ziel.
 :class: dropdown
 Den Greifer allein drehen wir wie im ersten Abschnitt von Kapitel 5.1 mit
 `drehmatrix(...) @ arm[1]`. Für den Abstand bilden wir den Differenzvektor zur
-Kistenmitte und wenden Pythagoras an. Wie viele Werte braucht `np.linspace` für
-Schritte von $1°$ zwischen $0°$ und $180°$?
+Kistenmitte und wenden Pythagoras an. Wie viele Werte braucht `np.linspace()`
+für Schritte von $1°$ zwischen $0°$ und $180°$?
 ```python
 winkel_grad = np.linspace(0, 180, ___)
 abstaende = np.zeros(len(winkel_grad))
@@ -341,7 +341,7 @@ Abhol- und Ablagestellung mit Deckel in ein Bild.
 ````{admonition} Tipp Teil 3
 :class: tip
 :class: dropdown
-Den Deckel drehen Sie mit `R_ablage` aus Teil 2. `np.min` und `np.max` aus
+Den Deckel drehen Sie mit `R_ablage` aus Teil 2. `np.min()` und `np.max()` aus
 Kapitel 2.1 liefern den kleinsten und größten Wert einer Spalte. Der Deckel
 liegt in der Kiste, wenn alle vier Vergleiche zutreffen.
 ```python
@@ -424,7 +424,7 @@ Für die Taktzeit der Anlage brauchen wir die Länge des Wegs, den der Greifer
 vom Band zur Kiste zurücklegt. Wir nähern den Kreisbogen durch gerade Stücke
 an. Schreiben Sie dazu zwei Funktionen:
 
-1. `greiferbahn(anzahl_punkte)` erzeugt mit `np.linspace` gleichmäßig
+1. `greiferbahn(anzahl_punkte)` erzeugt mit `np.linspace()` gleichmäßig
    verteilte Winkel von $0°$ bis zum Ablagewinkel und gibt die
    Greiferpositionen als Array der Form `(anzahl_punkte, 2)` zurück.
 2. `weglaenge(bahn)` addiert die geraden Abstände zwischen aufeinanderfolgenden
@@ -445,7 +445,7 @@ Warum ist der Weg aus geraden Stücken immer kürzer als der Kreisbogen?
 ````{admonition} Tipp Teil 4
 :class: tip
 :class: dropdown
-Die Schleife aus Teil 2 liefert schon die Greiferpositionen. In `greiferbahn`
+Die Schleife aus Teil 2 liefert schon die Greiferpositionen. In `greiferbahn()`
 speichern Sie sie statt der Abstände in den Zeilen eines Arrays. In `weglaenge`
 bilden Sie wie in Teil 2 einen Differenzvektor, jetzt zwischen Punkt `k` und
 Punkt `k + 1`. Wie oft muss die Schleife dafür laufen?
@@ -573,7 +573,7 @@ Die zuerst ausgeführte Drehung steht also rechts.
 
 1. Berechnen Sie die Greiferposition an der Kamera.
 2. Berechnen Sie das Produkt $\mathbf{R}_2 \cdot \mathbf{R}_1$ und vergleichen
-   Sie es mit `np.allclose` mit $\mathbf{R}(140°)$.
+   Sie es mit `np.allclose()` mit $\mathbf{R}(140°)$.
 3. Vertauschen Sie die Reihenfolge zu $\mathbf{R}_1 \cdot \mathbf{R}_2$.
    Ändert sich das Ergebnis?
 4. Begründen Sie ohne Code, warum die Reihenfolge hier keine Rolle spielt.

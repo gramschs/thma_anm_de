@@ -34,7 +34,7 @@ Matrix zusammen und berechnen die Stellung des ganzen Arms.
 
 ## Wie dreht sich Gelenk 2?
 
-Wir übernehmen den Arm, das Bauteil und die Funktion `drehmatrix` aus
+Wir übernehmen den Arm, das Bauteil und die Funktion `drehmatrix()` aus
 Kapitel 5.1 und führen zuerst die beiden folgenden Zellen aus. Die erste
 enthält die vorgegebene Zeichenfunktion, die zweite die Daten aus Kapitel 5.1.
 
@@ -246,7 +246,7 @@ Kapitel 5.2 für den schräg liegenden Deckel angekündigt.
 1. Beantworten Sie ohne Code: Wo steht der Greifer, wenn Gelenk 2 um
    $\beta = -90°$ dreht und Gelenk 1 in der Grundstellung bleibt?
 2. Drehen Sie Greifer und Bauteil mit den drei Schritten um $\beta = 45°$ und
-   zeichnen Sie Grundstellung und neue Stellung mit `zeichne_roboter`.
+   zeichnen Sie Grundstellung und neue Stellung mit `zeichne_roboter()`.
 3. Beantworten Sie ohne Code: Was passiert bei $\beta = 90°$, wenn wir
    Schritt 3 vergessen? Wo landet der Greifer, und wo säße Arm 2?
 ```
@@ -406,7 +406,7 @@ auch diese beiden zu einer Matrix zusammenfassen, zeigt der nächste Abschnitt.
 1. Beantworten Sie ohne Code: Wie sieht die Matrix
    `transformationsmatrix(0, 0.1, -0.2)` aus? Wohin bringt sie den Greifer in
    Grundstellung?
-2. Drehen Sie den ganzen Arm mit `transformationsmatrix` und `transformiere`
+2. Drehen Sie den ganzen Arm mit `transformationsmatrix()` und `transformiere()`
    um $30°$ um Gelenk 1. Vergleichen Sie mit dem Ergebnis aus Kapitel 5.1.
 3. Beantworten Sie ohne Code: Was würde passieren, wenn in der dritten
    Koordinate eines Punktes 0 statt 1 stünde?
@@ -454,7 +454,7 @@ Das Produkt $\mathbf{T}_2 \cdot \mathbf{T}_1$ ist eine einzige Matrix, die beide
 Schritte auf einmal erledigt. Diese Zusammenfassung heißt **Verkettung**. Die
 Matrix, die zuerst wirkt, steht dabei rechts, so wie bei den Drehungen in der
 Zusatzaufgabe von Kapitel 5.2. Für eine Drehung um einen beliebigen Punkt
-verketten wir die drei Schritte zur Funktion `drehung_um_punkt`.
+verketten wir die drei Schritte zur Funktion `drehung_um_punkt()`.
 
 ```{code-cell} python
 def drehung_um_punkt(winkel, zentrum):
@@ -567,8 +567,8 @@ Drehpunkt der Matrix, die gerade wirkt.
 :class: tip
 1. Beantworten Sie ohne Code: Wo stehen Gelenk 2 und der Greifer bei
    $\alpha = 90°$ und $\beta = -90°$?
-2. Prüfen Sie Ihre Antwort mit `transformationsmatrix`, `drehung_um_punkt` und
-   `transformiere` und zeichnen Sie die Stellung.
+2. Prüfen Sie Ihre Antwort mit `transformationsmatrix()`, `drehung_um_punkt()`
+   und `transformiere()` und zeichnen Sie die Stellung.
 3. Beantworten Sie ohne Code: Warum wenden wir
    $\mathbf{T}_\alpha \cdot \mathbf{T}_\beta$ nur auf Arm 2 und das Bauteil an
    und nicht auf Gelenk 1?

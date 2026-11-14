@@ -90,6 +90,13 @@ Motivation, keine Lernziele, keine Zusammenfassung.
 - Keine Gedankenstriche
 - Fachbegriffe werden beim ersten Auftreten **fett** markiert und sofort erklärt
 - Kein Lehrbuch-Jargon, sondern pragmatische Erklärungen
+- Funktionen und Methoden stehen im Fließtext immer mit runden Klammern:
+  `print()`, `np.isclose()`, `ax.plot()`, auch eigene Funktionen wie
+  `ableitung()`. Ohne Klammern nur, wenn die Funktion selbst als Objekt
+  gemeint ist, zum Beispiel als Argument übergeben (`fahrprofil` in
+  Kapitel 7.2) oder als bloßer Name in einer Lücke. Module (`np.random`),
+  Konstanten (`np.pi`), Attribute (`.shape`) und Datentypen (`int`) bleiben
+  ohne Klammern.
 
 ## Didaktik: Werkzeug, Code, Deutung
 
@@ -472,6 +479,7 @@ beantwortet.
 - [ ] YAML-Header vorhanden?
 - [ ] Variablennamen im Code nur ASCII, Kommentare und Strings mit Umlauten?
 - [ ] Kein Gedankenstrich im Fließtext, kein `d.h.` oder `z.B.` mitten im Satz?
+- [ ] Funktionsnamen im Fließtext mit runden Klammern (`np.zeros()`)?
 - [ ] Alle Lösungen als `dropdown` mit Code und fachlicher Erklärung?
 
 ### Zusätzlich für Code-Along-Kapitel (sec01, sec03)

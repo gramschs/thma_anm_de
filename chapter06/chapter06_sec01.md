@@ -61,10 +61,10 @@ zwischen $x_W$- und $x_F$-Achse heißen zusammen **Pose** des Fahrzeugs.
 Positive Gierwinkel drehen wie in Kapitel 5.1 gegen den Uhrzeigersinn.
 
 Zuerst führen wir zwei Zellen aus: die vorgegebene Zeichenfunktion
-`zeichne_halle` und eine Zelle mit `transformationsmatrix` und `transformiere`
-aus Kapitel 5.3 und der Hallenkarte. Dazu kommt der `umriss` des
-$1.2\,\text{m}$ langen und $0.8\,\text{m}$ breiten FTF. Seine Ecken liegen in
-Fahrzeugkoordinaten immer an denselben Stellen, die ersten beiden bilden die
+`zeichne_halle()` und eine Zelle mit `transformationsmatrix()` und
+`transformiere()` aus Kapitel 5.3 und der Hallenkarte. Dazu kommt der `umriss`
+des $1.2\,\text{m}$ langen und $0.8\,\text{m}$ breiten FTF. Seine Ecken liegen
+in Fahrzeugkoordinaten immer an denselben Stellen, die ersten beiden bilden die
 Vorderkante.
 
 ```{code-cell} python
@@ -265,7 +265,7 @@ Beide Sichtweisen liefern dieselben Zahlen.
 1. Beantworten Sie ohne Code: Ein zweites FTF steht bei $(2, 5)$ mit
    $\psi = 180°$. In welche Richtung der Halle zeigt seine $x_F$-Achse? Wo
    liegt seine Ecke vorne links?
-2. Prüfen Sie Ihre Antwort mit `transformationsmatrix` und `transformiere`.
+2. Prüfen Sie Ihre Antwort mit `transformationsmatrix()` und `transformiere()`.
    Zeichnen Sie beide Fahrzeuge mit ihren Koordinatensystemen in ein Bild.
 3. Beantworten Sie ohne Code: Das erste FTF fährt $1\,\text{m}$ geradeaus.
    Welche Spalten von $\mathbf{T}_{WF}$ ändern sich, und welche bleiben gleich?
@@ -317,7 +317,7 @@ wir in Kapitel 5.1 den Greifer auf seinem Kreis berechnet.
 ```
 
 Das Hindernis vom Anfang hat $r = 1.5$ und $\varphi = 0$, also die
-Fahrzeugkoordinaten $(1.5, 0)$. `transformiere` erwartet einen Punkt pro
+Fahrzeugkoordinaten $(1.5, 0)$. `transformiere()` erwartet einen Punkt pro
 Zeile, deshalb schreiben wir den einzelnen Punkt mit doppelten eckigen
 Klammern als Array der Form `(1, 2)`.
 
@@ -429,7 +429,7 @@ Determinante 1 und lassen sich immer umkehren.
 ```
 
 Von W nach F rechnet also $\mathbf{T}_{FW} = \mathbf{T}_{WF}^{-1}$. NumPy
-berechnet die Inverse mit `np.linalg.inv`. Zur Probe muss
+berechnet die Inverse mit `np.linalg.inv()`. Zur Probe muss
 $\mathbf{T}_{FW} \cdot \mathbf{T}_{WF}$ die Einheitsmatrix `np.eye(3)` aus
 Kapitel 5.1 ergeben.
 
@@ -462,11 +462,11 @@ zurückdrehen. Die Rückdrehung erfasst dabei den Verschiebungsvektor mit.
 1. Beantworten Sie ohne Code: Das Fahrzeug steht bei $(4, 2)$ und zeigt mit
    $\psi = 90°$ in $y_W$-Richtung. Liegt die Station bei $(8, 2.5)$ vor oder
    hinter dem Fahrzeug, links oder rechts? Wie weit jeweils?
-2. Prüfen Sie Ihre Antwort mit `np.linalg.inv` und `transformiere`.
+2. Prüfen Sie Ihre Antwort mit `np.linalg.inv()` und `transformiere()`.
 3. Zurück zur Ausgangspose bei $(4, 2)$ mit $\psi = 30°$: Es liegt nahe, die
    Umkehrung von $\mathbf{T}_{WF}$ einfach als
    `transformationsmatrix(np.deg2rad(-30), -4, -2)` zu schreiben. Prüfen Sie
-   mit `np.allclose`, ob das stimmt. Begründen Sie das Ergebnis ohne Code.
+   mit `np.allclose()`, ob das stimmt. Begründen Sie das Ergebnis ohne Code.
 ```
 
 ```{code-cell} python
@@ -491,7 +491,7 @@ $0.5\,\text{m}$ weiter in $y_W$-Richtung, also $0.5\,\text{m}$ vorne, und
 $4\,\text{m}$ weiter in $x_W$-Richtung. Für ein Fahrzeug, das in
 $y_W$-Richtung zeigt, ist die positive $x_W$-Richtung rechts. Die Station liegt
 also $4\,\text{m}$ rechts, und die Rechnung liefert $(0.5, -4)$. Die
-naheliegende Umkehrung ist falsch. `transformationsmatrix` dreht immer zuerst
+naheliegende Umkehrung ist falsch. `transformationsmatrix()` dreht immer zuerst
 und verschiebt danach. `T_naiv` macht also zuerst die Drehung rückgängig und
 dann die Verschiebung. $\mathbf{T}_{WF}$ hat aber zuletzt verschoben, deshalb
 muss die Umkehrung die Verschiebung als Erstes rückgängig machen. Wie in
@@ -506,7 +506,7 @@ zeigt. $\mathbf{T}_{WF}$ rechnet Fahrzeug- in Hallenkoordinaten um, in ihren
 Spalten stehen die Fahrzeugachsen und die Fahrzeugmitte. Scannermessungen
 rechnen wir mit $x = r\cos\varphi$ und $y = r\sin\varphi$ in
 Fahrzeugkoordinaten um. Die umgekehrte Richtung leistet
-$\mathbf{T}_{FW} = \mathbf{T}_{WF}^{-1}$ mit `np.linalg.inv`.
+$\mathbf{T}_{FW} = \mathbf{T}_{WF}^{-1}$ mit `np.linalg.inv()`.
 
 Im Projekt in Kapitel 6.2 sitzt ein zweiter Scanner vorne am Fahrzeug und
 bringt ein drittes Koordinatensystem mit. Wie in Kapitel 5.3 verketten wir

@@ -14,7 +14,7 @@ Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorle
 In Abschnitt 9.1 haben wir die Trapezregel kennengelernt: lineare Interpolation
 zwischen Messpunkten. *Geht es noch genauer?* Ja, wenn wir statt einer Geraden
 eine Parabel durch je drei aufeinanderfolgende Punkte legen. Das ist die Idee
-der Simpson-Regel. Außerdem lernen wir `scipy.integrate.quad` kennen, das
+der Simpson-Regel. Außerdem lernen wir `scipy.integrate.quad()` kennen, das
 Werkzeug der Wahl, wenn nicht Messdaten, sondern ein analytisches Modell
 vorliegt.
 
@@ -29,9 +29,9 @@ vorliegt.
   (Trapezregel) und $O(\Delta t^4)$ (Simpson) benennen.
 * [ ] Sie wissen, wann Simpson der Trapezregel vorzuziehen ist und wann
   nicht.
-* [ ] Sie können `scipy.integrate.quad` auf eine analytische Funktion
+* [ ] Sie können `scipy.integrate.quad()` auf eine analytische Funktion
   anwenden und den zurückgegebenen Fehlerabschätzungswert interpretieren.
-* [ ] Sie können `scipy.integrate.quad` für ein uneigentliches Integral
+* [ ] Sie können `scipy.integrate.quad()` für ein uneigentliches Integral
   mit unendlicher oberer Grenze einsetzen.
 ```
 
@@ -172,7 +172,7 @@ print(f"simpson():      {s_simpson:.4f} m")
 print(f"np.trapezoid:   {np.trapezoid(v, t):.4f} m")
 ```
 
-Simpson liefert $85/3 \approx 28.33$ m, `np.trapezoid` liefert
+Simpson liefert $85/3 \approx 28.33$ m, `np.trapezoid()` liefert
 $27.5$ m. Bei diesem kleinen Datensatz ist der Unterschied gering;
 bei glatten Funktionen und mehr Punkten wächst der Vorteil von Simpson
 deutlich.
@@ -240,7 +240,7 @@ für verrauschte Messdaten.
 ## scipy.integrate.quad für analytische Modelle
 
 Wenn das analytische Modell bekannt ist, muss man es nicht erst auf
-einem Gitter auswerten. `scipy.integrate.quad` integriert eine
+einem Gitter auswerten. `scipy.integrate.quad()` integriert eine
 Python-Funktion direkt und schätzt die Genauigkeit automatisch ab.
 
 ```{code-cell} python
@@ -268,11 +268,11 @@ print(f"Fehlerabschätzung:     {fehlerabschaetzung:.2e} m")
 print(f"Tatsächlicher Fehler:  {abs(bremsweg_quad - bremsweg_exakt):.2e} m")
 ```
 
-`quad` gibt zwei Werte zurück: den Integralwert und eine Schätzung des
+`quad()` gibt zwei Werte zurück: den Integralwert und eine Schätzung des
 absoluten Fehlers. Die Fehlerabschätzung liegt hier im Bereich der
 Maschinengenauigkeit, weil die Funktion glatt und gut konditioniert ist.
 
-`quad` kann auch **uneigentliche Integrale** mit unendlicher Grenze
+`quad()` kann auch **uneigentliche Integrale** mit unendlicher Grenze
 berechnen. Dazu übergibt man `np.inf`:
 
 ```{code-cell} python
@@ -301,16 +301,16 @@ Weges zurückgelegt.
 :class: note
 | Methode | Eingabe | Anwendungsfall |
 |---|---|---|
-| `np.trapezoid` | Messdaten `v[i]` | Sensordaten, diskrete Messung |
+| `np.trapezoid()` | Messdaten `v[i]` | Sensordaten, diskrete Messung |
 | `simpson()` | Messdaten `v[i]`, $n$ ungerade | Glatte Daten ohne Rauschen |
 | `quad(f, a, b)` | Funktion `f(t)` | Analytisches Modell bekannt |
 ```
 
 ```{admonition} Mini-Übung
 :class: tip
-1. Berechnen Sie $\int_0^\infty e^{-t}\,\mathrm{d}t$ mit `quad` und
+1. Berechnen Sie $\int_0^\infty e^{-t}\,\mathrm{d}t$ mit `quad()` und
    `np.inf`. Welchen Wert erwarten Sie analytisch?
-2. Das Ergebnis von `quad` enthält immer eine Fehlerabschätzung.
+2. Das Ergebnis von `quad()` enthält immer eine Fehlerabschätzung.
    Wofür ist dieser Wert praktisch nützlich? Nennen Sie ein Szenario,
    in dem eine große Fehlerabschätzung ein Warnsignal wäre.
 ```
@@ -335,7 +335,7 @@ print(f"Fehlerabschätzung:             {fehler:.2e}")
 
 Das Integral ergibt exakt 1, wie analytisch erwartet.
 
-Zu Frage 2: Eine große Fehlerabschätzung signalisiert, dass `quad`
+Zu Frage 2: Eine große Fehlerabschätzung signalisiert, dass `quad()`
 intern viele Auswertungen brauchte und trotzdem keine hohe Genauigkeit
 erreichte. Das passiert zum Beispiel bei Funktionen mit Sprungstellen,
 sehr starken Oszillationen oder Singularitäten im Integrationsbereich.
@@ -350,10 +350,10 @@ spezialisierte Methode verwenden.
 Die Simpson-Regel erreicht durch quadratische Interpolation die
 Fehlerordnung $O(\Delta t^4)$ und ist bei glatten Funktionen der
 Trapezregel deutlich überlegen. Bei verrauschten Messdaten dominiert
-das Rauschen und die Trapezregel genügt. `scipy.integrate.quad`
+das Rauschen und die Trapezregel genügt. `scipy.integrate.quad()`
 integriert eine analytisch gegebene Funktion adaptiv und ist das
 Werkzeug der Wahl, wenn das Modell bekannt ist.
 
-In Abschnitt 9.4 wenden wir Trapezregel und `quad` auf ein neues
+In Abschnitt 9.4 wenden wir Trapezregel und `quad()` auf ein neues
 Problem an: die geleistete Arbeit entlang einer gemessenen nichtlinearen
 Federkennlinie.

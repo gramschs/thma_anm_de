@@ -234,7 +234,7 @@ ausführen.
    $800\,\text{N}$?
 4. Welcher der beiden Blöcke `K[0:2, 6:8]` und `K[2:4, 6:8]` ist null?
 5. Führen Sie den Code aus, bauen Sie die Steifigkeitsmatrix mit
-   `baue_steifigkeitsmatrix` für Stahl mit $1\,\text{cm}$ Durchmesser auf und
+   `baue_steifigkeitsmatrix()` für Stahl mit $1\,\text{cm}$ Durchmesser auf und
    überprüfen Sie Ihre Vorhersagen.
 ````
 
@@ -409,7 +409,7 @@ ausführen.
 2. Was gibt `print(K)` aus? Warum?
 3. Wie muss die Zeile `K_lager = K` lauten, damit `K` unverändert bleibt?
 4. Ein Fachwerk hat ein Festlager an Knoten 1 und ein Loslager an Knoten 3.
-   Welche Zeilen der Steifigkeitsmatrix ersetzt `berechne_verschiebungen`?
+   Welche Zeilen der Steifigkeitsmatrix ersetzt `berechne_verschiebungen()`?
 5. Führen Sie den Code aus und überprüfen Sie Ihre Vorhersagen.
 ````
 
@@ -636,12 +636,12 @@ am wenigsten ab? Die Füße bleiben bei $(0, 0)$ und $(2\,\text{m}, 0)$, die
 Spitze liegt bei $(1\,\text{m}, h)$. Last $2000\,\text{N}$ nach unten, Stahl
 mit $1\,\text{cm}$ Durchmesser.
 
-1. Legen Sie mit `np.linspace` zwölf Höhen von $0.25\,\text{m}$ bis
+1. Legen Sie mit `np.linspace()` zwölf Höhen von $0.25\,\text{m}$ bis
    $3.0\,\text{m}$ an. Berechnen Sie in einer Schleife für jede Höhe die
    Kraft in Stab 0 und die Absenkung der Spitze.
 2. Stellen Sie beide Größen in zwei Subplots über $h$ dar.
 3. Bei welcher Höhe ist die Absenkung am kleinsten? Verwenden Sie
-   `np.argmin`.
+   `np.argmin()`.
 4. Warum wird die Stabkraft für kleine Höhen so groß? Warum wird die
    Absenkung für große Höhen wieder größer, obwohl die Stabkraft weiter sinkt?
 5. Unser Schaukelgestell ist $2\,\text{m}$ hoch und damit nicht am
