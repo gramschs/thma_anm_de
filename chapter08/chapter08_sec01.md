@@ -4,370 +4,505 @@ kernelspec:
   display_name: 'Python 3'
 ---
 
-# 8.1 Kostenfunktion und Gradient Descent
+# 8.1 Kostenfunktion und Gradientenverfahren (Gradient Descent)
 
-```{admonition} Warnung
-:class: warning
-Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
-```
+Ein Betrieb montiert Getriebe und verbaut dabei im Jahr 12 000 Kugellager
+desselben Typs. Die Einkaufsabteilung bestellt bisher alle zwei Wochen 500
+Stück. Jede Bestellung kostet 50 € für Abwicklung, Transport und
+Wareneingangsprüfung, egal wie viele Kugellager geliefert werden. Jedes
+Kugellager im Lager kostet pro Jahr 1.20 € für Lagerplatz, Versicherung und das
+Geld, das darin gebunden ist. *Sollte der Betrieb seltener bestellen und dafür
+mehr auf einmal?*
 
-In Kapitel 7 haben wir Ableitungen numerisch aus diskreten Messwerten berechnet.
-In diesem Kapitel wenden wir genau dieses Werkzeug an, um Modellparameter aus
-Messdaten zu bestimmen. *Wie findet man den Parameterwert eines physikalischen
-Modells, der am besten zu einer Messreihe passt?*
-
-Als Beispiel betrachten wir die Abkühlkurve eines Aluminiumteils, das frisch aus
-der Gusspresse kommt. Das physikalische Modell lautet
-
-$$T(t) = T_\infty + (T_0 - T_\infty) \cdot e^{-\lambda t},$$
-
-wobei $T_\infty$ die Umgebungstemperatur, $T_0$ die Starttemperatur und $\lambda$
-die **Abkühlkonstante** ist. $T_\infty$ und $T_0$ sind bekannt. $\lambda$ ist
-materialabhängig und muss aus den Sensordaten geschätzt werden. Das Verfahren
-dafür heißt **Gradient Descent** und bildet das Fundament moderner
-Optimierungsalgorithmen in der Regelungstechnik, der Simulation und dem
-maschinellen Lernen.
+Eine Aufgabe, bei der wir den besten Wert einer Größe suchen, heißt
+**Optimierungsproblem**. In Kapitel 7.2 haben wir die Ableitung einer
+Python-Funktion mit dem zentralen Differenzenquotienten berechnet. In diesem
+Kapitel nutzen wir die Ableitung als Wegweiser zum kleinsten Wert einer
+Funktion. Das Verfahren dafür heißt **Gradientenverfahren**, auf Englisch
+**Gradient Descent** (Gradientenabstieg). Es steckt in vielen
+Optimierungsprogrammen der Konstruktion und Fertigung und ist das wichtigste
+Werkzeug beim Training neuronaler Netze.
 
 ## Lernziele
 
 ```{admonition} Lernziele
 :class: attention
-* [ ] Sie können erklären, was eine **Kostenfunktion** ist und was ihr Minimum
-  bedeutet.
-* [ ] Sie können den **mittleren quadratischen Fehler** (MSE) als Kostenfunktion
-  implementieren und über dem Parameterraum visualisieren.
-* [ ] Sie können den **Gradient-Descent-Algorithmus** in Python implementieren
-  und auf ein Einparameter-Problem anwenden.
-* [ ] Sie können erklären, welche Rolle die **Lernrate** spielt, und den Effekt
-  einer zu großen oder zu kleinen Lernrate beschreiben.
-* [ ] Sie wissen, was **Konvergenz** bedeutet, und können eine Konvergenzkurve
-  interpretieren.
+* [ ] Sie können eine **Kostenfunktion** als Python-Funktion aufstellen,
+  plotten und ihr Minimum deuten.
+* [ ] Sie können erklären, wie das **Gradientenverfahren** (Gradient Descent)
+  mit der Ableitung den nächsten Schritt bestimmt.
+* [ ] Sie können die Ableitung einer Kostenfunktion mit dem zentralen
+  Differenzenquotienten berechnen.
+* [ ] Sie können beschreiben, wie die **Lernrate** die Konvergenz beeinflusst,
+  und das Verfahren mit einem **Abbruchkriterium** beenden.
 ```
 
-+++
+## Welche Bestellmenge ist am günstigsten?
 
-## Die Kostenfunktion: Güte einer Parameterschätzung messen
+Die Menge, die der Betrieb auf einmal bestellt, heißt **Bestellmenge** $Q$ (von
+engl. quantity). Die jährlichen Kosten setzen sich aus zwei Teilen zusammen.
 
-Wir erzeugen zunächst simulierte Sensordaten. Das normalverteilte Rauschen mit
-Standardabweichung 2 °C bildet die Messungenauigkeit eines echten Temperatursensors
-nach.
+* Bei einem Jahresbedarf von $D$ Stück (von engl. demand) bestellt der Betrieb
+  $D / Q$ Mal im Jahr.
+  Jede Bestellung kostet $K_B$, zusammen sind das die **Bestellkosten**
+  $D / Q \cdot K_B$.
+* Nach jeder Lieferung liegen $Q$ Kugellager im Lager. Bis zur nächsten
+  Lieferung sinkt der Bestand gleichmäßig auf null, im Mittel liegen also
+  $Q / 2$ Stück im Lager. Mit dem Lagerkostensatz $k_L$ pro Stück und Jahr
+  ergeben sich die **Lagerkosten** $Q / 2 \cdot k_L$.
+
+Zusammen ergeben sich die Gesamtkosten pro Jahr:
+
+$$K(Q) = \frac{D}{Q} \cdot K_B + \frac{Q}{2} \cdot k_L.$$
+
+| Größe | Bedeutung | Wert | Name im Code |
+| --- | --- | --- | --- |
+| $Q$ | Bestellmenge | gesucht, bisher 500 Stück | `menge` |
+| $D$ | Jahresbedarf | 12 000 Stück | `bedarf` |
+| $K_B$ | Kosten pro Bestellung | 50 € | `kosten_bestellung` |
+| $k_L$ | Lagerkostensatz | 1.20 € pro Stück und Jahr | `kostensatz_lager` |
+| $K(Q)$ | Gesamtkosten pro Jahr | in € | `gesamtkosten()` |
+
+Große Buchstaben $K$ stehen für Kostenbeträge in €, kleine Buchstaben $k$ für
+Kostensätze pro Stück und Jahr.
+
+Zuerst legen wir die bekannten Größen fest. Im Code verwenden wir statt der
+Formelzeichen aussagekräftige Namen, die letzte Spalte der Tabelle zeigt die
+Zuordnung.
 
 ```{code-cell} python
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.style as style
-style.use('seaborn-v0_8')
 
-np.random.seed(42)
-
-# --- Bekannte Größen und wahrer Parameterwert ---
-# Variablennamen entsprechen der mathematischen Notation im Text
-T_0         = 100.0  # Starttemperatur T_0 in °C
-T_inf       =  20.0  # Umgebungstemperatur T_inf (T_∞) in °C
-lambda_wahr =   0.05 # wahre Abkühlkonstante in 1/s (im echten Experiment unbekannt)
-
-# --- Messzeitpunkte und simulierte Sensordaten ---
-# Sensor misst alle 5 Sekunden über 2 Minuten: 24 Messpunkte
-t_mess = np.arange(0, 120, 5)
-
-# Modellwerte laut Physik, dann Messrauschen addieren
-T_wahr = T_inf + (T_0 - T_inf) * np.exp(-lambda_wahr * t_mess)
-T_mess = T_wahr + np.random.normal(0, 2.0, len(t_mess))
-
-# --- Messdaten visualisieren ---
-fig, ax = plt.subplots()
-ax.scatter(t_mess, T_mess, label='Messwerte (Sensor)')
-ax.set_xlabel('Zeit in s')
-ax.set_ylabel('Temperatur in °C')
-ax.set_title('Abkühlkurve eines Aluminiumteils')
-ax.legend()
-plt.show()
+# Jahresbedarf D in Stück
+bedarf = 12000
+# Kosten K_B pro Bestellung in €
+kosten_bestellung = 50
+# Lagerkostensatz k_L in € pro Stück und Jahr
+kostensatz_lager = 1.2
 ```
 
-Wir sehen einen abfallenden Verlauf, der dem Modell entspricht. Jetzt brauchen
-wir ein Maß dafür, wie gut ein bestimmter Parameterwert $\lambda$ zu diesen Daten
-passt. Als Maß verwenden wir den **mittleren quadratischen Fehler** (englisch:
-mean squared error, kurz **MSE**):
-
-$$K(\lambda) = \frac{1}{n} \sum_{i=1}^{n} \bigl(T_{\text{mess},i} - T(t_i,\,\lambda)\bigr)^2$$
-
-Die Funktion $K(\lambda)$ heißt **Kostenfunktion**. Je kleiner $K$, desto besser
-passt das Modell. Wir implementieren sie und berechnen $K$ für viele mögliche
-$\lambda$-Werte.
+Die Gesamtkosten schreiben wir als Funktion der Bestellmenge.
 
 ```{code-cell} python
-# --- Modellfunktion mit expliziten Parametern ---
-def modell(t, lam, T_inf, T_0):
-    """Abkühlmodell: T(t) = T_inf + (T_0 - T_inf) * exp(-lam * t)."""
-    return T_inf + (T_0 - T_inf) * np.exp(-lam * t)
-
-# --- Kostenfunktion: einstellig, weil GD nur lam optimiert ---
-# T_inf, T_0, t_mess und T_mess sind für dieses Problem bekannte Konstanten.
-# Die Wrapper-Funktion kosten(lam) friert sie ein, damit GD nur lam variiert.
-def kosten(lam):
-    """MSE zwischen Modell und Messdaten für den Parameter lam.
-    Einstellig, damit der GD-Algorithmus sie direkt aufrufen kann."""
-    T_vorhergesagt = modell(t_mess, lam, T_inf, T_0)
-    # Quadrierte Abweichung für jeden Messpunkt, dann Mittelwert
-    return np.mean((T_mess - T_vorhergesagt)**2)
-
-# --- Kostenfunktion für 300 lambda-Werte im Bereich [0.01, 0.12] berechnen ---
-lambda_werte = np.linspace(0.01, 0.12, 300)
-kosten_werte = []
-for lam in lambda_werte:
-   kosten_werte.append(kosten(lam))
-
-# --- Kostenfunktion plotten: das Minimum ist direkt sichtbar ---
-fig, ax = plt.subplots()
-ax.plot(lambda_werte, kosten_werte)
-ax.set_xlabel('λ in 1/s')
-ax.set_ylabel('K(λ) in °C²')
-ax.set_title('Kostenfunktion über dem Parameterraum')
-ax.grid(True)
-plt.show()
+def gesamtkosten(menge):
+    """Jährliche Kosten K(Q) in € für die Bestellmenge Q = menge."""
+    bestellkosten = bedarf / menge * kosten_bestellung
+    lagerkosten = menge / 2 * kostensatz_lager
+    return bestellkosten + lagerkosten
 ```
 
-Die Kostenfunktion hat ein klares Minimum. Der $\lambda$-Wert an dieser Stelle
-ist unsere beste Schätzung. Die naheliegende Strategie wäre, einfach alle
-$\lambda$-Werte auf einem feinen Gitter auszuprobieren. Bei einem einzigen
-Parameter ist das noch machbar. Bei zwei oder mehr Parametern explodiert die
-Rechenzeit: schon bei zehn Parametern mit je 100 Gitterpunkten sind das
-$100^{10}$ Auswertungen. Wir brauchen eine gezieltere Suchmethode.
-
-```{admonition} Mini-Übung
-:class: tip
-1. Was würde $K(\lambda) = 0$ bedeuten? Kann dieser Wert bei echten Messdaten
-   mit Sensorrauschen auftreten? Antworten Sie ohne Code.
-2. Berechnen Sie $K(0.02)$, $K(0.05)$ und $K(0.10)$. Welcher Wert ist am
-   kleinsten? Was schlussfolgern Sie über die Lage des Minimums?
-3. Warum nimmt $K(\lambda)$ für $\lambda \to 0$ große Werte an?
-   Begründen Sie physikalisch in einem Satz, ohne Code auszuführen.
-```
+Wir vergleichen die bisherige Bestellmenge von 500 Stück mit der halben, der
+doppelten und der vierfachen Menge.
 
 ```{code-cell} python
-# Code-Zelle
+# Gesamtkosten für einige Bestellmengen
+for menge in [250, 500, 1000, 2000]:
+    kosten = gesamtkosten(menge)
+    print(f'Bestellmenge {menge:4d} Stück: {kosten:7.2f} € pro Jahr')
 ```
 
-````{admonition} Lösung
-:class: tip
-:class: dropdown
-Zu Frage 1: $K = 0$ würde bedeuten, dass das Modell jeden einzelnen Messwert
-exakt trifft. Bei Sensorrauschen ist das mit einem glatten parametrischen Modell
-nicht möglich. Der verbleibende Minimalwert entspricht ungefähr der Varianz des
-Messrauschens.
-
-Zu Frage 2:
-```python
-print(f"K(0.02) = {kosten(0.02):.2f} °C²")
-print(f"K(0.05) = {kosten(0.05):.2f} °C²")
-print(f"K(0.10) = {kosten(0.10):.2f} °C²")
-```
-
-$K(0.05)$ ist am kleinsten. Das Minimum liegt also nahe bei
-$\lambda = 0.05\,\text{1/s}$, dem wahren Wert, der zur Datenerzeugung verwendet
-wurde.
-
-Zu Frage 3: Bei $\lambda \to 0$ kühlt das Modell kaum ab und sagt für große
-Zeiten noch hohe Temperaturen voraus, während die Messwerte bereits auf $T_\infty$
-abgefallen sind. Die Abweichungen und damit $K$ werden groß.
-````
-
-## Gradient Descent: dem Gefälle der Kostenfunktion folgen
-
-Wir suchen das Minimum von $K(\lambda)$, ohne alle Werte auszuprobieren. Die
-Idee: Wenn wir am aktuellen Punkt die Steigung von $K$ kennen, wissen wir, in
-welche Richtung $K$ abnimmt. Wir machen einen kleinen Schritt in genau diese
-Richtung und wiederholen das Vorgehen.
-
-Die Steigung berechnen wir mit der zentralen Differenz aus Kapitel 7. Der
-**Gradient-Descent-Algorithmus** lautet damit:
-
-$$\lambda_\text{neu} = \lambda_\text{alt} - \alpha \cdot K'(\lambda_\text{alt})$$
-
-Das Minus sorgt dafür, dass wir entgegen dem Gradienten gehen, also bergab. Der
-Parameter $\alpha > 0$ heißt **Lernrate** und bestimmt die Schrittgröße.
+Bisher zahlt der Betrieb 1500 € im Jahr. Mit 1000 Stück pro Bestellung
+wären es nur 1200 €, mit 2000 Stück aber wieder 1500 €. Das Minimum liegt
+also irgendwo dazwischen. *Wo genau?* Um das zu sehen, werten wir die Funktion
+für 400 Bestellmengen zwischen 100 und 4000 Stück aus. `gesamtkosten()`
+enthält nur Grundrechenarten, und die führt NumPy elementweise aus. Übergeben
+wir ein Array von Bestellmengen, erhalten wir deshalb ein Array von Kosten
+zurück.
 
 ```{code-cell} python
-# --- Numerische Ableitung der Kostenfunktion ---
-# Zentrale Differenz aus Kapitel 7, hier auf die Kostenfunktion angewandt
-def ableitung_kosten(lam, dx=1e-6):
-    """Ableitung K'(lam), berechnet mit der zentralen Differenz."""
-    return (kosten(lam + dx) - kosten(lam - dx)) / (2 * dx)
-
-# --- Gradient-Descent-Algorithmus ---
-lam_aktuell   = 0.01   # Startwert: bewusst weit vom Minimum entfernt
-alpha         = 1e-8   # Lernrate: muss zur Skala der Kostenfunktion passen
-n_iterationen = 1000   # feste Anzahl von Schritten
-
-kosten_verlauf = []    # Kostenwert nach jedem Schritt speichern
-
-for i in range(n_iterationen):
-    # Kostenwert vor dem Schritt festhalten
-    kosten_verlauf.append(kosten(lam_aktuell))
-    # Ableitung am aktuellen Punkt: zeigt die Richtung des stärksten Anstiegs
-    grad = ableitung_kosten(lam_aktuell)
-    # Schritt entgegen dem Gradienten: bergab auf der Kostenfunktion
-    lam_aktuell = lam_aktuell - alpha * grad
-
-print(f"Geschätztes λ:  {lam_aktuell:.5f} 1/s")
-print(f"Wahrer Wert λ:  {lambda_wahr:.5f} 1/s")
-print(f"MSE am Ende:    {kosten(lam_aktuell):.3f} °C²")
+# 400 Bestellmengen von 100 bis 4000 Stück
+menge_werte = np.linspace(100, 4000, 400)
+kosten_werte = gesamtkosten(menge_werte)
 ```
 
-Der Algorithmus findet einen Wert nahe am wahren $\lambda$. Die kleine Abweichung
-entsteht durch das Sensorrauschen: mit verrauschten Daten ist die beste Schätzung
-nicht identisch mit dem wahren Parameter.
-
-```{admonition} Mini-Übung
-:class: tip
-1. In welche Richtung ändert sich $\lambda$, wenn $K'(\lambda) > 0$?
-   Begründen Sie anhand der Update-Formel, ohne Code auszuführen.
-2. Setzen Sie `alpha = 1e-4` (1000-mal größer als im Beispiel) und
-   starten Sie den Algorithmus neu. Was beobachten Sie?
-3. Setzen Sie `alpha = 1e-10` (sehr klein) und starten Sie neu.
-   Was beobachten Sie, und warum ist dieses Verhalten ein Problem?
-```
+Das Diagramm zeigt die Gesamtkosten über der Bestellmenge. Den Punkt der
+bisherigen Bestellmenge heben wir hervor.
 
 ```{code-cell} python
-# Code-Zelle
-```
-
-````{admonition} Lösung
-:class: tip
-:class: dropdown
-Zu Frage 1: Wenn $K'(\lambda) > 0$, ist der Term $\alpha \cdot K'(\lambda) > 0$
-und damit $\lambda_\text{neu} < \lambda_\text{alt}$. $\lambda$ nimmt also ab.
-Das ist korrekt: ein positiver Gradient zeigt nach rechts, das Minimum liegt
-also links vom aktuellen Punkt.
-
-Zu Frage 2:
-
-```python
-# Frage 2: zu große Lernrate
-lam_test = 0.01
-for i in range(1000):
-    grad     = ableitung_kosten(lam_test)
-    lam_test = lam_test - 1e-4 * grad
-print(f"Zu groß  (alpha=1e-4):  λ = {lam_test:.3f} 1/s")
-```
-
-Bei zu großer Lernrate überspringt der Algorithmus das Minimum und
-springt auf die andere Seite. Dort ist der Gradient entgegengesetzt und der
-nächste Schritt überspringt es erneut. Der ausgegebene $\lambda$-Wert ist
-unbrauchbar oder sogar negativ.
-
-Zu Frage 3: 
-
-```python
-# Frage 3: zu kleine Lernrate
-lam_test = 0.01
-for i in range(1000):
-    grad     = ableitung_kosten(lam_test)
-    lam_test = lam_test - 1e-10 * grad
-print(f"Zu klein (alpha=1e-10): λ = {lam_test:.5f} 1/s")
-```
-
-Die Schritte sind so winzig, dass der Algorithmus nach 1000 Iterationen kaum vom
-Startwert wegkommt. Er würde konvergieren, benötigt aber viele Millionen
-Schritte. Die Lernrate muss zur Skala der Kostenfunktion passen.
-````
-
-## Lernrate und Konvergenz
-
-Wir haben die Kostenwerte in `kosten_verlauf` nach jedem Schritt gespeichert.
-Diese **Konvergenzkurve** zeigt, wie sich der Algorithmus dem Minimum nähert.
-
-```{code-cell} python
-# --- Konvergenzkurve: Kostenwert über alle Iterationen ---
-fig, ax = plt.subplots()
-ax.plot(kosten_verlauf)
-ax.set_xlabel('Iteration')
-ax.set_ylabel('K(λ) in °C²')
-ax.set_title('Konvergenz des Gradient-Descent-Algorithmus')
-ax.grid(True)
-plt.show()
-
-print(f"Kostenwert zu Beginn: {kosten_verlauf[0]:.1f} °C²")
-print(f"Kostenwert am Ende:   {kosten_verlauf[-1]:.1f} °C²")
-```
-
-Der Kostenwert fällt zunächst schnell und flacht dann ab. Das Abflachen zeigt,
-dass der Gradient in der Nähe des Minimums klein wird und die Schritte immer
-kürzer werden. Das Plateau ist das Minimum der Kostenfunktion.
-
-Eine sinnvolle Abbruchbedingung lautet: Stopp, wenn sich $\lambda$ kaum noch
-ändert, also $|\lambda_\text{neu} - \lambda_\text{alt}| < \varepsilon$ für ein
-kleines $\varepsilon$. In der Praxis kombiniert man das mit einer maximalen
-Iterationszahl als Sicherheitsgrenze gegen Endlosschleifen.
-
-```{admonition} Mini-Übung
-:class: tip
-1. Lesen Sie aus dem Konvergenzplot ab: nach ungefähr wie vielen Iterationen
-   ist der Kostenwert auf die Hälfte des Startwerts gesunken? Schätzen Sie
-   ab, ohne zu rechnen.
-2. Starten Sie die GD-Schleife von `lam_aktuell = 0.09` (rechts vom Minimum) und
-   zeichnen Sie die Konvergenzkurve. Konvergiert der Algorithmus zum selben
-   Ergebnis?
-3. Was würde der Algorithmus tun, wenn der Startwert bereits exakt dem Minimum
-   entspräche? Begründen Sie ohne Code.
-```
-
-```{code-cell} python
-# Code-Zelle
-```
-
-````{admonition} Lösung
-:class: tip
-:class: dropdown
-Zu Frage 1: Die Halbierung des Startkostenwerts ist im Plot schwer ablesbar,
-es könnten 4-5 Iterationen sein.
-
-Zu Frage 2:
-
-```python
-# Frage 2: Start von der rechten Seite des Minimums
-lam_rechts       = 0.09
-kosten_verlauf_r = []
-
-for i in range(n_iterationen):
-    kosten_verlauf_r.append(kosten(lam_rechts))
-    grad       = ableitung_kosten(lam_rechts)
-    lam_rechts = lam_rechts - alpha * grad
-
-fig, ax = plt.subplots()
-ax.plot(kosten_verlauf,   label='Start λ = 0.01')
-ax.plot(kosten_verlauf_r, label='Start λ = 0.09')
-ax.set_xlabel('Iteration')
-ax.set_ylabel('K(λ) in °C²')
-ax.set_title('Konvergenz von zwei verschiedenen Startwerten')
+# Diagramm: Gesamtkosten über der Bestellmenge
+fig, ax = plt.subplots(figsize=(7, 4))
+ax.plot(menge_werte, kosten_werte)
+ax.plot(500, gesamtkosten(500), marker='o', color='red', label='bisher')
+ax.set_xlabel('Bestellmenge in Stück')
+ax.set_ylabel('Gesamtkosten in € pro Jahr')
+ax.set_title('Kosten für Bestellung und Lagerung')
+ax.set_ylim(0, 4000)
 ax.legend()
 ax.grid(True)
 plt.show()
-
-print(f"Endwert (Start 0.01): λ = {lam_aktuell:.5f} 1/s")
-print(f"Endwert (Start 0.09): λ = {lam_rechts:.5f} 1/s")
 ```
 
-Ja. Von rechts ($\lambda = 0.09$) ist der Gradient positiv, der
-Schritt also negativ, und $\lambda$ nimmt ab in Richtung Minimum. Beide
-Startwerte konvergieren zum selben Ergebnis.
+Links fällt die Kurve steil ab, rechts steigt sie langsam an. Dazwischen liegt
+ein flaches Tal mit dem Minimum bei etwa 1000 Stück und 1200 €. Bei kleinen
+Bestellmengen treiben die vielen Bestellungen die Kosten hoch, bei großen das
+volle Lager.
 
-Zu Frage 3: Am Minimum ist $K'(\lambda) \approx 0$, der Schritt also null.
-Der Algorithmus verändert $\lambda$ nicht mehr und bleibt sofort stehen.
+```{admonition} Was ist ... eine Kostenfunktion?
+:class: note
+Eine Funktion, deren kleinster Wert die beste Lösung liefert, heißt in der
+Optimierung **Kostenfunktion**. Die Stelle, an der sie ihr Minimum annimmt,
+heißt **Minimalstelle**. Hier misst die Kostenfunktion tatsächlich Euro. Das
+muss aber nicht so sein. Kostenfunktion heißt jede Funktion, die wir minimieren
+wollen, zum Beispiel die Abweichung zwischen einem Modell und Messdaten
+(Kapitel 8.2) oder der Transportaufwand in Lkw-km pro Woche (Kapitel 8.3).
+Im maschinellen Lernen heißt die Kostenfunktion **Verlustfunktion** (englisch
+loss function). Aus der Betriebswirtschaft kennen Sie den Begriff enger,
+nämlich für die Kosten in Abhängigkeit von der Produktionsmenge.
+```
+
+```{admonition} Mini-Übung (✩)
+:class: tip
+1. Beantworten Sie ohne Code: Warum steigen die Kosten bei sehr kleinen
+   Bestellmengen so steil an, bei großen dagegen nur langsam?
+2. Berechnen Sie für eine Bestellmenge von 1000 Stück die Bestellkosten und die
+   Lagerkosten einzeln. Was fällt Ihnen auf?
+3. Beantworten Sie ohne Code: Der Lagerkostensatz steigt auf 2.40 € pro Stück
+   und Jahr. Liegt die günstigste Bestellmenge dann bei mehr oder bei weniger
+   als 1000 Stück?
+```
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+1. Die Bestellkosten sind proportional zu $1 / Q$. Halbieren wir die
+   Bestellmenge, verdoppelt sich die Zahl der Bestellungen und damit die
+   Bestellkosten. Für $Q$ gegen null wachsen sie unbegrenzt. Die Lagerkosten
+   wachsen dagegen nur linear, um 600 € pro 1000 Stück.
+2. Wir berechnen beide Anteile wie in `gesamtkosten()`:
+
+   ```python
+   # Teilaufgabe 2: Anteile bei 1000 Stück
+   menge = 1000
+   bestellkosten = bedarf / menge * kosten_bestellung
+   lagerkosten = menge / 2 * kostensatz_lager
+   print(f'Bestellkosten: {bestellkosten:.2f} €')
+   print(f'Lagerkosten:   {lagerkosten:.2f} €')
+   ```
+
+   Beide Anteile betragen 600 €. Am Minimum sind Bestell- und Lagerkosten
+   bei diesem Modell gleich groß.
+3. Mit dem doppelten Lagerkostensatz verdoppeln sich die Lagerkosten, der
+   rechte Ast der Kurve steigt doppelt so steil an. Das Minimum rückt nach
+   links, die günstigste Bestellmenge liegt also unter 1000 Stück. Der Betrieb
+   bestellt öfter und hält weniger auf Lager.
+````
+
+## In welche Richtung geht es bergab?
+
+Für das Diagramm haben wir die Funktion 400-mal ausgewertet und kennen das
+Minimum trotzdem nur ungefähr. Hängen die Kosten von mehreren Größen ab, wächst
+die Zahl der Auswertungen sehr schnell. Bei zwei Größen mit je 400 Werten sind
+es schon 160 000, bei drei Größen 64 Millionen. Stellen wir uns deshalb vor,
+wir kennen nur den Wert an der bisherigen Bestellmenge und wollen von dort aus
+bergab gehen, wie bei einer Wanderung im Nebel.
+
+Die Richtung verrät die Steigung, also die Ableitung $K'(Q)$. Ist sie negativ,
+sinken die Kosten mit wachsender Bestellmenge, und wir sollten mehr bestellen.
+Ist sie positiv, sollten wir weniger bestellen. Das **Gradientenverfahren**
+macht daraus eine Rechenvorschrift:
+
+$$Q_\text{neu} = Q - \alpha \cdot K'(Q).$$
+
+Das Minuszeichen sorgt dafür, dass wir gegen die Steigung gehen, also bergab.
+Die Zahl $\alpha > 0$ heißt **Lernrate**. Sie legt fest, wie weit wir im
+Verhältnis zur Steigung gehen. Wo die Kurve steil ist, machen wir große
+Schritte. Nahe am Minimum ist die Steigung fast null, und die Schritte werden
+von selbst klein. Jeden Durchgang dieser Rechnung nennen wir eine
+**Iteration**. Der Name "Gradient" kommt aus Kapitel 8.3, wo die Kosten von
+zwei Größen abhängen. Bei einer einzigen Größe ist der Gradient einfach die
+Ableitung.
+
+Die Ableitung berechnen wir mit dem zentralen Differenzenquotienten aus Kapitel
+7.2. Statt der Zeit `t` heißt die Variable hier allgemein `stelle`. Wie in
+Kapitel 7.2 angekündigt, verwenden wir die Schrittweite $10^{-6}$.
+
+```{code-cell} python
+def zentral(funktion, stelle, dx):
+    """Zentraler Differenzenquotient von funktion an der Stelle stelle."""
+    return (funktion(stelle + dx) - funktion(stelle - dx)) / (2 * dx)
+```
+
+Bei der bisherigen Bestellmenge von 500 Stück ergibt sich folgende Steigung.
+
+```{code-cell} python
+# Steigung der Kostenfunktion bei der bisherigen Bestellmenge
+steigung = zentral(gesamtkosten, 500, 1e-6)
+print(f'Steigung bei 500 Stück: {steigung:.4f} € pro Stück')
+```
+
+Die Steigung ist negativ. Bestellt der Betrieb ein Kugellager mehr auf einmal,
+sinken die jährlichen Kosten um ungefähr 1.80 €. Wir sollten also nach
+rechts gehen. Die Faustregel für die Schrittweite aus Kapitel 7.2 gilt für
+Größen um 1. Die Bestellmenge liegt um 1000, die beste Schrittweite wäre
+deshalb größer. Der Fehler mit $10^{-6}$ liegt aber unter $10^{-7}$ € pro
+Stück und spielt keine Rolle.
+
+Wir machen einen Schritt mit der Lernrate 200.
+
+```{code-cell} python
+# Ein Schritt des Gradientenverfahrens
+lernrate = 200
+menge = 500
+menge_neu = menge - lernrate * steigung
+
+# Kosten vor und nach dem Schritt
+kosten_alt = gesamtkosten(menge)
+kosten_neu = gesamtkosten(menge_neu)
+print(f'Neue Bestellmenge: {menge_neu:.1f} Stück')
+print(f'Kosten vorher: {kosten_alt:.2f} €, nachher: {kosten_neu:.2f} €')
+```
+
+Ein einziger Schritt bringt uns von 500 auf 860 Stück und senkt die Kosten von
+1500 € auf 1213.67 €. Die Lernrate 200 wirkt groß, ist es aber nicht.
+Das Produkt $\alpha \cdot K'(Q)$ muss eine Stückzahl ergeben, die Steigung hat
+aber die Einheit € pro Stück. Wie groß eine passende Lernrate ist, hängt deshalb
+von den Einheiten der Aufgabe ab.
+
+Jetzt wiederholen wir den Schritt zehnmal in einer Schleife. Jede neue
+Bestellmenge hängen wir mit `append()` an die Liste `verlauf` an.
+
+```{code-cell} python
+# Zehn Iterationen des Gradientenverfahrens, Start bei 500 Stück
+menge = 500
+verlauf = [menge]
+for k in range(10):
+    steigung = zentral(gesamtkosten, menge, 1e-6)
+    menge = menge - lernrate * steigung
+    verlauf.append(menge)
+
+print('Bestellmengen:', np.round(verlauf, 1))
+```
+
+Die Bestellmenge wächst von Iteration zu Iteration, aber immer langsamer: erst
+um 360 Stück, dann um 42, zuletzt nur noch um 3. Das liegt nicht an der
+Lernrate, die bleibt bei 200. Die Steigung wird kleiner, je näher wir dem
+Minimum kommen. Nach zehn Iterationen stehen wir bei 991 Stück, kurz vor dem
+Minimum.
+
+```{admonition} Mini-Übung (✩)
+:class: tip
+1. Beantworten Sie zuerst ohne Code: Wir starten bei 2000 Stück. Welches
+   Vorzeichen hat die Steigung dort, und in welche Richtung geht der erste
+   Schritt? Prüfen Sie Ihre Antwort, indem Sie die zehn Iterationen von 2000
+   Stück aus wiederholen.
+2. Für dieses einfache Modell kennen wir die Ableitung als Formel:
+   $K'(Q) = -D \cdot K_B / Q^2 + k_L / 2$. Berechnen Sie sie bei 500 Stück und
+   vergleichen Sie mit `zentral()`.
+3. Beantworten Sie ohne Code: Warum kann das Gradientenverfahren über das
+   Minimum hinausspringen, obwohl die Schritte nahe am Minimum klein werden?
+```
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+1. Rechts vom Minimum steigen die Kosten an, die Steigung ist also positiv. Der
+   erste Schritt geht nach links, zu kleineren Bestellmengen.
+
+   ```python
+   # Teilaufgabe 1: Start bei 2000 Stück
+   menge = 2000
+   verlauf = [menge]
+   for k in range(10):
+       steigung = zentral(gesamtkosten, menge, 1e-6)
+       menge = menge - lernrate * steigung
+       verlauf.append(menge)
+
+   print('Bestellmengen:', np.round(verlauf, 1))
+   ```
+
+   Die Bestellmenge sinkt von 2000 auf 1910 Stück und nach zehn Iterationen
+   auf 1272 Stück. Von rechts kommen wir viel langsamer voran als von links,
+   weil die Kurve rechts vom Minimum flach ist.
+2. Wir setzen die Zahlen in die Formel ein:
+
+   ```python
+   # Teilaufgabe 2: exakte und numerische Ableitung bei 500 Stück
+   steigung_exakt = -bedarf * kosten_bestellung / 500**2 + kostensatz_lager / 2
+   steigung_numerisch = zentral(gesamtkosten, 500, 1e-6)
+   abweichung = abs(steigung_exakt - steigung_numerisch)
+   print(f'exakt:      {steigung_exakt:.10f} € pro Stück')
+   print(f'numerisch:  {steigung_numerisch:.10f} € pro Stück')
+   print(f'Abweichung: {abweichung:.1e} € pro Stück')
+   ```
+
+   Beide Werte betragen $-1.8$ € pro Stück und weichen nur um etwa
+   $6 \cdot 10^{-8}$ € pro Stück voneinander ab. Für das Gradientenverfahren
+   ist das mehr als genau genug.
+3. Die Länge eines Schritts ist das Produkt aus Lernrate und Steigung. Ist
+   die Lernrate zu groß, wird schon eine kleine Steigung zu einem großen
+   Schritt, und wir landen auf der anderen Seite des Tals. Das untersuchen
+   wir im nächsten Abschnitt.
+````
+
+## Wann sind wir am Ziel?
+
+Bisher haben wir eine feste Zahl von Iterationen vorgegeben. Besser ist es,
+aufzuhören, sobald wir am Minimum angekommen sind. Dort ist die Steigung null.
+Exakt null wird sie in der Rechnung aber nie, deshalb geben wir eine kleine
+**Toleranz** vor. Ist der Betrag der Steigung kleiner als die Toleranz, brechen
+wir ab. Eine solche Bedingung heißt **Abbruchkriterium**. Die Steigung hat die
+Einheit € pro Stück, als Toleranz wählen wir $10^{-4}$ € pro Stück.
+
+Den Betrag berechnet `abs()`. Der Befehl `break` beendet eine `for`-Schleife
+sofort, auch wenn sie noch nicht alle Durchläufe gemacht hat. Die Zahl der
+Durchläufe begrenzen wir trotzdem mit `max_iterationen`. So endet die Rechnung
+auch dann, wenn das Abbruchkriterium nie erfüllt wird. Das ganze Verfahren
+verpacken wir in eine Funktion.
+
+```{code-cell} python
+def gradientenverfahren(funktion, start, lernrate, toleranz, max_iterationen):
+    """Sucht ein Minimum von funktion, Start bei start.
+
+    Gibt alle besuchten Stellen als Array zurück.
+    """
+    stelle = start
+    verlauf = [stelle]
+    for k in range(max_iterationen):
+        steigung = zentral(funktion, stelle, 1e-6)
+        # Abbruchkriterium: Steigung fast null
+        if abs(steigung) < toleranz:
+            break
+        stelle = stelle - lernrate * steigung
+        verlauf.append(stelle)
+    return np.array(verlauf)
+```
+
+Wir starten wieder bei 500 Stück mit der Lernrate 200. Die Zahl der Iterationen
+ist um eins kleiner als die Länge des Verlaufs, denn der erste Eintrag ist der
+Startwert.
+
+```{code-cell} python
+# Gradientenverfahren mit Abbruchkriterium
+verlauf = gradientenverfahren(gesamtkosten, 500, 200, 1e-4, 100)
+
+# Ergebnis: Zahl der Iterationen, Bestellmenge und Kosten am Ende
+anzahl = len(verlauf) - 1
+menge_optimal = verlauf[-1]
+kosten_optimal = gesamtkosten(menge_optimal)
+print(f'{anzahl} Iterationen')
+print(f'Bestellmenge: {menge_optimal:.2f} Stück')
+print(f'Gesamtkosten: {kosten_optimal:.2f} € pro Jahr')
+```
+
+Nach 28 Iterationen ist die Steigung kleiner als die Toleranz. Das Verfahren
+findet die Bestellmenge 999.94 Stück, gerundet also 1000 Stück, mit Kosten von
+1200 € pro Jahr. Bestellt der Betrieb künftig jeden Monat 1000 Kugellager
+statt alle zwei Wochen 500, spart er 300 € im Jahr.
+
+```{admonition} Aus der Betriebswirtschaft: Andlersche Losgrößenformel
+:class: note
+Für dieses einfache Modell lässt sich die Minimalstelle auch exakt berechnen.
+Die **Andlersche Losgrößenformel** lautet
+$Q^* = \sqrt{2 \cdot D \cdot K_B / k_L}$. Mit unseren Zahlen ergibt sie
+$\sqrt{2 \cdot 12000 \cdot 50 / 1.2} = 1000$ Stück. Sobald das Modell genauer
+wird, zum Beispiel mit Mengenrabatten oder einem begrenzten Lager, gibt es
+solche Formeln meist nicht mehr. Das Gradientenverfahren braucht dagegen nur
+die Kostenfunktion als Python-Funktion.
+```
+
+*Welche Lernrate ist die richtige?* Wir vergleichen vier Lernraten und zeichnen
+die Bestellmenge über der Iteration. Ein solches Diagramm zeigt, ob und wie
+schnell sich das Verfahren dem Minimum nähert. Dieses Verhalten heißt
+**Konvergenz**. Die waagerechte Linie bei 1000 Stück zeichnet `ax.axhline()`.
+
+```{code-cell} python
+# Diagramm: Bestellmenge über der Iteration für vier Lernraten
+fig, ax = plt.subplots(figsize=(7, 4))
+for lernrate in [50, 200, 800, 2000]:
+    verlauf = gradientenverfahren(gesamtkosten, 500, lernrate, 1e-4, 100)
+    ax.plot(verlauf, marker='.', label=f'Lernrate {lernrate}')
+ax.axhline(1000, color='gray', linestyle='--')
+ax.set_xlim(0, 30)
+ax.set_xlabel('Iteration')
+ax.set_ylabel('Bestellmenge in Stück')
+ax.set_title('Konvergenz des Gradientenverfahrens')
+ax.legend()
+ax.grid(True)
+plt.show()
+```
+
+Die vier Lernraten zeigen typisches Verhalten.
+
+* Mit der Lernrate 50 kriecht die Bestellmenge auf das Minimum zu. Nach 100
+  Iterationen ist das Abbruchkriterium noch immer nicht erfüllt.
+* Mit der Lernrate 200 nähert sie sich gleichmäßig von unten.
+* Mit der Lernrate 800 springt sie im ersten Schritt weit über das Minimum
+  hinaus, auf 1940 Stück. Weil die Kurve rechts flach ist, kommt sie trotzdem
+  schnell zurück und ist schon nach sieben Iterationen am Ziel.
+* Mit der Lernrate 2000 springt sie bei jedem Schritt über das Tal hinweg und
+  pendelt am Ende endlos zwischen 815 und 1421 Stück. Das Verfahren
+  **konvergiert nicht**.
+
+Eine Lernrate, die immer passt, gibt es nicht. Ist sie zu klein, braucht das
+Verfahren viele Iterationen. Ist sie zu groß, gerät es ins Springen. In der
+Praxis probieren wir einige Lernraten aus und schauen uns das
+Konvergenzdiagramm an.
+
+```{admonition} Mini-Übung (✩)
+:class: tip
+1. Beantworten Sie ohne Code: Wo landet der erste Schritt mit der Lernrate 2000,
+   wenn wir bei 500 Stück starten? Die Steigung dort kennen Sie.
+2. Rufen Sie `gradientenverfahren()` mit den Lernraten 400 und 1600 auf, Start
+   bei 500 Stück. Wie viele Iterationen braucht das Verfahren jeweils?
+3. Beantworten Sie ohne Code: Mit der Lernrate 2000 gibt `gradientenverfahren()`
+   trotzdem eine Bestellmenge zurück. Woran erkennen Sie am Rückgabewert, dass
+   das Ergebnis unbrauchbar ist?
+```
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+1. Die Steigung bei 500 Stück beträgt $-1.8$ € pro Stück. Der erste Schritt
+   führt also zu $500 - 2000 \cdot (-1.8) = 500 + 3600 = 4100$ Stück, weit
+   über das Minimum hinaus.
+2. Wir zählen die Iterationen wie oben:
+
+   ```python
+   # Teilaufgabe 2: Lernraten 400 und 1600
+   for lernrate in [400, 1600]:
+       verlauf = gradientenverfahren(gesamtkosten, 500, lernrate, 1e-4, 100)
+       anzahl = len(verlauf) - 1
+       print(f'Lernrate {lernrate}: {anzahl} Iterationen, '
+             f'Bestellmenge {verlauf[-1]:.2f} Stück')
+   ```
+
+   Mit der Lernrate 400 braucht das Verfahren 14 Iterationen, mit 1600 sind es
+   83. Die Lernrate 1600 konvergiert noch, springt aber lange hin und her. Die
+   schnellste der getesteten Lernraten ist 800.
+3. Das Verfahren hat alle `max_iterationen` Durchläufe gebraucht, die Länge des
+   Verlaufs ist also 101. Das Abbruchkriterium wurde nie erfüllt, die Steigung
+   an der letzten Stelle ist nicht nahe null. Den Rückgabewert dürfen wir dann
+   nicht als Minimum verwenden. Dasselbe gilt übrigens für die Lernrate 50,
+   auch wenn sie dem Minimum schon nahe gekommen ist.
 ````
 
 ## Zusammenfassung und Ausblick
 
-Die Kostenfunktion $K(\lambda)$ misst die Güte einer Parameterschätzung als
-mittleren quadratischen Fehler zwischen Modell und Messdaten. Ihr Minimum ist
-die beste Schätzung für den gesuchten Parameter. Gradient Descent findet dieses
-Minimum durch iterative kleine Schritte entgegen dem Gradienten. Die Ableitung
-berechnen wir mit der zentralen Differenz aus Kapitel 7, hier direkt als
-Werkzeug eingesetzt. Die Lernrate $\alpha$ bestimmt die Schrittgröße und muss
-sorgfältig gewählt werden: zu groß führt zu Divergenz, zu klein zu unnötig
-vielen Iterationen.
+Eine Kostenfunktion ordnet jedem Wert einer Größe einen Wert zu, den wir so
+klein wie möglich machen wollen, hier die jährlichen Kosten für Bestellung und
+Lagerung. Das Gradientenverfahren sucht ihr Minimum, ohne die Funktion überall
+auszuwerten. Es geht von einem Startwert aus schrittweise gegen die Steigung,
+nach der Vorschrift $Q_\text{neu} = Q - \alpha \cdot K'(Q)$. Die Steigung
+berechnen wir mit dem zentralen Differenzenquotienten aus Kapitel 7.2. Die
+Lernrate $\alpha$ bestimmt, ob das Verfahren langsam, schnell oder gar nicht
+konvergiert. Ein Abbruchkriterium beendet die Rechnung, sobald die Steigung
+fast null ist.
 
-In Abschnitt 8.3 erweitern wir diesen Ansatz auf zwei unbekannte Parameter.
-Sowohl $T_\infty$ als auch $\lambda$ werden dann gleichzeitig aus den Messdaten
-geschätzt. Das Prinzip bleibt identisch, der Gradient wird zum Vektor zweier
-partieller Ableitungen.
+In Kapitel 8.2 stellen Sie selbst eine Kostenfunktion auf, die misst, wie gut
+ein Modell zu Messdaten passt, und bestimmen mit `gradientenverfahren()` den
+Parameter, bei dem Modell und Messung am besten übereinstimmen. In Kapitel 8.3
+hängen die Kosten von zwei Größen gleichzeitig ab: Wir suchen den Standort
+eines Zentrallagers. Aus der Ableitung wird dann der Gradient.

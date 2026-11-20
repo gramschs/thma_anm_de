@@ -6,51 +6,119 @@ kernelspec:
 
 # 8.5 Übungen
 
-```{admonition} Warnung
-:class: warning
-Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+Diese Aufgaben sind für das Selbststudium zuhause gedacht und wiederholen den
+Stoff der Kapitel 8.1 bis 8.4. Rechnen Sie mit rund 90 Minuten
+Bearbeitungszeit. Führen Sie vor den Aufgaben die folgende Zelle aus. Sie
+enthält die Funktionen `zentral()` und `gradientenverfahren()` aus Kapitel 8.1
+sowie `gradient()` und `gradientenverfahren_2d()` aus Kapitel 8.3. Mehrere
+Aufgaben verwenden dieselben Namen, zum Beispiel `kosten`. Wenn Sie zu einer
+früheren Aufgabe zurückkehren, führen Sie deren Zellen deshalb noch einmal der
+Reihe nach aus. Denken Sie auch daran: Die Verfahren enden ebenfalls, wenn
+`max_iterationen` erreicht ist, und eine kleine Steigung allein beweist noch
+kein Minimum.
+
+Der Schwierigkeitsgrad steht im Titel jeder Aufgabe:
+
+* ✩ Verständnis: Code und Ausgaben vorhersagen und erklären (ca. 5 min)
+* ✩✩ Anwendung: eigenen Code schreiben und Ergebnisse interpretieren (ca. 10 min)
+* ✩✩✩ Mini-Projekt: mehrere Konzepte des Parts kombinieren (ca. 30 min)
+
+Die Zeiten sind reine Bearbeitungszeiten. Dazu kommt Zeit zum Lesen, zum
+Prüfen der Ergebnisse und für die Fehlersuche.
+
+```{code-cell} python
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Funktionen aus Kapitel 8.1
+def zentral(funktion, stelle, dx):
+    """Zentraler Differenzenquotient von funktion an der Stelle stelle."""
+    return (funktion(stelle + dx) - funktion(stelle - dx)) / (2 * dx)
+
+def gradientenverfahren(funktion, start, lernrate, toleranz, max_iterationen):
+    """Sucht ein Minimum von funktion, Start bei start.
+
+    Gibt alle besuchten Stellen als Array zurück.
+    """
+    stelle = start
+    verlauf = [stelle]
+    for k in range(max_iterationen):
+        steigung = zentral(funktion, stelle, 1e-6)
+        # Abbruchkriterium: Steigung fast null
+        if abs(steigung) < toleranz:
+            break
+        stelle = stelle - lernrate * steigung
+        verlauf.append(stelle)
+    return np.array(verlauf)
+
+# Funktionen aus Kapitel 8.3
+def gradient(funktion, stelle, dx):
+    """Gradient von funktion an der Stelle stelle = [x, y].
+
+    Jede partielle Ableitung mit dem zentralen Differenzenquotienten.
+    """
+    versatz_x = np.array([dx, 0.0])
+    versatz_y = np.array([0.0, dx])
+    ableitung_x = (funktion(stelle + versatz_x)
+                   - funktion(stelle - versatz_x)) / (2 * dx)
+    ableitung_y = (funktion(stelle + versatz_y)
+                   - funktion(stelle - versatz_y)) / (2 * dx)
+    return np.array([ableitung_x, ableitung_y])
+
+def gradientenverfahren_2d(funktion, start, lernrate, toleranz,
+                           max_iterationen):
+    """Sucht ein Minimum von funktion, Start bei start = [x, y].
+
+    Gibt alle besuchten Stellen als Array zurück, Zeile = [x, y].
+    """
+    stelle = start
+    verlauf = [stelle]
+    for k in range(max_iterationen):
+        steigung = gradient(funktion, stelle, 1e-6)
+        # Abbruchkriterium: Länge des Gradienten fast null
+        if np.linalg.norm(steigung) < toleranz:
+            break
+        stelle = stelle - lernrate * steigung
+        verlauf.append(stelle)
+    return np.array(verlauf)
 ```
 
-````{admonition} Übung 8.5 (✩)
+````{admonition} Aufgabe 8.1 (✩)
 :class: tip
-Gegeben ist der folgende Code, der Gradient Descent auf eine
-Abkühlkurve anwendet.
+Beim Fräsen hängen die Kosten pro Bauteil vom **Vorschub** ab, also davon, wie
+schnell sich das Werkzeug durch das Material bewegt. Ist der Vorschub klein,
+dauert die Bearbeitung lange. Ist er groß, nutzt sich das Werkzeug schnell ab.
+Vereinfacht beschreiben wir die Kosten in € pro Bauteil durch
+$K(v) = (v - 4)^2 + 10$ mit dem Vorschub $v$ in m/min. Das Modell gilt nur in
+der Nähe von $4\,\text{m/min}$, der Startwert $v = 0$ im Code dient nur zur
+Veranschaulichung des Verfahrens. Gegeben ist folgender Code:
 
 ```python
-import numpy as np
+def kosten(vorschub):
+    """Kosten in € pro Bauteil für den Vorschub in m/min."""
+    return (vorschub - 4)**2 + 10
 
-# Messdaten: sechs Temperaturwerte in °C
-t_mess = np.array([ 0,  10,  20,  30,  40,  50])
-T_mess = np.array([100, 72,  53,  40,  31,  25])
-T_0    = 100.0
-T_inf  =  20.0
-
-def modell(t, lam):
-    return T_inf + (T_0 - T_inf) * np.exp(-lam * t)
-
-def kosten(lam):
-    return np.mean((T_mess - modell(t_mess, lam))**2)
-
-def ableitung_kosten(lam, dx=1e-6):
-    return (kosten(lam + dx) - kosten(lam - dx)) / (2 * dx)
-
-lam_aktuell = 0.01
-alpha = 0.01
-
-for i in range(8):
-    grad = ableitung_kosten(lam_aktuell)
-    lam_aktuell = lam_aktuell + alpha * grad   # Zeile A
-    print(f"i={i+1}: lam = {lam_aktuell:.5f},  K = {kosten(lam_aktuell):.2f}")
+# Drei Schritte des Gradientenverfahrens für drei Lernraten
+for lernrate in [0.25, 0.5, 1.0]:
+    vorschub = 0.0
+    verlauf = [vorschub]
+    for k in range(3):
+        steigung = zentral(kosten, vorschub, 1e-6)
+        vorschub = vorschub - lernrate * steigung
+        verlauf.append(vorschub)
+    print(lernrate, np.round(verlauf, 2))
 ```
 
-1. Enthält der Code einen Fehler? Wenn ja: in welcher Zeile, und was
-   genau ist falsch? Antworten Sie ohne Code.
-2. Welches Vorzeichen hat `grad` in der ersten Iteration? Begründen Sie
-   anhand der Lage von `lam_aktuell = 0.01` relativ zum Minimum.
-3. Wird der Kostenwert `K` nach der ersten Iteration größer oder kleiner?
-   Begründen Sie mit den Ergebnissen aus Fragen 1 und 2.
-4. Korrigieren Sie Zeile A, führen Sie den Code aus und überprüfen Sie
-   Ihre Vorhersagen.
+Notieren Sie Ihre Vermutung in einer Markdown-Zelle, bevor Sie den Code
+ausführen.
+
+1. Bei welchem Vorschub sind die Kosten am kleinsten, und wie hoch sind sie
+   dort?
+2. Die Ableitung lautet $K'(v) = 2 \cdot (v - 4)$. Wie groß ist die Steigung
+   beim Start $v = 0$?
+3. Welche drei Vorschübe berechnet der Code für jede der drei Lernraten? Was
+   fällt Ihnen bei der Lernrate $1.0$ auf?
+4. Führen Sie den Code aus und überprüfen Sie Ihre Vorhersagen.
 ````
 
 ```{code-cell} python
@@ -61,84 +129,68 @@ for i in range(8):
 :class: tip
 :class: dropdown
 ```python
-import numpy as np
+def kosten(vorschub):
+    """Kosten in € pro Bauteil für den Vorschub in m/min."""
+    return (vorschub - 4)**2 + 10
 
-t_mess = np.array([ 0,  10,  20,  30,  40,  50])
-T_mess = np.array([100,  72,  53,  40,  31,  25])
-T_0   = 100.0
-T_inf =  20.0
+for lernrate in [0.25, 0.5, 1.0]:
+    vorschub = 0.0
+    verlauf = [vorschub]
+    for k in range(3):
+        steigung = zentral(kosten, vorschub, 1e-6)
+        vorschub = vorschub - lernrate * steigung
+        verlauf.append(vorschub)
+    print(lernrate, np.round(verlauf, 2))
+```
+Ausgabe:
 
-def modell(t, lam):
-    return T_inf + (T_0 - T_inf) * np.exp(-lam * t)
-
-def kosten(lam):
-    return np.mean((T_mess - modell(t_mess, lam))**2)
-
-def ableitung_kosten(lam, dx=1e-6):
-    return (kosten(lam + dx) - kosten(lam - dx)) / (2 * dx)
-
-lam_aktuell = 0.01
-alpha = 0.01
-
-# Korrigierte Zeile A: Minus statt Plus
-for i in range(8):
-    grad = ableitung_kosten(lam_aktuell)
-    lam_aktuell = lam_aktuell - alpha * grad
-    print(f"i={i+1}: lam = {lam_aktuell:.5f},  K = {kosten(lam_aktuell):.2f}")
+```text
+0.25 [0.  2.  3.  3.5]
+0.5 [0. 4. 4. 4.]
+1.0 [0. 8. 0. 8.]
 ```
 
-Zu Frage 1: Ja, Zeile A enthält einen Fehler. Der Update-Schritt lautet
-`lam_aktuell + alpha * grad` statt `lam_aktuell - alpha * grad`. Das Minus
-ist entscheidend: GD bewegt sich entgegen dem Gradienten, also bergab. Mit
-einem Plus bewegt sich der Algorithmus mit dem Gradienten, also bergauf.
-
-Zu Frage 2: Bei `lam = 0.01` liegt das Minimum rechts (bei ca. 0.05).
-Die Kostenfunktion fällt nach rechts, also ist $K'(0.01) < 0$ (`grad` ist
-negativ).
-
-Zu Frage 3: Mit dem falschen Plus-Zeichen und negativem `grad` wird
-`lam_aktuell` kleiner (bewegt sich nach links, weg vom Minimum). Der
-Kostenwert `K` nimmt zu.
+1. Der Ausdruck $(v - 4)^2$ ist nie negativ und wird bei $v = 4\,\text{m/min}$
+   null. Dort betragen die Kosten $10$ € pro Bauteil.
+2. Die Steigung beim Start ist $2 \cdot (0 - 4) = -8$ € pro (m/min). Sie ist
+   negativ, der erste Schritt geht also zu größeren Vorschüben.
+3. Mit der Lernrate $0.25$ ist der erste Schritt $0.25 \cdot 8 = 2$ lang. Jeder
+   weitere Schritt halbiert den Abstand zum Minimum: $2$, $3$, $3.5$. Mit
+   $0.5$ landet schon der erste Schritt genau bei $4$, danach ist die Steigung
+   null und der Vorschub bleibt stehen. Mit $1.0$ springt das Verfahren von $0$
+   auf $8$, genau so weit hinter das Minimum, wie es davor lag. Dort ist die
+   Steigung $+8$, und es springt zurück auf $0$. Bei dieser Parabel würde das
+   Verfahren endlos zwischen $0$ und $8$ pendeln und nie konvergieren.
 ````
 
-````{admonition} Übung 8.6 (✩✩)
+````{admonition} Aufgabe 8.2 (✩)
 :class: tip
-In einem Mikrobiologielabor wird das Wachstum einer Bakterienkultur gemessen.
-Das Modell lautet
-
-$$N(t) = N_0 \cdot e^{r \cdot t},$$
-
-wobei $N_0 = 100$ die bekannte Startpopulation (Zellen pro µL) und $r$ die
-unbekannte Wachstumsrate (in 1/h) ist.
+Eine Kommilitonin hat das Gradientenverfahren für die Bestellmenge aus
+Kapitel 8.1 abgetippt. Ihr Code lautet:
 
 ```python
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.style as style
-style.use('seaborn-v0_8')
+def gesamtkosten(menge):
+    """Jährliche Kosten K(Q) in € für die Bestellmenge Q = menge."""
+    return 12000 / menge * 50 + menge / 2 * 1.2
 
-np.random.seed(3)
-
-N_0     = 100.0
-r_wahr  = 0.30          # wahre Wachstumsrate in 1/h (unbekannt)
-t_mess  = np.array([0, 1, 2, 3, 4, 5])     # Messzeitpunkte in h
-N_wahr  = N_0 * np.exp(r_wahr * t_mess)
-N_mess  = N_wahr + np.random.normal(0, 10, len(t_mess))
+menge = 500
+for k in range(3):
+    steigung = zentral(gesamtkosten, menge, 1e-6)
+    menge = menge + 200 * steigung
+    kosten = gesamtkosten(menge)
+    print(f'Bestellmenge {menge:8.1f} Stück, Kosten {kosten:8.1f} €')
 ```
 
-1. Plotten Sie die Messdaten `N_mess` gegen `t_mess`. Stellen Sie
-   dieselben Daten zusätzlich in einem Semilog-Diagramm dar
-   (`ax.semilogy()`). Was beobachten Sie im Semilog-Diagramm?
-2. Implementieren Sie das Modell $N(t, r)$ und die Kostenfunktion
-   `kosten(r)` als MSE. Plotten Sie `kosten(r)` für
-   $r \in [0.05,\; 0.60]$, um das Minimum zu lokalisieren.
-3. Implementieren Sie den Gradient-Descent-Algorithmus mit der zentralen
-   Differenz. Wählen Sie `r_start = 0.05` und `n_iterationen = 2000`.
-   Probieren Sie verschiedene Werte für `alpha` aus und wählen Sie einen,
-   der zuverlässig konvergiert. Geben Sie das geschätzte $r$ aus.
-4. Plotten Sie die angepasste Kurve über die Messdaten.
-5. Bestimmen Sie $r$ alternativ mit `scipy.optimize.minimize()` und
-   vergleichen Sie das Ergebnis.
+Notieren Sie Ihre Vermutung in einer Markdown-Zelle, bevor Sie den Code
+ausführen.
+
+1. Finden Sie den Fehler.
+2. Die Steigung bei 500 Stück beträgt $-1.8$ € pro Stück. Wo landet der erste
+   Schritt? Steigen oder sinken die Kosten?
+3. Nach dem zweiten Schritt ist die Bestellmenge negativ und die Kosten auch.
+   Warum liefert `gesamtkosten()` überhaupt einen Wert, und warum ist er
+   sinnlos?
+4. Führen Sie den Code aus und überprüfen Sie Ihre Vorhersagen.
 ````
 
 ```{code-cell} python
@@ -149,146 +201,71 @@ N_mess  = N_wahr + np.random.normal(0, 10, len(t_mess))
 :class: tip
 :class: dropdown
 ```python
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.style as style
-style.use('seaborn-v0_8')
-from scipy.optimize import minimize
+def gesamtkosten(menge):
+    """Jährliche Kosten K(Q) in € für die Bestellmenge Q = menge."""
+    return 12000 / menge * 50 + menge / 2 * 1.2
 
-np.random.seed(3)
+menge = 500
+for k in range(3):
+    steigung = zentral(gesamtkosten, menge, 1e-6)
+    menge = menge + 200 * steigung
+    kosten = gesamtkosten(menge)
+    print(f'Bestellmenge {menge:8.1f} Stück, Kosten {kosten:8.1f} €')
+```
+Ausgabe:
 
-N_0    = 100.0
-r_wahr = 0.30
-t_mess = np.array([0, 1, 2, 3, 4, 5])
-N_wahr = N_0 * np.exp(r_wahr * t_mess)
-N_mess = N_wahr + np.random.normal(0, 10, len(t_mess))
-
-# --- Frage 1: Rohdaten in zwei Darstellungen ---
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4))
-
-ax1.plot(t_mess, N_mess, 'o-')
-ax1.set_xlabel('Zeit in h')
-ax1.set_ylabel('Zellzahl N in Zellen/µL')
-ax1.set_title('Lineares Diagramm')
-ax1.grid(True)
-
-ax2.semilogy(t_mess, N_mess, 'o-')
-ax2.set_xlabel('Zeit in h')
-ax2.set_ylabel('Zellzahl N in Zellen/µL')
-ax2.set_title('Semilog-Diagramm')
-ax2.grid(True)
-
-plt.tight_layout()
-plt.show()
-
-# --- Modell- und Kostenfunktion ---
-
-def modell(t, r):
-    """Wachstumsmodell: N(t) = N_0 * exp(r*t)."""
-    return N_0 * np.exp(r * t)
-
-def kosten(r):
-    """MSE zwischen Modell und Messdaten."""
-    return np.mean((N_mess - modell(t_mess, r))**2)
-
-# --- Frage 2: Kostenfunktion plotten ---
-r_werte      = np.linspace(0.05, 0.60, 300)
-kosten_werte = np.array([kosten(r) for r in r_werte])
-
-fig, ax = plt.subplots()
-ax.plot(r_werte, kosten_werte)
-ax.set_xlabel('r in 1/h')
-ax.set_ylabel('K(r) in (Zellen/µL)²')
-ax.set_title('Kostenfunktion über dem Parameterraum')
-ax.grid(True)
-plt.show()
-
-# --- Frage 3: Gradient Descent ---
-def ableitung_kosten(r, dx=1e-6):
-    return (kosten(r + dx) - kosten(r - dx)) / (2 * dx)
-
-r_aktuell     = 0.05
-alpha         = 1e-6
-n_iterationen = 2000
-
-for i in range(n_iterationen):
-    grad      = ableitung_kosten(r_aktuell)
-    r_aktuell = r_aktuell - alpha * grad
-
-print(f"Gradient Descent: r = {r_aktuell:.4f} 1/h  (wahr: {r_wahr:.4f} 1/h)")
-print(f"MSE = {kosten(r_aktuell):.2f} (Zellen/µL)²")
-
-# --- Frage 4: Angepasste Kurve ---
-t_fein = np.linspace(0, 5, 200)
-
-fig, ax = plt.subplots()
-ax.plot(t_mess, N_mess, 'o', label='Messwerte')
-ax.plot(t_fein, modell(t_fein, r_aktuell), label=f'GD: r = {r_aktuell:.3f}')
-ax.set_xlabel('Zeit in h')
-ax.set_ylabel('Zellzahl N in Zellen/µL')
-ax.set_title('Wachstumskurve: Kurvenanpassung')
-ax.legend()
-ax.grid(True)
-plt.show()
-
-# --- Frage 5: scipy ---
-ergebnis  = minimize(kosten, x0=[0.05])
-r_scipy   = ergebnis.x[0]
-print(f"scipy:            r = {r_scipy:.4f} 1/h")
+```text
+Bestellmenge    140.0 Stück, Kosten   4369.7 €
+Bestellmenge  -5862.5 Stück, Kosten  -3619.8 €
+Bestellmenge  -5745.9 Stück, Kosten  -3552.0 €
 ```
 
-Zu Frage 1: Im Semilog-Diagramm erscheinen die Messdaten auf einer Geraden,
-weil $\ln N(t) = \ln N_0 + r \cdot t$ eine lineare Funktion von $t$ ist.
-Jede Exponentialfunktion wird im Semilog-Diagramm zu einer Geraden. Die
-Steigung der Geraden ist die gesuchte Wachstumsrate $r$.
+1. In der Rechenvorschrift steht ein Plus statt eines Minus. Richtig ist
+   `menge = menge - 200 * steigung`. Mit dem Plus geht das Verfahren in
+   Richtung der Steigung, also bergauf.
+2. Der erste Schritt führt zu $500 + 200 \cdot (-1.8) = 140$ Stück. Dort sind
+   die Kosten mit $4369.7$ € fast dreimal so hoch wie vorher.
+3. Bei 140 Stück ist die Kurve sehr steil, die Steigung beträgt etwa $-30$ €
+   pro Stück. Der nächste Schritt geht deshalb um $6000$ Stück nach links, weit
+   ins Negative. Python rechnet die Formel auch für negative Zahlen aus. Das
+   Modell gilt aber nur für positive Bestellmengen, eine negative Bestellmenge
+   und negative Kosten haben keine Bedeutung. Ein Verfahren, das Unsinn
+   liefert, hält oft trotzdem nicht an. Die Ergebnisse müssen wir deshalb immer
+   auf Plausibilität prüfen.
 ````
 
-````{admonition} Übung 8.7 (✩✩✩)
+````{admonition} Aufgabe 8.3 (✩)
 :class: tip
-Ein Schwingungssensor misst die freie gedämpfte Schwingung eines Maschinenteils
-nach einer impulsförmigen Anregung. Das Modell lautet
-
-$$x(t) = A \cdot e^{-\delta t} \cdot \cos(\omega t),$$
-
-wobei $A$ die Anfangsamplitude (in mm), $\delta$ die Abklingrate (in 1/s)
-und $\omega$ die Kreisfrequenz (in rad/s) sind.
+Ein **Schnappschalter** hat zwei stabile Stellungen. Die gespeicherte Energie
+in mJ hängt von der Auslenkung $x$ in mm ab:
+$E(x) = x^4 - 4x^2 + x$. Die Kurve hat zwei Täler, bei etwa
+$x = -1.47\,\text{mm}$ und $x = 1.35\,\text{mm}$, und dazwischen einen
+Buckel bei etwa $x = 0.13\,\text{mm}$. Der Schalter bleibt in dem Tal liegen,
+in das er beim Loslassen rollt. Gegeben ist folgender Code:
 
 ```python
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.style as style
-style.use('seaborn-v0_8')
-from scipy.optimize import minimize
+def energie(x):
+    """Gespeicherte Energie in mJ bei der Auslenkung x in mm."""
+    return x**4 - 4 * x**2 + x
 
-np.random.seed(11)
-
-A_wahr     =  10.0   # mm
-delta_wahr =   0.5   # 1/s
-omega_wahr =   5.0   # rad/s
-
-t_mess = np.linspace(0, 4, 50)
-x_wahr = A_wahr * np.exp(-delta_wahr * t_mess) * np.cos(omega_wahr * t_mess)
-x_mess = x_wahr + np.random.normal(0, 0.5, len(t_mess))
+for start in [0.5, -0.5, 0.1]:
+    verlauf = gradientenverfahren(energie, start, 0.02, 1e-4, 500)
+    x_ende = verlauf[-1]
+    e_ende = energie(x_ende)
+    print(f'Start {start:5.2f} mm: Ende bei {x_ende:6.3f} mm, {e_ende:6.3f} mJ')
 ```
 
-1. Plotten Sie `x_mess` gegen `t_mess`. Schätzen Sie aus dem Plot grob
-   die Amplitude $A$, die Abklingrate $\delta$ und die Kreisfrequenz
-   $\omega$ ab. (Hinweis: Die Periodendauer $T$ ist im Plot ablesbar,
-   und es gilt $\omega = 2\pi / T$.)
-2. Implementieren Sie das Modell und die Kostenfunktion `kosten(A, delta,
-   omega)`. Implementieren Sie Gradient Descent mit drei unabhängigen
-   Update-Schritten und numerischen partiellen Ableitungen. Verwenden
-   Sie die Startwerte `A=8, delta=0.3, omega=4` (nahe am wahren Wert)
-   und `n_iterationen=5000`. Geben Sie die gefundenen Parameter aus.
-3. Setzen Sie den Startwert für $\omega$ auf `omega=8` (weit vom wahren
-   Wert). Was beobachten Sie? Konvergiert der Algorithmus zum selben
-   Ergebnis?
-4. Lösen Sie das Problem mit `scipy.optimize.minimize()` von beiden
-   Startwerten aus. Vergleichen Sie die Robustheit von GD und scipy.
-5. Begründen Sie: Warum hat die Kostenfunktion $K(A, \delta, \omega)$
-   mehrere lokale Minima, während die Kostenfunktionen der Abkühlkurve
-   (Abschnitt 8.1) und der Wöhlerkurve (Übung 8.4) nur ein einziges
-   Minimum besitzen?
+Notieren Sie Ihre Vermutung in einer Markdown-Zelle, bevor Sie den Code
+ausführen.
+
+1. In welchem Tal endet das Verfahren für jeden der drei Startwerte?
+   Begründen Sie besonders den Startwert $0.1\,\text{mm}$.
+2. Jedes Tal ist ein **lokales Minimum**. Das tiefste Tal heißt zusätzlich
+   **globales Minimum**. Welches Tal ist das globale Minimum? Schätzen Sie mit
+   der Formel ab.
+3. Wie können wir das globale Minimum einer Funktion mit mehreren Tälern
+   finden, wenn wir nur das Gradientenverfahren zur Verfügung haben?
+4. Führen Sie den Code aus und überprüfen Sie Ihre Vorhersagen.
 ````
 
 ```{code-cell} python
@@ -299,142 +276,503 @@ x_mess = x_wahr + np.random.normal(0, 0.5, len(t_mess))
 :class: tip
 :class: dropdown
 ```python
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.style as style
-style.use('seaborn-v0_8')
-from scipy.optimize import minimize
+def energie(x):
+    """Gespeicherte Energie in mJ bei der Auslenkung x in mm."""
+    return x**4 - 4 * x**2 + x
 
-np.random.seed(11)
+for start in [0.5, -0.5, 0.1]:
+    verlauf = gradientenverfahren(energie, start, 0.02, 1e-4, 500)
+    x_ende = verlauf[-1]
+    e_ende = energie(x_ende)
+    print(f'Start {start:5.2f} mm: Ende bei {x_ende:6.3f} mm, {e_ende:6.3f} mJ')
+```
+Ausgabe:
 
-A_wahr     = 10.0
-delta_wahr =  0.5
-omega_wahr =  5.0
-
-t_mess = np.linspace(0, 4, 50)
-x_wahr = A_wahr * np.exp(-delta_wahr * t_mess) * np.cos(omega_wahr * t_mess)
-x_mess = x_wahr + np.random.normal(0, 0.5, len(t_mess))
-
-# --- Frage 1: Plot der Messdaten ---
-fig, ax = plt.subplots()
-ax.plot(t_mess, x_mess, 'o', markersize=3, label='Messwerte')
-ax.axhline(0, color='gray', linewidth=0.8)
-ax.set_xlabel('Zeit in s')
-ax.set_ylabel('Auslenkung x in mm')
-ax.set_title('Gedämpfte Schwingung (Messdaten)')
-ax.legend()
-ax.grid(True)
-plt.show()
-
-# --- Modell- und Kostenfunktion ---
-
-def modell(t, A, delta, omega):
-    """Gedämpfte Schwingung: x(t) = A * exp(-delta*t) * cos(omega*t)."""
-    return A * np.exp(-delta * t) * np.cos(omega * t)
-
-def kosten(A, delta, omega):
-    """MSE zwischen Modell und Messdaten."""
-    return np.mean((x_mess - modell(t_mess, A, delta, omega))**2)
-
-# --- Fragen 2 und 3: Gradient Descent ---
-dx = 1e-5
-
-def dK_dA(A, delta, omega):
-    return (kosten(A+dx, delta, omega) - kosten(A-dx, delta, omega)) / (2*dx)
-
-def dK_ddelta(A, delta, omega):
-    return (kosten(A, delta+dx, omega) - kosten(A, delta-dx, omega)) / (2*dx)
-
-def dK_domega(A, delta, omega):
-    return (kosten(A, delta, omega+dx) - kosten(A, delta, omega-dx)) / (2*dx)
-
-def gradient_descent_3d(A_start, delta_start, omega_start,
-                         alpha_A=0.01, alpha_delta=0.005, alpha_omega=0.001,
-                         n_iter=5000):
-    A, delta, omega = A_start, delta_start, omega_start
-    for i in range(n_iter):
-        A     = A     - alpha_A     * dK_dA(A, delta, omega)
-        delta = delta - alpha_delta * dK_ddelta(A, delta, omega)
-        omega = omega - alpha_omega * dK_domega(A, delta, omega)
-    return A, delta, omega
+```text
+Start  0.50 mm: Ende bei  1.347 mm, -2.619 mJ
+Start -0.50 mm: Ende bei -1.473 mm, -5.444 mJ
+Start  0.10 mm: Ende bei -1.473 mm, -5.444 mJ
 ```
 
-In der obigen Funktion `gradient_descent_3d()` werden die drei Parameter $A$,
-$\delta$ und $\omega$ nacheinander aktualisiert. Dabei wird die Ableitung von
-$K$ nach $\delta$ und $\omega$ bereits mit den zuvor aktualisierten Werten von
-$A$ bzw. $\delta$ berechnet.
+1. Mit der kleinen Lernrate $0.02$ geht das Verfahren in kurzen Schritten
+   bergab und bleibt im Tal, an dessen Hang es startet. Von $0.5\,\text{mm}$
+   aus geht es ins rechte Tal, von $-0.5\,\text{mm}$ aus ins linke. Der
+   Startwert $0.1\,\text{mm}$ liegt knapp links vom Buckel bei
+   $0.13\,\text{mm}$. Dort fällt die Kurve nach links ab, und das Verfahren
+   rollt ins linke Tal, obwohl der Startwert näher am rechten Tal liegt.
+2. Ohne den Term $+x$ wären beide Täler gleich tief. Der Term macht die Energie
+   für negative $x$ kleiner und für positive größer. Das linke Tal mit
+   $-5.444\,\text{mJ}$ ist deshalb das globale Minimum, das rechte mit
+   $-2.619\,\text{mJ}$ nur ein lokales.
+3. Mit einer kleinen Lernrate findet das Gradientenverfahren in der Regel nur
+   das Tal, an dessen Hang es startet. Wir starten es deshalb von mehreren,
+   über den
+   ganzen Bereich verteilten Startwerten und nehmen das Ergebnis mit dem
+   kleinsten Funktionswert. Eine sichere Garantie für das globale Minimum gibt
+   das nicht, aber die Chance steigt mit der Zahl der Startwerte.
+````
 
-Streng genommen wertet "klassisches" Gradient Descent alle Gradienten am
-gleichen Punkt $(A, \delta, \omega)$ aus und macht dann einen gemeinsamen
-Update-Schritt. Die hier verwendete Variante (nacheinander aktualisieren)
-liefert bei kleinen Lernraten sehr ähnliche Ergebnisse und ist für unsere Zwecke
-ausreichend. Wichtig ist, dass alle Schritte in Richtung abnehmender
-Kostenfunktion gehen.
+````{admonition} Aufgabe 8.4 (✩)
+:class: tip
+Eine Feder wird um $1$, $2$ und $3\,\text{cm}$ ausgelenkt, die gemessenen
+Kräfte sind $2.3$, $4.1$ und $6.2\,\text{N}$. Das Modell lautet $F = c \cdot s$
+mit der Federsteifigkeit $c$ in N/cm. Gegeben ist folgender Code:
 
 ```python
-# Guter Startwert
-A_gd, delta_gd, omega_gd = gradient_descent_3d(8.0, 0.3, 4.0)
-print("--- GD (guter Startwert: omega=4) ---")
-print(f"A     = {A_gd:.3f} mm   (wahr: {A_wahr:.3f})")
-print(f"delta = {delta_gd:.4f} 1/s (wahr: {delta_wahr:.4f})")
-print(f"omega = {omega_gd:.4f} rad/s (wahr: {omega_wahr:.4f})")
-print(f"MSE   = {kosten(A_gd, delta_gd, omega_gd):.4f} mm²")
-print()
+auslenkung = np.array([1.0, 2.0, 3.0])
+kraft = np.array([2.3, 4.1, 6.2])
 
-# Schlechter Startwert für omega
-A_gd2, delta_gd2, omega_gd2 = gradient_descent_3d(8.0, 0.3, 8.0)
-print("--- GD (schlechter Startwert: omega=8) ---")
-print(f"A     = {A_gd2:.3f} mm   (wahr: {A_wahr:.3f})")
-print(f"delta = {delta_gd2:.4f} 1/s (wahr: {delta_wahr:.4f})")
-print(f"omega = {omega_gd2:.4f} rad/s (wahr: {omega_wahr:.4f})")
-print(f"MSE   = {kosten(A_gd2, delta_gd2, omega_gd2):.4f} mm²")
-print()
+for c in [2.0, 2.1]:
+    abweichung = kraft - c * auslenkung
+    mse = np.mean(abweichung**2)
+    print(c, np.round(abweichung, 2), round(mse, 4))
+```
 
-# --- Frage 4: scipy von beiden Startwerten ---
-def kosten_vektor(params):
-    return kosten(params[0], params[1], params[2])
+Notieren Sie Ihre Vermutung in einer Markdown-Zelle, bevor Sie den Code
+ausführen.
 
-res1 = minimize(kosten_vektor, x0=[8.0, 0.3, 4.0])
-res2 = minimize(kosten_vektor, x0=[8.0, 0.3, 8.0])
+1. Berechnen Sie für beide Werte von $c$ von Hand die drei Abweichungen und die
+   mittlere quadratische Abweichung.
+2. Welche Federsteifigkeit passt besser? Welche Einheit hat die mittlere
+   quadratische Abweichung?
+3. Für $c = 2.0$ sind alle Abweichungen positiv. Was bedeutet das für die
+   Modellgerade im Vergleich zu den Messpunkten?
+4. Führen Sie den Code aus und überprüfen Sie Ihre Vorhersagen.
+````
 
-print("--- scipy (guter Startwert: omega=4) ---")
-print(f"A={res1.x[0]:.3f}, delta={res1.x[1]:.4f}, omega={res1.x[2]:.4f}, "
-      f"MSE={res1.fun:.4f}, Iter={res1.nit}")
-print()
-print("--- scipy (schlechter Startwert: omega=8) ---")
-print(f"A={res2.x[0]:.3f}, delta={res2.x[1]:.4f}, omega={res2.x[2]:.4f}, "
-      f"MSE={res2.fun:.4f}, Iter={res2.nit}")
-print()
+```{code-cell} python
+# Code-Zelle
+```
 
-# Vergleichsplot
-t_fein = np.linspace(0, 4, 300)
-fig, ax = plt.subplots()
-ax.plot(t_mess, x_mess, 'o', markersize=3, label='Messwerte')
-ax.plot(t_fein, modell(t_fein, A_gd, delta_gd, omega_gd),
-        label='GD (guter Start)')
-ax.plot(t_fein, modell(t_fein, res1.x[0], res1.x[1], res1.x[2]),
-        linestyle='--', label='scipy (guter Start)')
-ax.set_xlabel('Zeit in s')
-ax.set_ylabel('Auslenkung x in mm')
-ax.set_title('Gedämpfte Schwingung: Kurvenanpassung')
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+```python
+auslenkung = np.array([1.0, 2.0, 3.0])
+kraft = np.array([2.3, 4.1, 6.2])
+
+for c in [2.0, 2.1]:
+    abweichung = kraft - c * auslenkung
+    mse = np.mean(abweichung**2)
+    print(c, np.round(abweichung, 2), round(mse, 4))
+```
+Ausgabe:
+
+```text
+2.0 [0.3 0.1 0.2] 0.0467
+2.1 [ 0.2 -0.1 -0.1] 0.02
+```
+
+1. Für $c = 2.0$ sind die Abweichungen $0.3$, $0.1$ und $0.2\,\text{N}$. Ihre
+   Quadrate $0.09$, $0.01$ und $0.04$ ergeben im Mittel
+   $0.14 / 3 \approx 0.0467$. Für $c = 2.1$ sind die Abweichungen $0.2$,
+   $-0.1$ und $-0.1\,\text{N}$, die Quadrate $0.04$, $0.01$ und $0.01$ ergeben
+   im Mittel $0.06 / 3 = 0.02$.
+2. $c = 2.1\,\text{N/cm}$ passt besser, die mittlere quadratische Abweichung
+   ist nicht einmal halb so groß. Sie hat die Einheit $\text{N}^2$, weil wir
+   Kräfte quadrieren.
+3. Die Abweichung ist Messwert minus Modell. Sind alle Abweichungen positiv,
+   liegen alle Messpunkte über der Modellgeraden. Die Gerade ist zu flach, $c$
+   sollte größer werden.
+````
+
+````{admonition} Aufgabe 8.5 (✩✩)
+:class: tip
+Ein Lkw fährt $400\,\text{km}$ über die Autobahn. Je schneller er fährt, desto
+kürzer ist die Fahrt und desto geringer sind die Lohnkosten für den Fahrer. Der
+Kraftstoffverbrauch wächst aber mit der Geschwindigkeit. Bei der
+Geschwindigkeit $v$ in km/h verbraucht der Lkw $20 + 0.0015 \cdot v^2$ Liter
+auf $100\,\text{km}$. Der Fahrer kostet $30$ € pro Stunde, ein Liter Diesel
+$1.70$ €. Damit kostet die Fahrt
+
+$$K(v) = \frac{400}{v} \cdot 30 + \frac{400}{100} \cdot (20 + 0.0015 \cdot v^2) \cdot 1.70.$$
+
+1. Schreiben Sie eine Funktion `fahrtkosten(v)` und zeichnen Sie die Kosten
+   für Geschwindigkeiten von $50$ bis $100\,\text{km/h}$.
+2. Bestimmen Sie die günstigste Geschwindigkeit mit `gradientenverfahren()`.
+   Starten Sie bei $60\,\text{km/h}$ mit der Lernrate $10$, der Toleranz
+   $10^{-3}$ und höchstens 500 Iterationen. Was passiert mit der Lernrate
+   $50$?
+3. Lkw über $7.5\,\text{t}$ dürfen in Deutschland auf der Autobahn höchstens
+   $80\,\text{km/h}$ fahren. Wie viel teurer ist eine Fahrt mit
+   $80\,\text{km/h}$ als eine mit der günstigsten Geschwindigkeit?
+````
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+1. Die Funktion folgt direkt der Formel:
+
+   ```python
+   # Teilaufgabe 1: Kosten der Fahrt über der Geschwindigkeit
+   def fahrtkosten(v):
+       """Kosten in € für 400 km bei der Geschwindigkeit v in km/h."""
+       lohn = 400 / v * 30
+       diesel = 400 / 100 * (20 + 0.0015 * v**2) * 1.70
+       return lohn + diesel
+
+   v_werte = np.linspace(50, 100, 200)
+   fig, ax = plt.subplots(figsize=(7, 4))
+   ax.plot(v_werte, fahrtkosten(v_werte))
+   ax.set_xlabel('Geschwindigkeit in km/h')
+   ax.set_ylabel('Kosten der Fahrt in €')
+   ax.set_title('Lohn und Diesel für 400 km')
+   ax.grid(True)
+   plt.show()
+   ```
+
+   Die Kurve hat ein flaches Minimum zwischen $80$ und $90\,\text{km/h}$.
+2. Wir starten bei $60\,\text{km/h}$:
+
+   ```python
+   # Teilaufgabe 2: günstigste Geschwindigkeit
+   for lernrate in [10, 50]:
+       verlauf = gradientenverfahren(fahrtkosten, 60.0, lernrate, 1e-3, 500)
+       anzahl = len(verlauf) - 1
+       v_ende = verlauf[-1]
+       print(f'Lernrate {lernrate}: {anzahl} Iterationen, '
+             f'v = {v_ende:.2f} km/h')
+   ```
+
+   Ausgabe:
+
+   ```text
+   Lernrate 10: 7 Iterationen, v = 83.78 km/h
+   Lernrate 50: 500 Iterationen, v = 147.10 km/h
+   ```
+
+   Mit der Lernrate $10$ findet das Verfahren nach sieben Iterationen
+   $83.78\,\text{km/h}$. Mit $50$ springt es hin und her, erreicht das
+   Abbruchkriterium nicht und endet bei einer unsinnigen Geschwindigkeit.
+3. Wir vergleichen die Kosten bei beiden Geschwindigkeiten:
+
+   ```python
+   # Teilaufgabe 3: Mehrkosten bei 80 km/h
+   verlauf = gradientenverfahren(fahrtkosten, 60.0, 10, 1e-3, 500)
+   kosten_optimal = fahrtkosten(verlauf[-1])
+   kosten_80 = fahrtkosten(80)
+   mehrkosten = kosten_80 - kosten_optimal
+   print(f'Günstigste Geschwindigkeit: {kosten_optimal:.2f} €')
+   print(f'Mit 80 km/h:                {kosten_80:.2f} €')
+   print(f'Mehrkosten:                 {mehrkosten:.2f} €')
+   ```
+
+   Ausgabe:
+
+   ```text
+   Günstigste Geschwindigkeit: 350.83 €
+   Mit 80 km/h:                351.28 €
+   Mehrkosten:                 0.45 €
+   ```
+
+   Mit $80\,\text{km/h}$ kostet die Fahrt nur $0.45$ € mehr. Weil das Minimum
+   so flach ist, verliert die Spedition durch das Tempolimit praktisch nichts.
+   Weil die Kosten bis zum Minimum bei $83.8\,\text{km/h}$ stetig fallen, ist
+   $80\,\text{km/h}$ hier die günstigste erlaubte Geschwindigkeit.
+````
+
+````{admonition} Aufgabe 8.6 (✩✩)
+:class: tip
+In Kapitel 8.3 haben wir behauptet, dass der gewichtete Schwerpunkt die Summe
+der quadrierten Entfernungen minimiert. Das prüfen wir jetzt mit dem
+Gradientenverfahren. Die Werke und Ladungen aus Kapitel 8.3:
+
+```python
+werke = np.array([[6.0, 24.0], [16.0, 30.0], [20.0, 12.0],
+                  [8.0, 6.0], [44.0, 10.0]])
+ladungen = np.array([12, 10, 10, 8, 6])
+```
+
+1. Schreiben Sie eine Funktion `aufwand_quadrat(standort)`, die
+   $\sum n_i \cdot d_i^2$ berechnet.
+2. Starten Sie `gradientenverfahren_2d()` bei $(40, 30)$ mit der Lernrate
+   $0.2$ aus Kapitel 8.3, Toleranz $0.01$, höchstens 200 Iterationen. Was
+   passiert? Probieren Sie dann die Lernraten $0.02$, $0.01$ und $0.005$.
+3. Vergleichen Sie das Ergebnis mit dem gewichteten Schwerpunkt. Warum braucht
+   diese Kostenfunktion eine viel kleinere Lernrate als `aufwand()` in
+   Kapitel 8.3?
+````
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+1. Statt der Wurzel summieren wir die Quadrate direkt:
+
+   ```python
+   # Teilaufgabe 1: Summe der gewichteten quadrierten Entfernungen
+   werke = np.array([[6.0, 24.0], [16.0, 30.0], [20.0, 12.0],
+                     [8.0, 6.0], [44.0, 10.0]])
+   ladungen = np.array([12, 10, 10, 8, 6])
+
+   def aufwand_quadrat(standort):
+       """Summe der Ladungen mal quadrierte Entfernung in km²."""
+       differenz = werke - standort
+       quadrate = differenz[:, 0]**2 + differenz[:, 1]**2
+       return np.sum(ladungen * quadrate)
+   ```
+
+2. Wir probieren alle vier Lernraten aus:
+
+   ```python
+   # Teilaufgabe 2: verschiedene Lernraten
+   start = np.array([40.0, 30.0])
+   for lernrate in [0.2, 0.02, 0.01, 0.005]:
+       verlauf = gradientenverfahren_2d(aufwand_quadrat, start, lernrate,
+                                        0.01, 200)
+       anzahl = len(verlauf) - 1
+       print(f'Lernrate {lernrate}: {anzahl} Iterationen, '
+             f'Ende bei {np.round(verlauf[-1], 3)}')
+   ```
+
+   Ausgabe (die sehr großen Zahlen können je nach Rechner etwas abweichen):
+
+   ```text
+   Lernrate 0.2: 8 Iterationen, Ende bei [3.03756161e+11 9.90524457e+10]
+   Lernrate 0.02: 72 Iterationen, Ende bei [16.522 17.739]
+   Lernrate 0.01: 5 Iterationen, Ende bei [16.522 17.739]
+   Lernrate 0.005: 21 Iterationen, Ende bei [16.522 17.739]
+   ```
+
+   Mit $0.2$ explodiert das Verfahren. Dass es nach acht Iterationen anhält,
+   heißt nicht, dass es ein Minimum gefunden hat. Die Koordinaten sind so
+   groß, dass der Differenzenquotient wegen der Rundungsfehler null wird.
+   Mit $0.02$ springt es lange hin und her, mit $0.01$ ist es schon nach fünf
+   Iterationen am Ziel.
+3. Wir berechnen den Schwerpunkt wie in Kapitel 8.3:
+
+   ```python
+   # Teilaufgabe 3: gewichteter Schwerpunkt zum Vergleich
+   schwerpunkt_x = np.sum(ladungen * werke[:, 0]) / np.sum(ladungen)
+   schwerpunkt_y = np.sum(ladungen * werke[:, 1]) / np.sum(ladungen)
+   print('Schwerpunkt:', np.round([schwerpunkt_x, schwerpunkt_y], 3))
+   ```
+
+   Ausgabe:
+
+   ```text
+   Schwerpunkt: [16.522 17.739]
+   ```
+
+   Das Gradientenverfahren landet innerhalb der Toleranz im Schwerpunkt. Das
+   bestätigt die Behauptung aus Kapitel 8.3 für unsere Werke, ein allgemeiner
+   Beweis ist es nicht.
+
+   Der Gradient von `aufwand_quadrat()` ist genau $2 \cdot 46 = 92$-mal so
+   groß wie der Abstand vom Schwerpunkt, denn alle Werke zusammen brauchen
+   46 Ladungen. Ein Schritt mit der Lernrate $\alpha$ ist deshalb
+   $92 \cdot \alpha$-mal so lang wie der Abstand. Mit
+   $\alpha = 1/92 \approx 0.011$ landet schon der erste Schritt genau im
+   Schwerpunkt, mit $0.01$ fast, wie bei der Lernrate $0.5$ in Aufgabe 8.1.
+   Bei genau $\alpha = 2/92 \approx 0.022$ springt jeder Schritt genau so weit
+   über das Ziel hinaus, wie er davor lag, und das Verfahren pendelt mit
+   gleichbleibendem Abstand. Ist $\alpha$ größer, wird der Abstand mit jedem
+   Schritt größer, und das Verfahren explodiert. Mit $0.02$ liegen wir knapp
+   unter der Grenze und pendeln lange. Bei `aufwand()` in Kapitel 8.3 wächst
+   der Gradient dagegen nicht mit dem Abstand, seine Länge ist nie größer
+   als 46. Die Schritte bleiben dort auch weit weg vom Ziel begrenzt, und für
+   den Startwert in Kapitel 8.3 hat die Lernrate $0.2$ gut funktioniert.
+````
+
+````{admonition} Aufgabe 8.7 (✩✩✩) Mini-Projekt: Den Bestückroboter genauer ansteuern
+:class: tip
+In Kapitel 5.4 haben wir die Gelenkwinkel des SCARA-Roboters für den
+Bestückplatz $P_1 = (0.30, 0.35)$ mit einer Rastersuche in $1°$-Schritten
+bestimmt. Nach $27\,331$ Stellungen lag der Greifer mit $\alpha = 9°$ und
+$\beta = 99°$ noch $3.2\,\text{mm}$ neben dem Platz. Das schaffen wir jetzt
+genauer. Für die Aufgabe brauchen Sie aus Kapitel 5.4 nur die folgende Formel
+für die Lage des Greifers bei den Armlängen $l_1 = 0.4\,\text{m}$ und
+$l_2 = 0.3\,\text{m}$:
+
+$$x = l_1 \cos\alpha + l_2 \cos(\alpha + \beta), \qquad
+y = l_1 \sin\alpha + l_2 \sin(\alpha + \beta).$$
+
+Gelenk 2 darf nur zwischen $0°$ und $150°$ abknicken.
+
+**Teil 1:** Schreiben Sie eine Funktion `greifer(winkel)`, die für
+`winkel = [alpha, beta]` in Grad die Lage des Greifers als Array zurückgibt.
+`np.deg2rad()` rechnet Grad in Radiant um. Prüfen Sie: In der Grundstellung
+$(0°, 0°)$ steht der Greifer bei $(0.7, 0)$. Schreiben Sie dann eine
+Kostenfunktion `kosten(winkel)`, die das Quadrat des Abstands zwischen Greifer
+und $P_1$ in $\text{mm}^2$ berechnet. Prüfen Sie damit das Ergebnis der
+Rastersuche.
+
+**Teil 2:** Starten Sie `gradientenverfahren_2d()` beim Ergebnis der
+Rastersuche mit der Lernrate $0.01$, der Toleranz $10^{-3}$ und höchstens 500
+Iterationen. Welche Winkel finden Sie, und wie weit liegt der Greifer jetzt
+noch neben $P_1$? Wie oft wurde `kosten()` aufgerufen, verglichen mit der
+Rastersuche?
+
+**Teil 3:** Starten Sie das Verfahren jetzt in der Stellung $(90°, 0°)$, in der
+der Arm gestreckt nach oben zeigt, und speichern Sie das Ergebnis in
+`winkel_oben`. Welche Winkel findet es? Der folgende Code zeichnet beide
+Lösungen als Linienzug vom Ursprung über Gelenk 2 zum Greifer. Er erwartet die
+Lösung aus Teil 2 in `winkel_optimal`, das Ziel $P_1$ in `ziel` und die Länge
+von Arm 1 in `l_1`.
+
+```python
+# Beide Stellungen des Roboterarms
+fig, ax = plt.subplots(figsize=(6, 6))
+for winkel, name in [(winkel_optimal, 'Lösung aus Teil 2'),
+                     (winkel_oben, 'Lösung aus Teil 3')]:
+    alpha = np.deg2rad(winkel[0])
+    gelenk_2 = l_1 * np.array([np.cos(alpha), np.sin(alpha)])
+    spitze = greifer(winkel)
+    ax.plot([0, gelenk_2[0], spitze[0]], [0, gelenk_2[1], spitze[1]],
+            marker='o', linewidth=3, label=name)
+ax.scatter(ziel[0], ziel[1], marker='x', s=100, color='black', label='P1')
+ax.set_aspect('equal')
+ax.set_xlabel('x in m')
+ax.set_ylabel('y in m')
+ax.set_title('Zwei Stellungen für denselben Bestückplatz')
 ax.legend()
 ax.grid(True)
 plt.show()
 ```
 
+**Abschlussfrage:** Darf der Roboter die Lösung aus Teil 3 anfahren? Was folgt
+daraus für den Einsatz des Gradientenverfahrens, und wie lassen sich
+Rastersuche und Gradientenverfahren sinnvoll kombinieren?
+````
 
-Zu Frage 5: Die Abkühlkurve $T(t) = T_\infty + (T_0 - T_\infty) e^{-\lambda t}$
-ist eine monoton fallende Funktion. Für jeden $\lambda$-Wert gibt es genau
-eine solche Kurve, und die Kostenfunktion hat deshalb nur ein Minimum.
-Dasselbe gilt für die Wöhlerkurve $S = a \cdot N^{-b}$.
+```{code-cell} python
+# Code-Zelle
+```
 
-Bei der gedämpften Schwingung $x(t) = A e^{-\delta t} \cos(\omega t)$
-erzeugt der $\cos(\omega t)$-Term ein oszillierendes Muster. Eine
-Kreisfrequenz $\omega' = \omega + 2\pi / t_\text{max}$ erzeugt an den
-Messzeitpunkten eine ähnlich aussehende Kurve wie $\omega$, wenn die
-Abtastdichte nicht ausreicht. Jede dieser Frequenzen entspricht einem
-lokalen Minimum der Kostenfunktion. GD konvergiert zum nächsten lokalen
-Minimum, das vom Startwert aus erreichbar ist. scipy verwendet robustere
-Algorithmen, bleibt aber bei sehr schlechten Startwerten ebenfalls in
-falschen lokalen Minima stecken.
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+**Teil 1:** Die Funktion folgt der Formel, die Kostenfunktion rechnet den
+Abstand in Millimeter um und quadriert ihn:
+
+```python
+# Teil 1: Lage des Greifers und Kostenfunktion
+l_1 = 0.4
+l_2 = 0.3
+ziel = np.array([0.30, 0.35])
+
+def greifer(winkel):
+    """Lage des Greifers in m für winkel = [alpha, beta] in Grad."""
+    alpha = np.deg2rad(winkel[0])
+    beta = np.deg2rad(winkel[1])
+    x = l_1 * np.cos(alpha) + l_2 * np.cos(alpha + beta)
+    y = l_1 * np.sin(alpha) + l_2 * np.sin(alpha + beta)
+    return np.array([x, y])
+
+def kosten(winkel):
+    """Quadrat des Abstands zwischen Greifer und Ziel in mm²."""
+    differenz = (greifer(winkel) - ziel) * 1000
+    return differenz[0]**2 + differenz[1]**2
+
+print('Grundstellung:', greifer(np.array([0.0, 0.0])))
+rest_raster = np.sqrt(kosten(np.array([9.0, 99.0])))
+print(f'Rastersuche: {rest_raster:.1f} mm neben P1')
+```
+
+Ausgabe:
+
+```text
+Grundstellung: [0.7 0. ]
+Rastersuche: 3.2 mm neben P1
+```
+
+Die Funktionen bestätigen die Grundstellung und den Restabstand von
+$3.2\,\text{mm}$ aus Kapitel 5.4.
+
+**Teil 2:** Wir starten beim Ergebnis der Rastersuche:
+
+```python
+# Teil 2: Gradientenverfahren ab dem Ergebnis der Rastersuche
+start = np.array([9.0, 99.0])
+verlauf = gradientenverfahren_2d(kosten, start, 0.01, 1e-3, 500)
+winkel_optimal = verlauf[-1]
+rest = np.sqrt(kosten(winkel_optimal))
+anzahl = len(verlauf) - 1
+aufrufe = 4 * (anzahl + 1)
+print(f'{anzahl} Iterationen, {aufrufe} Aufrufe von kosten()')
+print('Winkel in Grad:', np.round(winkel_optimal, 3))
+print(f'Restabstand: {rest:.6f} mm')
+```
+
+Ausgabe:
+
+```text
+21 Iterationen, 88 Aufrufe von kosten()
+Winkel in Grad: [ 9.398 98.989]
+Restabstand: 0.000090 mm
+```
+
+Nach 21 Iterationen liegt der Greifer im Modell weniger als
+$0.1\,\mu\text{m}$ neben $P_1$. Das ist eine rechnerische Genauigkeit. Wie
+genau der echte Roboter positioniert, hängt von seiner Mechanik ab. Jede
+Iteration wertet für den Gradienten `kosten()` viermal aus, die letzte Prüfung
+des Abbruchkriteriums eingerechnet sind das 88 Aufrufe. Dazu kommt die
+Rastersuche, die den Startwert geliefert hat. Wie viele Aufrufe sich insgesamt
+sparen lassen, zeigt die Lösung der Abschlussfrage.
+
+**Teil 3:** Wir starten in der gestreckten Stellung nach oben und zeichnen
+beide Lösungen. Gelenk 2 liegt bei $l_1 (\cos\alpha, \sin\alpha)$:
+
+```python
+# Teil 3: anderer Startwert
+verlauf_oben = gradientenverfahren_2d(kosten, np.array([90.0, 0.0]),
+                                      0.01, 1e-3, 500)
+winkel_oben = verlauf_oben[-1]
+print('Winkel in Grad:', np.round(winkel_oben, 3))
+
+fig, ax = plt.subplots(figsize=(6, 6))
+for winkel, name in [(winkel_optimal, 'Lösung aus Teil 2'),
+                     (winkel_oben, 'Lösung aus Teil 3')]:
+    alpha = np.deg2rad(winkel[0])
+    gelenk_2 = l_1 * np.array([np.cos(alpha), np.sin(alpha)])
+    spitze = greifer(winkel)
+    ax.plot([0, gelenk_2[0], spitze[0]], [0, gelenk_2[1], spitze[1]],
+            marker='o', linewidth=3, label=name)
+ax.scatter(ziel[0], ziel[1], marker='x', s=100, color='black', label='P1')
+ax.set_aspect('equal')
+ax.set_xlabel('x in m')
+ax.set_ylabel('y in m')
+ax.set_title('Zwei Stellungen für denselben Bestückplatz')
+ax.legend()
+ax.grid(True)
+plt.show()
+```
+
+Ausgabe:
+
+```text
+Winkel in Grad: [ 89.399 -98.989]
+```
+
+Von der gestreckten Stellung aus findet das Verfahren
+$\alpha = 89.4°$ und $\beta = -99.0°$. Auch dort liegt der Greifer im Modell
+praktisch genau auf $P_1$. Die beiden Stellungen sind Spiegelbilder an der
+Verbindungslinie vom Ursprung zu $P_1$: Einmal knickt Arm 2 nach links ab,
+einmal nach rechts.
+
+**Abschlussfrage:** Nein. Mit $\beta = -99°$ müsste Gelenk 2 im Uhrzeigersinn
+abknicken, erlaubt sind aber nur $0°$ bis $150°$. Das Gradientenverfahren kennt
+diese Grenze nicht. Es läuft bergab in das Tal, in dessen Nähe es startet.
+Zu $P_1$ gibt es zwei Armstellungen, die den Greifer genau auf den Platz
+bringen. Welche das Verfahren findet, entscheidet bei dieser kleinen Lernrate
+der Startwert. Jedes Ergebnis müssen wir deshalb auf die Gelenkgrenzen prüfen.
+
+Rastersuche und Gradientenverfahren ergänzen sich gut. Eine grobe Rastersuche,
+die nur erlaubte Winkel durchprobiert, liefert hier einen Startwert nahe der
+erlaubten Armstellung, aber nur eine ungenaue Lösung. Das
+Gradientenverfahren verfeinert sie mit wenigen Aufrufen. Ein Raster mit
+$10°$-Schritten hätte schon gereicht. Mit $\alpha$ von $0°$ bis $180°$ und
+$\beta$ von $0°$ bis $150°$ probiert es 19 mal 16, also 304 Stellungen durch
+und findet $(10°, 100°)$, $8.8\,\text{mm}$ neben $P_1$. Von dort braucht das
+Gradientenverfahren 100 Aufrufe bis zur Lösung aus Teil 2. Zusammen sind das
+gut 400 Aufrufe statt $27\,331$. Auch das verfeinerte Ergebnis müssen wir
+wieder auf die Gelenkgrenzen prüfen. Hat eine Kostenfunktion sehr schmale
+Täler, kann ein grobes Raster das richtige Tal außerdem verfehlen.
 ````

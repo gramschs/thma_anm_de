@@ -4,324 +4,171 @@ kernelspec:
   display_name: 'Python 3'
 ---
 
-# 8.3 Gradient Descent in 2D und Kurvenanpassung
+# 8.3 Standort für ein Zentrallager
 
-```{admonition} Warnung
-:class: warning
-Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
-```
+Ein Zulieferer beliefert fünf Montagewerke in der Region. Künftig soll ein
+einziges Zentrallager alle Werke versorgen. Die Werke brauchen unterschiedlich
+viele Lkw-Ladungen pro Woche. Der Vorstand schlägt ein freies Grundstück im
+Nordosten der Region vor. *Wo sollte das Zentrallager stehen, damit die Lkw
+insgesamt möglichst wenig fahren?*
 
-In Abschnitt 8.1 haben wir $\lambda$ aus den Sensordaten bestimmt, während
-$T_\infty$ als bekannt vorausgesetzt wurde. In der Praxis ist $T_\infty$ oft
-genauso unbekannt wie $\lambda$: Die Umgebungstemperatur in einer
-Produktionshalle schwankt, und wir können sie nicht einfach ablesen. *Wie
-passt man ein Modell an, wenn mehrere Parameter gleichzeitig unbekannt sind?*
-
-Die Antwort ist dieselbe Idee wie in 1D: wir minimieren die Kostenfunktion.
-Der Gradient hat jetzt zwei Komponenten, eine für jeden Parameter.
+In Kapitel 8.1 hing die Kostenfunktion von einer einzigen Größe ab, der
+Bestellmenge. Ein Standort hat dagegen zwei Koordinaten. Wir übertragen das
+Gradientenverfahren deshalb auf zwei Größen. Dabei wird aus der Ableitung der
+**Gradient**, der dem Verfahren seinen Namen gibt.
 
 ## Lernziele
 
 ```{admonition} Lernziele
 :class: attention
-* [ ] Sie können die Kostenfunktion $K(T_\infty, \lambda)$ als Konturplot
-  darstellen und das Minimum darin lokalisieren.
-* [ ] Sie können den **numerischen Gradienten** für zwei Parameter berechnen,
-  indem Sie die zentrale Differenz aus Kapitel 7 auf jeden Parameter einzeln
-  anwenden.
-* [ ] Sie können Gradient Descent für ein Zweiparameter-Problem implementieren,
-  ohne Vektornotation zu verwenden.
-* [ ] Sie können `scipy.optimize.minimize()` auf ein Kurvenanpassungsproblem
-  anwenden und das Ergebnis mit einer eigenen GD-Implementierung vergleichen.
+* [ ] Sie können eine Kostenfunktion von zwei Größen aufstellen und als
+  **Höhenlinienbild** darstellen.
+* [ ] Sie können die **partiellen Ableitungen** mit dem zentralen
+  Differenzenquotienten berechnen und zum **Gradienten** zusammensetzen.
+* [ ] Sie können erklären, warum der negative Gradient in die Richtung des
+  steilsten Abstiegs zeigt.
+* [ ] Sie können das Gradientenverfahren für zwei Größen anwenden und seinen
+  Weg im Höhenlinienbild deuten.
 ```
 
-+++
+## Wie weit fahren die Lkw?
 
-## Zwei Parameter, zwei Update-Schritte
+Wir legen ein Koordinatensystem über die Region, $x$ zeigt nach Osten, $y$
+nach Norden, beide in Kilometern. Die Tabelle zeigt die Lage der Werke und wie
+viele Lkw-Ladungen jedes Werk pro Woche braucht.
 
-Wir starten mit denselben Sensordaten wie in Abschnitt 8.1. Dieses Mal sind
-jedoch sowohl $T_\infty$ als auch $\lambda$ unbekannt. $T_0 = 100\,°C$ bleibt
-bekannt, weil die Starttemperatur direkt am Sensor ablesbar ist.
+| Werk | $x$ in km | $y$ in km | Ladungen pro Woche |
+| --- | --- | --- | --- |
+| Werk 1 | 6 | 24 | 12 |
+| Werk 2 | 16 | 30 | 10 |
+| Werk 3 | 20 | 12 | 10 |
+| Werk 4 | 8 | 6 | 8 |
+| Werk 5 | 44 | 10 | 6 |
+
+Das vorgeschlagene Grundstück liegt bei $(40, 30)$. Die Lage der Werke
+speichern wir als Array mit einer Zeile pro Werk. Spalte 0 enthält $x$,
+Spalte 1 enthält $y$.
 
 ```{code-cell} python
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.style as style
-style.use('seaborn-v0_8')
 
-np.random.seed(42)
+# Lage der Werke in km, Zeile = [x, y]
+werke = np.array([
+    [ 6.0, 24.0],   # Werk 1
+    [16.0, 30.0],   # Werk 2
+    [20.0, 12.0],   # Werk 3
+    [ 8.0,  6.0],   # Werk 4
+    [44.0, 10.0],   # Werk 5
+])
+# Lkw-Ladungen pro Woche für jedes Werk
+ladungen = np.array([12, 10, 10, 8, 6])
 
-# --- Messdaten aus Abschnitt 8.1 (gleicher Seed ergibt identische Daten) ---
-T_0        = 100.0   # Starttemperatur in °C (bekannt)
-T_inf_wahr =  20.0   # wahre Umgebungstemperatur in °C (jetzt unbekannt)
-lambda_wahr =  0.05  # wahre Abkühlkonstante in 1/s (unbekannt)
-
-t_mess = np.arange(0, 120, 5)
-T_wahr = T_inf_wahr + (T_0 - T_inf_wahr) * np.exp(-lambda_wahr * t_mess)
-T_mess = T_wahr + np.random.normal(0, 2.0, len(t_mess))
-
-# --- Modell- und Kostenfunktion für zwei unbekannte Parameter ---
-def modell(t, lam, T_inf, T_0):
-    """Abkühlmodell mit allen Parametern explizit."""
-    return T_inf + (T_0 - T_inf) * np.exp(-lam * t)
-
-def kosten(T_inf, lam):
-    """MSE als Funktion der beiden unbekannten Parameter T_inf und lam."""
-    T_vorhergesagt = modell(t_mess, lam, T_inf, T_0)
-    return np.mean((T_mess - T_vorhergesagt)**2)
-
-# --- Kostenfunktion als Konturplot über dem 2D-Parameterraum ---
-# Für jede Kombination aus T_inf und lam wird K berechnet
-T_inf_werte = np.linspace(10, 35, 120)
-lam_werte   = np.linspace(0.01, 0.10, 120)
-
-K_gitter = np.array([[kosten(T, l) for l in lam_werte]
-                      for T in T_inf_werte])
-
-fig, ax = plt.subplots()
-cp = ax.contourf(lam_werte, T_inf_werte, K_gitter, levels=40, cmap='viridis')
-plt.colorbar(cp, label='K(T_∞, λ) in °C²')
-ax.set_xlabel('λ in 1/s')
-ax.set_ylabel('T_inf in °C')
-ax.set_title('Kostenfunktion über dem 2D-Parameterraum')
-plt.show()
+# Vorschlag des Vorstands für das Zentrallager in km
+vorschlag = np.array([40.0, 30.0])
 ```
 
-Das Minimum liegt im dunkelsten Bereich des Konturplots. Wir suchen genau
-diesen Punkt.
+Für die Kosten zählen wir die Kilometer, die alle Lkw zusammen pro Woche
+fahren. Als Entfernung nehmen wir vereinfacht die Luftlinie. Liegt das Lager
+bei $(x, y)$, ist Werk $i$ nach dem Satz des Pythagoras
+$d_i = \sqrt{(x - x_i)^2 + (y - y_i)^2}$ entfernt. Mit $n_i$ Ladungen pro Woche
+ergibt sich der **Transportaufwand**
 
-In 1D lautete der GD-Schritt $\lambda_\text{neu} = \lambda_\text{alt} -
-\alpha \cdot K'(\lambda_\text{alt})$. Für zwei Parameter brauchen wir zwei
-solche Schritte, einen für jeden Parameter:
+$$A(x, y) = \sum_{i=1}^{5} n_i \cdot d_i$$
 
-$$T_{\infty,\text{neu}} = T_{\infty,\text{alt}}
-  - \alpha_{T_\infty} \cdot \frac{\partial K}{\partial T_\infty}$$
+in Lkw-Kilometern pro Woche. Wir zählen nur die Hinfahrten. Die Rückfahrten
+verdoppeln den Aufwand, ändern aber nichts am besten Standort.
 
-$$\lambda_\text{neu} = \lambda_\text{alt}
-  - \alpha_\lambda \cdot \frac{\partial K}{\partial \lambda}$$
-
-Die zwei Lernraten dürfen unterschiedlich sein, weil $T_\infty$ in °C und
-$\lambda$ in 1/s gemessen werden. Der Gradient in $\lambda$-Richtung ist wegen
-der Zeitfaktoren im Modell deutlich größer als in $T_\infty$-Richtung, sodass
-$\alpha_\lambda$ entsprechend kleiner gewählt werden muss.
-
-```{admonition} Mini-Übung
-:class: tip
-1. Lesen Sie aus dem Konturplot die ungefähren Koordinaten des Minimums ab.
-   Stimmen sie mit den wahren Werten $T_\infty = 20\,°\text{C}$ und
-   $\lambda = 0.05\,\text{1/s}$ überein?
-2. Am Punkt $(T_\infty = 35\,°\text{C},\; \lambda = 0.05\,\text{1/s})$ sagt
-   das Modell für große $t$ eine zu hohe Temperatur voraus. Welches Vorzeichen
-   hat $\partial K / \partial T_\infty$ an diesem Punkt, und in welche Richtung
-   bewegt sich $T_\infty$ im nächsten GD-Schritt? Antworten Sie ohne Code.
-```
+Die Funktion `aufwand()` erhält den Standort als Array `[x, y]`. Ziehen wir
+ihn von `werke` ab, zieht NumPy ihn von jeder Zeile ab. Wir erhalten die
+Differenzen zu allen fünf Werken auf einmal.
 
 ```{code-cell} python
-# Code-Zelle
+def aufwand(standort):
+    """Transportaufwand in Lkw-km pro Woche für ein Lager bei [x, y]."""
+    differenz = werke - standort
+    # Luftlinie zu jedem Werk nach Pythagoras
+    abstaende = np.sqrt(differenz[:, 0]**2 + differenz[:, 1]**2)
+    return np.sum(ladungen * abstaende)
+
+aufwand_vorschlag = aufwand(vorschlag)
+print(f'Aufwand beim Vorschlag: {aufwand_vorschlag:.1f} Lkw-km pro Woche')
 ```
 
-````{admonition} Lösung
-:class: tip
-:class: dropdown
-Zu Frage 1: Das Minimum liegt bei $\lambda \approx 0.05\,\text{1/s}$ und
-$T_\infty \approx 20\,°\text{C}$. Die leichte Abweichung von den wahren Werten
-entsteht durch das Messrauschen.
+Beim Vorschlag des Vorstands fahren die Lkw $1365.8\,\text{km}$ pro Woche.
+*Geht es besser?* In Kapitel 8.1 haben wir die Kosten über der Bestellmenge
+gezeichnet. Hier hängt der Aufwand von zwei Größen ab, er bildet eine Art
+Gebirge über der Karte. Wie auf einer Wanderkarte zeichnen wir es mit
+**Höhenlinien**, also Linien, auf denen der Aufwand überall gleich groß ist.
 
-Zu Frage 2: Bei $T_\infty = 35\,°\text{C}$ konvergiert das Modell gegen
-$35\,°\text{C}$, die Messdaten aber gegen $20\,°\text{C}$. Es gilt
-$T_\text{pred} > T_\text{mess}$, also $(T_\text{mess} - T_\text{pred}) < 0$.
-Da $\partial T_\text{pred} / \partial T_\infty = 1 - e^{-\lambda t} > 0$,
-ergibt sich
-
-$$\frac{\partial K}{\partial T_\infty}
-  = -\frac{2}{n} \sum (T_\text{mess} - T_\text{pred})
-    \cdot \underbrace{(1 - e^{-\lambda t})}_{>0}
-  = -\frac{2}{n} \sum \underbrace{(\text{negativ})}_{} \cdot (\text{positiv})
-  > 0.$$
-
-Der GD-Schritt ist $-\alpha_{T_\infty} \cdot (\text{positiv}) < 0$, also
-nimmt $T_\infty$ ab, in Richtung des wahren Werts $20\,°\text{C}$.
-````
-
-## Numerischer Gradient als Werkzeug aus Kapitel 7
-
-Wir brauchen die partiellen Ableitungen $\partial K / \partial T_\infty$ und
-$\partial K / \partial \lambda$. Statt sie analytisch herzuleiten, berechnen
-wir sie numerisch mit der zentralen Differenz aus Kapitel 7. Das Prinzip ist
-dasselbe wie dort: wir variieren einen Parameter um ein kleines $\Delta x$ und
-halten den anderen fest.
+Dazu werten wir `aufwand()` auf einem Gitter aus, alle $0.5\,\text{km}$ ein
+Punkt. Für jeden Wert von $y$ und jeden Wert von $x$ berechnen wir den Aufwand
+in zwei verschachtelten Schleifen. Das Ergebnis speichern wir in einer Matrix.
+Achtung, die Zeilen der Matrix gehören zu $y$, die Spalten zu $x$, genau wie
+auf einer Karte.
 
 ```{code-cell} python
-# --- Numerischer Gradient: zentrale Differenz für jeden Parameter einzeln ---
-# Dasselbe Verfahren wie in Kapitel 7, jetzt auf die Kostenfunktion angewandt
+# Gitter über die Region: x von 0 bis 50 km, y von 0 bis 35 km
+x_werte = np.linspace(0, 50, 101)
+y_werte = np.linspace(0, 35, 71)
 
-dx = 1e-5  # kleine Störung für die zentrale Differenz
-
-def dK_dT_inf(T_inf, lam):
-    """Partielle Ableitung von K nach T_inf (lam wird festgehalten)."""
-    return (kosten(T_inf + dx, lam) - kosten(T_inf - dx, lam)) / (2 * dx)
-
-def dK_dlam(T_inf, lam):
-    """Partielle Ableitung von K nach lam (T_inf wird festgehalten)."""
-    return (kosten(T_inf, lam + dx) - kosten(T_inf, lam - dx)) / (2 * dx)
-
-# --- Gradienten an einem Testpunkt auswerten ---
-T_inf_test = 35.0
-lam_test   = 0.02
-
-grad_T_inf = dK_dT_inf(T_inf_test, lam_test)
-grad_lam   = dK_dlam(T_inf_test, lam_test)
-
-print(f"Testpunkt: T_inf = {T_inf_test} °C,  lam = {lam_test} 1/s")
-print(f"dK/dT_inf = {grad_T_inf:.4f} °C")
-print(f"dK/dlam   = {grad_lam:.2f} °C² · s")
-print()
-# Verhältnis der Gradientenbeträge erklärt, warum unterschiedliche Lernraten nötig sind
-print(f"Betrag dK/dlam ist {abs(grad_lam)/abs(grad_T_inf):.0f}-mal größer als Betrag dK/dT_inf")
-print("=> alpha_lam muss entsprechend kleiner als alpha_T_inf gewählt werden")
+# Aufwand an jedem Gitterpunkt, Zeile = y, Spalte = x
+aufwand_werte = np.zeros((len(y_werte), len(x_werte)))
+for i in range(len(y_werte)):
+    for j in range(len(x_werte)):
+        standort = np.array([x_werte[j], y_werte[i]])
+        aufwand_werte[i, j] = aufwand(standort)
 ```
 
-Die Ausgabe zeigt, dass der Gradient in $\lambda$-Richtung viel größer ist.
-Mit einer einheitlichen Lernrate würde $\lambda$ massive Sprünge machen, während
-$T_\infty$ kaum vorankommt. Die unterschiedlichen Lernraten gleichen das aus.
-
-```{admonition} Mini-Übung
-:class: tip
-1. Berechnen Sie `dK_dT_inf(20.0, 0.05)` (am wahren Parameterwert). Was
-   erwarten Sie für das Ergebnis, und warum? Überprüfen Sie Ihre Vorhersage
-   mit Python.
-2. Berechnen Sie `dK_dT_inf(20.0, 0.05)` und `dK_dlam(20.0, 0.05)`. Sind
-   die Werte exakt null? Begründen Sie das Ergebnis in einem Satz.
-```
+`ax.contour()` zeichnet die Höhenlinien. Es erhält die Werte von $x$, die Werte
+von $y$ und die Matrix. Mit `levels` legen wir fest, für welche Werte Linien
+erscheinen, `ax.clabel()` schreibt die Werte an die Linien.
 
 ```{code-cell} python
-# Code-Zelle
-```
-
-````{admonition} Lösung
-:class: tip
-:class: dropdown
-```python
-print(f"dK/dT_inf am wahren Punkt: {dK_dT_inf(20.0, 0.05):.6f}")
-print(f"dK/dlam   am wahren Punkt: {dK_dlam(20.0, 0.05):.6f}")
-```
-
-Zu Frage 1: Am wahren Parameterwert liegt das Minimum der Kostenfunktion.
-Der Gradient sollte dort null sein. Wegen des Messrauschens ist das Minimum
-der Kostenfunktion leicht verschoben, daher sind die Werte nahe null, aber
-nicht exakt null.
-
-Zu Frage 2: Die Gradienten sind klein, aber nicht exakt null, weil die
-Messdaten Rauschen enthalten. Das Minimum der Kostenfunktion liegt nicht
-exakt beim wahren Parameterwert, sondern leicht daneben.
-````
-
-## Vollständige Kurvenanpassung und scipy
-
-Wir haben alle Zutaten: die Kostenfunktion, die Gradienten und die
-Update-Regeln. Jetzt setzen wir alles zu einer vollständigen
-Kurvenanpassung zusammen und vergleichen das Ergebnis mit
-`scipy.optimize.minimize()`.
-
-```{code-cell} python
-from scipy.optimize import minimize
-
-# --- Gradient-Descent-Algorithmus für zwei Parameter ---
-T_inf_aktuell = 35.0   # Startwert: deutlich über wahrem T_inf = 20 °C
-lam_aktuell   = 0.02   # Startwert: deutlich unter wahrem λ = 0.05 1/s
-alpha_T_inf   = 5e-3   # Lernrate für T_inf (größer wegen kleinem Gradienten)
-alpha_lam     = 2e-7   # Lernrate für lam   (kleiner wegen großem Gradienten)
-n_iterationen = 2000
-
-kosten_verlauf = []
-
-for i in range(n_iterationen):
-    kosten_verlauf.append(kosten(T_inf_aktuell, lam_aktuell))
-    # Partielle Ableitungen am aktuellen Punkt berechnen
-    grad_T = dK_dT_inf(T_inf_aktuell, lam_aktuell)
-    grad_l = dK_dlam(T_inf_aktuell, lam_aktuell)
-    # Jeden Parameter unabhängig aktualisieren
-    T_inf_aktuell = T_inf_aktuell - alpha_T_inf * grad_T
-    lam_aktuell   = lam_aktuell   - alpha_lam   * grad_l
-
-print("--- Gradient Descent ---")
-print(f"T_inf = {T_inf_aktuell:.4f} °C   (wahr: {T_inf_wahr:.4f} °C)")
-print(f"lam   = {lam_aktuell:.5f} 1/s  (wahr: {lambda_wahr:.5f} 1/s)")
-print(f"MSE   = {kosten(T_inf_aktuell, lam_aktuell):.4f} °C²")
-print()
-
-# --- scipy.optimize.minimize als Vergleich ---
-# scipy erwartet eine Funktion mit einem einzigen Parametervektor
-def kosten_vektor(params):
-    """Wrapper für scipy: Parameter als Liste [T_inf, lam]."""
-    T_inf, lam = params
-    return kosten(T_inf, lam)
-
-# sinnvolle Grenzen für die Parameter festlegen
-grenzen = [
-    (None, None),   # T_inf: unbegrenzt
-    (1e-6, 10),     # lam:   muss positiv sein!
-]
-
-# minimize() findet das Minimum automatisch, ohne dass wir alpha wählen müssen
-ergebnis = minimize(kosten_vektor, x0=[35.0, 0.02], bounds=grenzen)
-T_inf_scipy, lam_scipy = ergebnis.x
-
-print("--- scipy.optimize.minimize ---")
-print(f"T_inf = {T_inf_scipy:.4f} °C   (wahr: {T_inf_wahr:.4f} °C)")
-print(f"lam   = {lam_scipy:.5f} 1/s  (wahr: {lambda_wahr:.5f} 1/s)")
-print(f"MSE   = {kosten(T_inf_scipy, lam_scipy):.4f} °C²")
-print(f"Iterationen: {ergebnis.nit}")
-
-# --- Vergleichsplot: Messdaten und beide Anpassungen ---
-t_fein = np.linspace(0, 120, 300)
-
-fig, ax = plt.subplots()
-ax.scatter(t_mess, T_mess, label='Messwerte', zorder=5)
-ax.plot(t_fein, modell(t_fein, lam_aktuell, T_inf_aktuell, T_0),
-        label='Gradient Descent')
-ax.plot(t_fein, modell(t_fein, lam_scipy, T_inf_scipy, T_0),
-        linestyle='--', label='scipy')
-ax.set_xlabel('Zeit in s')
-ax.set_ylabel('Temperatur in °C')
-ax.set_title('Kurvenanpassung: GD vs. scipy')
+# Höhenlinienbild des Transportaufwands mit Werken und Vorschlag
+fig, ax = plt.subplots(figsize=(8, 6))
+linien = ax.contour(x_werte, y_werte, aufwand_werte,
+                    levels=np.arange(650, 1500, 50))
+ax.clabel(linien, fontsize=8)
+ax.scatter(werke[:, 0], werke[:, 1], color='black', zorder=3)
+for k in range(len(werke)):
+    ax.text(werke[k, 0] + 0.8, werke[k, 1] + 0.8, f'Werk {k + 1}')
+ax.scatter(vorschlag[0], vorschlag[1], marker='x', s=80, color='red',
+           label='Vorschlag')
+ax.set_aspect('equal')
+ax.set_xlabel('x in km')
+ax.set_ylabel('y in km')
+ax.set_title('Transportaufwand in Lkw-km pro Woche')
 ax.legend()
 plt.show()
-
-# --- Konvergenzkurve des GD ---
-fig, ax = plt.subplots()
-ax.plot(kosten_verlauf)
-ax.set_xlabel('Iteration')
-ax.set_ylabel('K(T_∞, λ) in °C²')
-ax.set_title('Konvergenz des 2D-Gradient-Descent')
-ax.grid(True)
-plt.show()
 ```
 
-Beide Methoden finden nahezu dasselbe Ergebnis. `scipy.optimize.minimize()`
-passt die Schrittgröße automatisch an, braucht keine manuell gewählten
-Lernraten und konvergiert deutlich schneller. Die eigene GD-Implementierung
-ist dafür transparent: wir sehen jeden Schritt und können den Algorithmus
-nach Bedarf anpassen.
+Die Höhenlinien umschließen ein Tal links von der Mitte zwischen den Werken 1
+bis 4. Dort liegt der kleinste Aufwand, unter $650\,\text{km}$ pro Woche. Zum
+Vorschlag des Vorstands hin liegen die Linien immer dichter, der Aufwand
+steigt dort immer steiler an. Das Tal liegt nicht in der Mitte der Karte. Die
+Werke 1 bis 4 mit zusammen 40 Ladungen ziehen es nach links, Werk 5 mit
+6 Ladungen kaum nach rechts.
 
-```{admonition} Wann GD selbst implementieren, wann scipy?
+```{admonition} Was ist ein Höhenlinienbild?
 :class: note
-`scipy.optimize.minimize()` ist in der Ingenieurpraxis die erste Wahl: robust,
-schnell und ohne Lernraten-Tuning. Die eigene GD-Implementierung ist sinnvoll,
-wenn man den Algorithmus verstehen, Zwischenergebnisse speichern oder
-den Update-Schritt anpassen will, zum Beispiel in der Simulation von
-Lernprozessen.
+Ein **Höhenlinienbild** (englisch contour plot) stellt eine Funktion von zwei
+Größen in der Ebene dar. Jede Linie verbindet Punkte mit demselben
+Funktionswert. Liegen die Linien dicht, ändert sich die Funktion dort stark.
+Ziehen sich geschlossene Linien um einen Punkt zusammen und werden die Werte
+dabei nach innen kleiner, liegt darin ein Minimum.
 ```
 
-```{admonition} Mini-Übung
+```{admonition} Mini-Übung (✩)
 :class: tip
-1. `scipy` meldet in `ergebnis.nit` die Anzahl der benötigten Iterationen.
-   Vergleichen Sie diese Zahl mit den 2000 GD-Iterationen. Was schlussfolgern
-   Sie über die Effizienz der beiden Methoden?
-2. Ändern Sie den Startwert für scipy auf `x0=[50.0, 0.001]` (weit entfernt
-   vom Minimum). Findet `scipy` trotzdem das richtige Ergebnis?
-3. Versuchen Sie denselben schlechten Startwert mit Ihrem GD-Algorithmus.
-   Was beobachten Sie?
+1. Beantworten Sie ohne Code: Werk 5 liegt weit draußen. Warum liegt das Tal
+   trotzdem nicht in der Mitte zwischen allen fünf Werken?
+2. Der Zulieferer könnte das Lager auch direkt neben eines der Werke bauen.
+   Berechnen Sie in einer Schleife den Aufwand für ein Lager an jedem der fünf
+   Werke. Welches Werk ist am günstigsten?
+3. Beantworten Sie ohne Code, nur mit dem Höhenlinienbild: Zum Verkauf
+   stehen noch Grundstücke bei $(20, 25)$ und bei $(10, 14)$. Welches ist
+   günstiger, und zwischen welchen Werten liegt jeweils der Aufwand?
 ```
 
 ```{code-cell} python
@@ -331,50 +178,320 @@ Lernprozessen.
 ````{admonition} Lösung
 :class: tip
 :class: dropdown
-```python
-# Frage 2: schlechter Startwert für scipy
-ergebnis_weit = minimize(kosten_vektor, x0=[50.0, 0.001], bounds=grenzen)
-T_inf_w, lam_w = ergebnis_weit.x
-print(f"scipy (schlechter Start): T_inf = {T_inf_w:.4f} °C,  lam = {lam_w:.5f} 1/s")
-print(f"Iterationen: {ergebnis_weit.nit}")
+1. Jede Ladung zählt mit ihrer Entfernung. Die Werke 1 bis 4 brauchen zusammen
+   40 Ladungen, Werk 5 nur 6. Kurze Wege zu den Werken 1 bis 4 sparen deshalb
+   viel mehr Kilometer als ein kurzer Weg zu Werk 5. Werk 5 zieht das Lager
+   nur wenig zu sich nach rechts.
+2. Die Zeile `werke[k]` ist die Lage von Werk `k + 1`:
 
-# Frage 3: schlechter Startwert für GD
-T_inf_weit = 50.0
-lam_weit   = 0.001
-for i in range(n_iterationen):
-    grad_T   = dK_dT_inf(T_inf_weit, lam_weit)
-    grad_l   = dK_dlam(T_inf_weit, lam_weit)
-    T_inf_weit = T_inf_weit - alpha_T_inf * grad_T
-    lam_weit   = lam_weit   - alpha_lam   * grad_l
-print(f"GD (schlechter Start):    T_inf = {T_inf_weit:.4f} °C,  lam = {lam_weit:.5f} 1/s")
+   ```python
+   # Teilaufgabe 2: Lager direkt an einem der Werke
+   for k in range(len(werke)):
+       aufwand_werk = aufwand(werke[k])
+       print(f'Lager bei Werk {k + 1}: {aufwand_werk:.1f} Lkw-km pro Woche')
+   ```
+
+   Am günstigsten ist ein Lager bei Werk 3 mit $657.5\,\text{km}$ pro Woche,
+   am ungünstigsten eines bei Werk 5 mit $1360.7\,\text{km}$, kaum besser als
+   der Vorschlag des Vorstands. Werk 3 liegt am Rand des Tals im
+   Höhenlinienbild.
+3. Der Punkt $(10, 14)$ liegt zwischen den Linien für $650$ und
+   $700\,\text{km}$, der Punkt $(20, 25)$ zwischen den Linien für $700$ und
+   $750\,\text{km}$. Das Grundstück bei $(10, 14)$ ist also günstiger. Mit
+   `aufwand()` nachgerechnet sind es $673.5\,\text{km}$ und
+   $712.0\,\text{km}$ pro Woche.
+````
+
+## Wohin zeigt der Gradient?
+
+Wie in Kapitel 8.1 wollen wir vom Vorschlag aus bergab gehen. Jetzt können wir
+aber in jede Richtung der Ebene gehen. Wir fragen deshalb getrennt nach den
+beiden Richtungen.
+
+* Wie ändert sich der Aufwand, wenn wir nur $x$ ändern und $y$ festhalten?
+* Wie ändert sich der Aufwand, wenn wir nur $y$ ändern und $x$ festhalten?
+
+Diese beiden Steigungen heißen **partielle Ableitungen**, geschrieben
+$\partial A / \partial x$ und $\partial A / \partial y$. Wir berechnen jede wie
+in Kapitel 8.1 mit dem zentralen Differenzenquotienten. Dazu verschieben wir
+den Standort um `dx` nur in $x$-Richtung oder nur in $y$-Richtung. Beide
+partiellen Ableitungen zusammen bilden einen Vektor, den **Gradienten**
+
+$$\nabla A = \begin{pmatrix} \partial A / \partial x \\ \partial A / \partial y \end{pmatrix}.$$
+
+```{code-cell} python
+def gradient(funktion, stelle, dx):
+    """Gradient von funktion an der Stelle stelle = [x, y].
+
+    Jede partielle Ableitung mit dem zentralen Differenzenquotienten.
+    """
+    versatz_x = np.array([dx, 0.0])
+    versatz_y = np.array([0.0, dx])
+    ableitung_x = (funktion(stelle + versatz_x)
+                   - funktion(stelle - versatz_x)) / (2 * dx)
+    ableitung_y = (funktion(stelle + versatz_y)
+                   - funktion(stelle - versatz_y)) / (2 * dx)
+    return np.array([ableitung_x, ableitung_y])
 ```
 
-Zu Frage 1: `scipy` benötigt typischerweise unter 100 Iterationen, während
-unser GD 2000 Schritte und mehr braucht. `scipy` passt die Schrittgröße adaptiv an
-und ist daher effizienter.
+Am Vorschlag des Vorstands ergibt sich folgender Gradient. Seine Länge
+berechnet `np.linalg.norm()`, nach Pythagoras aus den beiden Komponenten.
 
-Zu Frage 2: `scipy` findet vom Startwert `x0=[50.0, 0.001]` **nicht** das
-richtige Minimum. Stattdessen konvergiert es zu einem *lokalen* Minimum bei
-$T_\infty \approx 31.86\,°\text{C}$ und $\lambda \approx 4.47\,\text{s}^{-1}$
-mit einem MSE von rund $295\,°\text{C}^2$, also etwa 80-mal schlechter als das
-globale Minimum. `scipy.optimize.minimize()` ist ein **lokaler** Optimierer: Es findet das nächstgelegene Minimum, nicht zwingend das globale. Für globale Suche wären andere Verfahren nötig, etwa [`scipy.optimize.differential_evolution()`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.differential_evolution.html).
+```{code-cell} python
+# Gradient am Vorschlag des Vorstands
+gradient_vorschlag = gradient(aufwand, vorschlag, 1e-6)
+laenge = np.linalg.norm(gradient_vorschlag)
+print('Gradient am Vorschlag:', np.round(gradient_vorschlag, 2))
+print(f'Länge des Gradienten: {laenge:.2f}')
+```
 
-Zu Frage 3: GD mit den gewählten Lernraten konvergiert vom schlechten
-Startwert möglicherweise nicht mehr korrekt, weil die Lernraten auf den
-ursprünglichen Startbereich abgestimmt wurden. Das zeigt die Schwäche fester
-Lernraten: sie funktionieren nur in einem bestimmten Bereich zuverlässig.
+Die erste Komponente ist die Steigung in $x$-Richtung, also nach Osten. Rückt
+das Lager vom Vorschlag aus einen Kilometer nach Osten, fahren die Lkw deshalb
+rund $34.5\,\text{km}$ pro Woche mehr. Die zweite Komponente gehört zur
+$y$-Richtung: Einen Kilometer nach Norden sind es rund $19.5\,\text{km}$ mehr.
+Das sind Näherungen, denn der Gradient beschreibt die Änderung direkt am
+Vorschlag. Beide Komponenten sind positiv, wir sollten also nach
+Westen und nach Süden gehen. Der Gradient zeigt in die Richtung, in der der
+Aufwand am stärksten wächst. Seine Länge von $39.6$ ist die Steigung in genau
+dieser Richtung. Der **negative Gradient** zeigt deshalb in die Richtung des
+steilsten Abstiegs. Wir zeichnen ihn als Pfeil in das Höhenlinienbild, mit
+`ax.annotate()` wie die Kraftpfeile in Part 4. Damit der Pfeil auf die Karte
+passt, kürzen wir ihn auf ein Viertel.
+
+```{code-cell} python
+# Höhenlinienbild mit negativem Gradienten am Vorschlag
+pfeilspitze = vorschlag - 0.25 * gradient_vorschlag
+
+fig, ax = plt.subplots(figsize=(8, 6))
+linien = ax.contour(x_werte, y_werte, aufwand_werte,
+                    levels=np.arange(650, 1500, 50))
+ax.clabel(linien, fontsize=8)
+ax.scatter(werke[:, 0], werke[:, 1], color='black', zorder=3)
+ax.scatter(vorschlag[0], vorschlag[1], marker='x', s=80, color='red')
+ax.annotate('', xy=pfeilspitze, xytext=vorschlag,
+            arrowprops=dict(arrowstyle='-|>', color='red', lw=2))
+ax.set_aspect('equal')
+ax.set_xlabel('x in km')
+ax.set_ylabel('y in km')
+ax.set_title('Richtung des steilsten Abstiegs am Vorschlag')
+plt.show()
+```
+
+Der Pfeil steht senkrecht auf den Höhenlinien. *Warum?* Entlang einer
+Höhenlinie ändert sich der Aufwand nicht. Am schnellsten ändert er sich also
+quer dazu. Wer im Gebirge den direkten Weg ins Tal sucht, geht ebenfalls quer
+zu den Höhenlinien.
+
+```{admonition} Mini-Übung (✩)
+:class: tip
+1. Beantworten Sie ohne Code: Der Gradient an einer Stelle ist
+   $(-11.8, -15.9)$. In welche Himmelsrichtung sollte das Lager rücken?
+2. Berechnen Sie den Gradienten bei $(10, 10)$ und bei $(14.4, 18.6)$. Was
+   fällt Ihnen beim zweiten Punkt auf?
+3. Beantworten Sie ohne Code: Wie viele Aufrufe von `aufwand()` braucht ein
+   Aufruf von `gradient()`? Wie viele wären es bei einem Standort im Raum mit
+   drei Koordinaten?
+```
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+1. Beide Komponenten sind negativ. Der Aufwand sinkt also, wenn $x$ und $y$
+   wachsen. Das Lager sollte nach Osten und nach Norden rücken, also nach
+   Nordosten, mit etwas mehr Gewicht auf Norden.
+2. Wir rufen `gradient()` an beiden Punkten auf:
+
+   ```python
+   # Teilaufgabe 2: Gradient an zwei weiteren Punkten
+   for punkt in [np.array([10.0, 10.0]), np.array([14.4, 18.6])]:
+       gradient_punkt = gradient(aufwand, punkt, 1e-6)
+       print(punkt, np.round(gradient_punkt, 3))
+   ```
+
+   Bei $(10, 10)$ ist der Gradient $(-11.8, -15.9)$, das ist der Punkt aus
+   Frage 1. Bei $(14.4, 18.6)$ ist er nur $(0.096, 0.040)$, also fast null. Der
+   Aufwand ändert sich dort in alle Richtungen nur noch wenig, wir sind ganz
+   nah am Minimum.
+3. Für jede Koordinate wertet `gradient()` die Funktion zweimal aus, einmal
+   davor und einmal dahinter. Bei zwei Koordinaten sind das vier Aufrufe, bei
+   drei Koordinaten sechs.
+````
+
+## Wo steht das Zentrallager am besten?
+
+Das Gradientenverfahren aus Kapitel 8.1 übertragen wir fast unverändert. Die
+Stelle ist jetzt ein Array `[x, y]`. Statt `zentral()` rufen wir `gradient()`
+auf, und die Vorschrift
+
+$$\begin{pmatrix} x \\ y \end{pmatrix}_\text{neu}
+= \begin{pmatrix} x \\ y \end{pmatrix} - \alpha \cdot \nabla A$$
+
+rechnet NumPy für beide Koordinaten auf einmal. Als Abbruchkriterium prüfen wir
+die Länge des Gradienten. Am Minimum ist der Gradient null, und seine Länge ist
+klein, wenn beide Komponenten klein sind.
+
+```{code-cell} python
+def gradientenverfahren_2d(funktion, start, lernrate, toleranz,
+                           max_iterationen):
+    """Sucht ein Minimum von funktion, Start bei start = [x, y].
+
+    Gibt alle besuchten Stellen als Array zurück, Zeile = [x, y].
+    """
+    stelle = start
+    verlauf = [stelle]
+    for k in range(max_iterationen):
+        steigung = gradient(funktion, stelle, 1e-6)
+        # Abbruchkriterium: Länge des Gradienten fast null
+        if np.linalg.norm(steigung) < toleranz:
+            break
+        stelle = stelle - lernrate * steigung
+        verlauf.append(stelle)
+    return np.array(verlauf)
+```
+
+Wir starten am Vorschlag des Vorstands, mit der Lernrate $0.2$ und der Toleranz
+$0.01$.
+
+```{code-cell} python
+# Gradientenverfahren vom Vorschlag aus
+verlauf = gradientenverfahren_2d(aufwand, vorschlag, 0.2, 0.01, 200)
+
+# Ergebnis: Iterationen, Standort und Aufwand
+anzahl = len(verlauf) - 1
+standort_optimal = verlauf[-1]
+aufwand_optimal = aufwand(standort_optimal)
+print(f'{anzahl} Iterationen')
+print('Bester Standort in km:', np.round(standort_optimal, 2))
+print(f'Aufwand: {aufwand_optimal:.1f} Lkw-km pro Woche')
+```
+
+Nach 24 Iterationen steht das Lager bei $(14.37, 18.59)$. Die Lkw fahren dort
+$619.5\,\text{km}$ pro Woche statt $1365.8\,\text{km}$ beim Vorschlag des
+Vorstands, das sind rund $750\,\text{km}$ weniger. Den Weg des Verfahrens
+zeichnen wir in das Höhenlinienbild. Die erste Spalte von `verlauf` enthält
+alle $x$-Werte, die zweite alle $y$-Werte.
+
+```{code-cell} python
+# Weg des Gradientenverfahrens im Höhenlinienbild
+fig, ax = plt.subplots(figsize=(8, 6))
+linien = ax.contour(x_werte, y_werte, aufwand_werte,
+                    levels=np.arange(650, 1500, 50))
+ax.clabel(linien, fontsize=8)
+ax.scatter(werke[:, 0], werke[:, 1], color='black', zorder=3)
+ax.plot(verlauf[:, 0], verlauf[:, 1], marker='o', markersize=4, color='red',
+        label='Weg des Verfahrens')
+ax.set_aspect('equal')
+ax.set_xlabel('x in km')
+ax.set_ylabel('y in km')
+ax.set_title('Gradientenverfahren für den Lagerstandort')
+ax.legend()
+plt.show()
+```
+
+Der Weg beginnt quer zu den Höhenlinien und biegt dann ins Tal ein. Die ersten
+Schritte sind lang, weil das Gelände am Vorschlag steil ist. Am Talboden
+werden sie immer kürzer, genau wie in Kapitel 8.1.
+
+Zum Vergleich: Das Höhenlinienbild hat `aufwand()` an $101 \cdot 71 = 7171$
+Gitterpunkten ausgewertet und kennt den besten Standort trotzdem nur auf
+$0.5\,\text{km}$ genau. Das Gradientenverfahren kam mit 25 Gradienten aus, also
+mit 100 Aufrufen von `aufwand()`.
+
+```{admonition} Aus der Logistik: Schwerpunktverfahren
+:class: note
+Eine verbreitete Faustregel legt das Lager in den **gewichteten Schwerpunkt**
+der Werke. Seine $x$-Koordinate ist $\sum n_i x_i / \sum n_i$, die
+$y$-Koordinate entsprechend. Der Schwerpunkt minimiert aber nicht die Summe der
+Entfernungen, sondern die Summe der quadrierten Entfernungen. Für das Minimum
+der Summe der Entfernungen gibt es im Allgemeinen keine geschlossene Formel.
+Das Problem heißt nach dem Ökonomen Alfred Weber **Weber-Problem** und wird
+numerisch gelöst, zum Beispiel mit dem Gradientenverfahren.
+
+Direkt an einem Werk hat der Aufwand eine Spitze, dort gibt es keinen
+Gradienten. Braucht ein Werk mindestens die Hälfte aller Ladungen, liegt das
+Minimum genau an diesem Werk, und das Gradientenverfahren findet es nur
+ungenau. In unserem Beispiel liegt das Minimum zwischen den Werken, dort ist
+der Gradient null.
+```
+
+```{admonition} Mini-Übung (✩)
+:class: tip
+1. Berechnen Sie den gewichteten Schwerpunkt der Werke und den Aufwand für ein
+   Lager dort. Wie viele Kilometer pro Woche fahren die Lkw mehr als beim
+   Ergebnis des Gradientenverfahrens?
+2. Starten Sie das Verfahren bei $(5, 5)$. Landet es am selben Standort?
+3. Beantworten Sie ohne Code: Werk 5 braucht künftig doppelt so viele
+   Ladungen. In welche Richtung rückt der beste Standort?
+```
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+1. Wir gewichten jede Koordinate mit der Zahl der Ladungen:
+
+   ```python
+   # Teilaufgabe 1: gewichteter Schwerpunkt der Werke
+   schwerpunkt_x = np.sum(ladungen * werke[:, 0]) / np.sum(ladungen)
+   schwerpunkt_y = np.sum(ladungen * werke[:, 1]) / np.sum(ladungen)
+   schwerpunkt = np.array([schwerpunkt_x, schwerpunkt_y])
+   aufwand_schwerpunkt = aufwand(schwerpunkt)
+   mehr = aufwand_schwerpunkt - aufwand_optimal
+   print('Schwerpunkt in km:', np.round(schwerpunkt, 2))
+   print(f'Aufwand: {aufwand_schwerpunkt:.1f} Lkw-km pro Woche')
+   print(f'Mehr als beim Gradientenverfahren: {mehr:.1f} Lkw-km pro Woche')
+   ```
+
+   Der Schwerpunkt liegt bei $(16.52, 17.74)$, gut $2\,\text{km}$ vom
+   Ergebnis des Gradientenverfahrens entfernt. Die Lkw fahren dort
+   $624.1\,\text{km}$ pro Woche, also $4.6\,\text{km}$ mehr. Das ist wenig,
+   weil der Talboden flach ist. Der Schwerpunkt liegt weiter rechts, weil das
+   weit entfernte Werk 5 beim Quadrieren mehr Gewicht bekommt. Das kennen Sie
+   von der mittleren quadratischen Abweichung in Kapitel 8.2: Große
+   Abweichungen zählen dort stärker als kleine.
+2. Wir ändern nur den Startwert:
+
+   ```python
+   # Teilaufgabe 2: anderer Startwert
+   start_2 = np.array([5.0, 5.0])
+   verlauf_2 = gradientenverfahren_2d(aufwand, start_2, 0.2, 0.01, 200)
+   print('Ergebnis in km:', np.round(verlauf_2[-1], 2))
+   ```
+
+   Von $(5, 5)$ aus landet das Verfahren bei $(14.36, 18.59)$, nur
+   $10\,\text{m}$ neben dem ersten Ergebnis. Ganz gleich sind die Ergebnisse
+   nicht, weil das Verfahren kurz vor dem Minimum abbricht, sobald die
+   Toleranz erreicht ist. Wo genau es stehen bleibt, hängt davon ab, aus
+   welcher Richtung es kommt. Das Gebirge hat nur ein einziges Tal, deshalb
+   führen beide Startwerte zum selben Minimum. Ob das Verfahren ein Minimum
+   zuverlässig erreicht, hängt aber auch von der Lernrate ab. Ist sie zu groß,
+   springt es wie in Kapitel 8.1 über das Tal hinweg.
+3. Werk 5 zieht dann stärker an dem Standort. Der beste Standort rückt auf
+   Werk 5 zu, also nach rechts und etwas nach unten. Mit 12 Ladungen für
+   Werk 5 liegt er bei etwa $(17.8, 15.7)$.
 ````
 
 ## Zusammenfassung und Ausblick
 
-Gradient Descent für zwei Parameter funktioniert nach demselben Prinzip wie
-in 1D: für jeden Parameter einen Update-Schritt, berechnet mit der zentralen
-Differenz aus Kapitel 7. Die Lernraten müssen an die unterschiedlichen Skalen
-der Parameter angepasst werden. `scipy.optimize.minimize()` löst dasselbe
-Problem robuster und schneller, ohne manuelles Lernraten-Tuning.
+Hängt eine Kostenfunktion von zwei Größen ab, stellen wir sie als
+Höhenlinienbild dar. Die partiellen Ableitungen geben an, wie stark sie sich
+ändert, wenn wir nur eine der beiden Größen ändern. Wir berechnen sie wie in
+Kapitel 8.1 mit dem zentralen Differenzenquotienten. Zusammen bilden sie den
+Gradienten. Er zeigt in die Richtung des steilsten Anstiegs und steht senkrecht
+auf den Höhenlinien. Das Gradientenverfahren geht in Richtung des negativen
+Gradienten und bricht ab, sobald dessen Länge fast null ist. Für den
+Lagerstandort fanden wir so in 24 Iterationen einen Standort, an dem die Lkw
+rund $750\,\text{km}$ pro Woche weniger fahren als beim Vorschlag des
+Vorstands.
 
-In Abschnitt 8.4 wenden wir die vollständige Kurvenanpassungs-Pipeline auf
-ein neues ingenieurtechnisches Problem an. Kapitel 9 wechselt dann das Thema:
-wir kehren zur Frage zurück, wie man das bestimmte Integral einer Funktion
-numerisch berechnet, und lernen mit der Trapez- und Simpson-Regel die
-klassischen Quadraturmethoden kennen.
+In Kapitel 8.4 passen Sie mit `gradientenverfahren_2d()` eine Gerade mit zwei
+Parametern an die Messdaten eines Sensors an. Anders als hier haben die beiden
+Größen dann verschiedene Einheiten. Wir werden sehen, dass das die Wahl der
+Lernrate schwieriger macht.

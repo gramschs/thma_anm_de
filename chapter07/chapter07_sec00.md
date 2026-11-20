@@ -61,6 +61,7 @@ schließt es wieder.
 </summary>
 <div class="applet-container">
 <iframe
+  title="Vorkenntnis-Check zu Kapitel 7"
   src="https://gramschs.github.io/thma_anm_assets/interactive/chapter07/chap07_sec00_quiz.html"
   width="100%"
   frameborder="0"

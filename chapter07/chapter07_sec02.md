@@ -486,7 +486,7 @@ $\sqrt[3]{\text{eps}}$, also $10^{-5}$ bis $10^{-6}$, für den zentralen
 Differenzenquotienten gut.
 
 Die Übungen in Kapitel 7.3 wiederholen beide Kapitel, unter anderem an der
-Notbremsung eines FTF. In Kapitel 8.1 suchen wir den Parameter eines Modells,
-der am besten zu Messdaten passt. Die Ableitung, die uns dabei die Richtung
-weist, berechnen wir mit dem zentralen Differenzenquotienten und der
-Schrittweite $10^{-6}$.
+Notbremsung eines FTF. In Kapitel 8.1 suchen wir die Bestellmenge, bei der
+die Kosten für Bestellung und Lagerung am kleinsten sind. Die Ableitung, die
+uns dabei die Richtung weist, berechnen wir mit dem zentralen
+Differenzenquotienten und der Schrittweite $10^{-6}$.

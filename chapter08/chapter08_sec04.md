@@ -4,247 +4,575 @@ kernelspec:
   display_name: 'Python 3'
 ---
 
-# 8.4 Übungen zu Gradient Descent in 2D
+# 8.4 Kalibrierung eines Kraftsensors
 
-```{admonition} Warnung
-:class: warning
-Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
+In Kapitel 8.3 haben wir mit dem Gradientenverfahren zwei Koordinaten eines
+Standorts gesucht. Jetzt suchen Sie zwei Parameter eines Modells, das wie in
+Kapitel 8.2 zu Messdaten passen soll. Bearbeiten Sie die Teile möglichst zu
+zweit und der Reihe nach.
+
+````{admonition} Projekt: Wie genau misst die Wägezelle? (✩✩)
+:class: tip
+An einer Abfüllanlage wiegt eine **Wägezelle** jedes Gebinde. Sie gibt eine
+Spannung aus, die mit der Kraft auf die Zelle wächst. Laut Datenblatt gilt die
+**Kennlinie**
+
+$$U = m \cdot F + b$$
+
+mit der Empfindlichkeit $m = 2.0\,\text{V/kN}$ und dem Nullpunkt
+$b = 0\,\text{V}$. Weil jede Zelle etwas anders ist, wird sie nach dem Einbau
+**kalibriert**. Dazu belastet ein Prüfer sie mit Prüfgewichten von $0$ bis
+$2\,\text{kN}$ und notiert die Spannung.
+
+| Größe | Bedeutung | Einheit |
+| --- | --- | --- |
+| $F$ | Kraft auf die Wägezelle | kN |
+| $U$ | Ausgangsspannung | V |
+| $m$ | Empfindlichkeit, Steigung der Kennlinie | V/kN |
+| $b$ | Nullpunkt, Spannung ohne Last | V |
+
+Gesucht sind die tatsächlichen Werte von $m$ und $b$ und die Frage, wie stark
+sich eine Messung mit der Kennlinie aus dem Datenblatt verschätzt.
+````
+
+Führen Sie zuerst die folgende Zelle aus. Sie enthält die Funktionen
+`gradient()` und `gradientenverfahren_2d()` aus Kapitel 8.3, die Messdaten und
+die Kennlinie aus dem Datenblatt.
+
+```{code-cell} python
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Funktionen aus Kapitel 8.3
+def gradient(funktion, stelle, dx):
+    """Gradient von funktion an der Stelle stelle = [x, y].
+
+    Jede partielle Ableitung mit dem zentralen Differenzenquotienten.
+    """
+    versatz_x = np.array([dx, 0.0])
+    versatz_y = np.array([0.0, dx])
+    ableitung_x = (funktion(stelle + versatz_x)
+                   - funktion(stelle - versatz_x)) / (2 * dx)
+    ableitung_y = (funktion(stelle + versatz_y)
+                   - funktion(stelle - versatz_y)) / (2 * dx)
+    return np.array([ableitung_x, ableitung_y])
+
+def gradientenverfahren_2d(funktion, start, lernrate, toleranz,
+                           max_iterationen):
+    """Sucht ein Minimum von funktion, Start bei start = [x, y].
+
+    Gibt alle besuchten Stellen als Array zurück, Zeile = [x, y].
+    """
+    stelle = start
+    verlauf = [stelle]
+    for k in range(max_iterationen):
+        steigung = gradient(funktion, stelle, 1e-6)
+        # Abbruchkriterium: Länge des Gradienten fast null
+        if np.linalg.norm(steigung) < toleranz:
+            break
+        stelle = stelle - lernrate * steigung
+        verlauf.append(stelle)
+    return np.array(verlauf)
+
+# Kalibrierung: Kraft der Prüfgewichte in kN und gemessene Spannung in V
+kraft = np.array([0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0])
+spannung = np.array([0.121, 0.437, 0.904, 1.293, 1.703, 2.116, 2.488,
+                     2.931, 3.327, 3.818, 4.165])
+
+# Kennlinie laut Datenblatt: [m in V/kN, b in V]
+datenblatt = np.array([2.0, 0.0])
 ```
 
-````{admonition} Übung 8.3 (✩)
+````{admonition} Teil 1: Messdaten und Datenblatt
 :class: tip
-Gegeben ist der folgende Code, der `scipy.optimize.minimize()` auf eine
-zweidimensionale Kostenfunktion anwendet.
+Schreiben Sie eine Funktion `kennlinie(kraft, parameter)`, die die Spannung
+nach der Kennlinie berechnet. Wie in Kapitel 8.3 der Standort ist `parameter`
+ein Array mit zwei Einträgen, hier `[m, b]`.
+
+Das folgende Gerüst zeichnet die Messwerte als Punkte und die Kennlinie aus dem
+Datenblatt als Linie. Ergänzen Sie die Lücke:
 
 ```python
-from scipy.optimize import minimize
-
-def f(params):
-    a, b = params
-    return (a - 5)**2 + 2 * (b + 3)**2
-
-ergebnis = minimize(f, x0=[0.0, 0.0])
-
-print(f"a          = {ergebnis.x[0]:.4f}")
-print(f"b          = {ergebnis.x[1]:.4f}")
-print(f"f(a, b)    = {ergebnis.fun:.6f}")
-print(f"Konvergiert: {ergebnis.success}")
-print(f"Iterationen: {ergebnis.nit}")
+fig, ax = plt.subplots(figsize=(7, 4))
+ax.scatter(kraft, spannung, color='black', label='Messwerte')
+ax.plot(kraft, ___, label='Datenblatt')
+ax.set_xlabel('Kraft in kN')
+ax.set_ylabel('Spannung in V')
+ax.set_title('Kalibrierung der Wägezelle')
+ax.legend()
+ax.grid(True)
+plt.show()
 ```
 
-1. Wo liegt das Minimum von $f(a, b)$? Berechnen Sie es ohne Code und
-   geben Sie $a^*$ und $b^*$ an.
-2. Was erwarten Sie für die Ausgabe von `ergebnis.x` und `ergebnis.fun`?
-   Schreiben Sie die erwarteten Werte auf, bevor Sie den Code ausführen.
-3. Der erste Term $(a - 5)^2$ hat den Koeffizienten 1, der zweite
-   $2 \cdot (b + 3)^2$ den Koeffizienten 2. In welcher Richtung ist
-   $f$ steiler, in $a$- oder in $b$-Richtung? Was würde das für die
-   Wahl von Lernraten bei einem eigenen GD-Algorithmus bedeuten?
-4. Führen Sie den Code aus und überprüfen Sie Ihre Vorhersagen aus
-   den Fragen 1 und 2.
+Passt das Datenblatt zu der eingebauten Zelle? Welcher der beiden Parameter
+weicht vermutlich ab?
 ````
 
 ```{code-cell} python
 # Code-Zelle
 ```
 
-````{admonition} Lösung
+````{admonition} Tipp Teil 1
+:class: tip
+:class: dropdown
+`parameter[0]` ist die Steigung $m$, `parameter[1]` der Nullpunkt $b$.
+```python
+def kennlinie(kraft, parameter):
+    """Spannung in V für die Kraft in kN, parameter = [m, b]."""
+    return ___
+```
+In die Lücke im Gerüst gehört ein Aufruf von `kennlinie()` mit allen Kräften
+und den Parametern aus dem Datenblatt.
+````
+
+````{admonition} Lösung Teil 1
 :class: tip
 :class: dropdown
 ```python
-from scipy.optimize import minimize
+def kennlinie(kraft, parameter):
+    """Spannung in V für die Kraft in kN, parameter = [m, b]."""
+    return parameter[0] * kraft + parameter[1]
 
-def f(params):
-    a, b = params
-    return (a - 5)**2 + 2 * (b + 3)**2
-
-ergebnis = minimize(f, x0=[0.0, 0.0])
-
-print(f"a          = {ergebnis.x[0]:.4f}")
-print(f"b          = {ergebnis.x[1]:.4f}")
-print(f"f(a, b)    = {ergebnis.fun:.6f}")
-print(f"Konvergiert: {ergebnis.success}")
-print(f"Iterationen: {ergebnis.nit}")
+fig, ax = plt.subplots(figsize=(7, 4))
+ax.scatter(kraft, spannung, color='black', label='Messwerte')
+ax.plot(kraft, kennlinie(kraft, datenblatt), label='Datenblatt')
+ax.set_xlabel('Kraft in kN')
+ax.set_ylabel('Spannung in V')
+ax.set_title('Kalibrierung der Wägezelle')
+ax.legend()
+ax.grid(True)
+plt.show()
 ```
-
-Zu Frage 1: Jedes Quadrat ist mindestens null. Das Minimum liegt vor, wenn
-beide Terme gleichzeitig null sind, also bei $a^* = 5$ und $b^* = -3$.
-Dort gilt $f(5, -3) = 0$.
-
-Zu Frage 2: `ergebnis.x` enthält `[5.0, -3.0]` (bis auf numerische
-Ungenauigkeiten), `ergebnis.fun` ist nahezu null.
-
-Zu Frage 3: In $b$-Richtung ist $f$ doppelt so steil wie in $a$-Richtung,
-weil der Koeffizient 2 vor dem zweiten Term steht. Der Gradient in
-$b$-Richtung ist für denselben Abstand vom Minimum doppelt so groß. Bei
-einem eigenen GD müsste $\alpha_b$ halb so groß wie $\alpha_a$ gewählt
-werden, damit die Schritte in beiden Richtungen gleich groß ausfallen.
+Die Messwerte liegen fast auf einer Geraden, aber durchweg etwas über der
+Kennlinie aus dem Datenblatt. Schon ohne Last zeigt die Zelle $0.121\,\text{V}$
+statt $0\,\text{V}$. Das deutet auf einen Nullpunkt $b$ über $0\,\text{V}$ hin.
+Ob auch die Steigung abweicht, lässt sich mit bloßem Auge kaum entscheiden. Das
+klärt erst die Anpassung in Teil 3.
 ````
 
-````{admonition} Übung 8.4 (✩✩)
+````{admonition} Teil 2: Kostenfunktion und Höhenlinienbild
 :class: tip
-Die **Wöhlerkurve** beschreibt, wie viele Lastspiele $N$ ein Bauteil bei
-einer Spannungsamplitude $S$ aushält. Das Modell lautet
+Schreiben Sie wie in Teil 2 von Kapitel 8.2 eine Funktion `kosten(parameter)`,
+die die mittlere quadratische Abweichung zwischen gemessener Spannung und
+Kennlinie berechnet. Wie groß ist sie für das Datenblatt?
 
-$$S = a \cdot N^{-b},$$
-
-wobei $a$ und $b$ materialabhängige Parameter sind. Maschinenbauteile aus
-Stahl haben typischerweise $a \approx 1500\,\text{MPa}$ und
-$b \approx 0.12$.
-
-Im folgenden Datensatz stehen simulierte Prüfergebnisse zur Verfügung:
+Zeichnen Sie dann wie im ersten Abschnitt von Kapitel 8.3 ein Höhenlinienbild
+der Kostenfunktion für $m$ von $1.8$ bis $2.3\,\text{V/kN}$ und $b$ von $-0.2$
+bis $0.3\,\text{V}$. Auf der waagerechten Achse liegt $m$, auf der senkrechten
+$b$. Die Zeilen der Matrix gehören deshalb zu $b$, die Spalten zu $m$. Das
+Gerüst ist vorbereitet, Sie ergänzen nur die Lücken:
 
 ```python
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.style as style
-style.use('seaborn-v0_8')
-from scipy.optimize import minimize
+# Kosten auf einem Gitter, Zeile = b, Spalte = m
+m_werte = np.linspace(1.8, 2.3, 101)
+b_werte = np.linspace(-0.2, 0.3, 101)
+kosten_werte = np.zeros((len(b_werte), len(m_werte)))
+for i in range(len(b_werte)):
+    for j in range(len(m_werte)):
+        parameter = np.array([___, ___])
+        kosten_werte[i, j] = ___
 
-np.random.seed(7)
-
-# --- Wöhlerversuch: Spannungsamplitude vs. Lastspielzahl ---
-a_wahr = 1500.0  # MPa
-b_wahr = 0.12
-N_mess = np.array([1e4, 3e4, 1e5, 5e5, 2e6, 1e7])  # Lastspielzahl
-S_wahr = a_wahr * N_mess**(-b_wahr)                  # Spannungsamplitude in MPa
-# Multiplikatives Rauschen: ±5 % Streuung
-S_mess = S_wahr * (1 + np.random.normal(0, 0.05, len(N_mess)))
+# Höhenlinienbild mit dem Datenblatt
+fig, ax = plt.subplots(figsize=(7, 6))
+linien = ax.contour(m_werte, b_werte, kosten_werte,
+                    levels=[0.002, 0.005, 0.01, 0.02, 0.05])
+ax.clabel(linien, fontsize=8)
+ax.scatter(datenblatt[0], datenblatt[1], marker='x', s=80, color='red',
+           label='Datenblatt')
+ax.set_xlabel('m in V/kN')
+ax.set_ylabel('b in V')
+ax.set_title('Mittlere quadratische Abweichung in V²')
+ax.legend()
+plt.show()
 ```
 
-1. Plotten Sie `N_mess` gegen `S_mess` in einem Log-Log-Diagramm
-   (`ax.loglog()`). Beschriften Sie die Achsen mit Einheiten. Warum
-   erscheint die Wöhlerkurve im Log-Log-Diagramm als Gerade?
-2. Implementieren Sie Kostenfunktion und numerische Gradienten für die
-   Parameter $a$ und $b$. Wählen Sie `alpha_a = 0.5` und
-   `alpha_b = 1e-8` als Lernraten sowie `[500.0, 0.05]` als Startwerte.
-   Führen Sie 10000 Iterationen durch und geben Sie die gefundenen
-   Parameter aus.
-3. Plotten Sie die angepasste Kurve über die Messdaten (Log-Log).
-4. Wiederholen Sie die Anpassung mit `scipy.optimize.minimize()` und
-   vergleichen Sie die Ergebnisse.
-5. Warum ist $\alpha_b$ so viel kleiner als $\alpha_a$? Berechnen Sie
-   die numerischen Gradienten am Startpunkt und begründen Sie das
-   Verhältnis der Lernraten damit.
+Wo etwa liegt das Minimum? Welche Form hat das Tal?
 ````
 
 ```{code-cell} python
 # Code-Zelle
 ```
 
-````{admonition} Lösung
+````{admonition} Tipp Teil 2
+:class: tip
+:class: dropdown
+Die Funktion `kosten()` ist gebaut wie in Kapitel 8.2, nur mit `kennlinie()`
+statt `modell()`.
+```python
+def kosten(parameter):
+    """Mittlere quadratische Abweichung in V² zwischen Messung und Kennlinie."""
+    abweichung = ___
+    return np.mean(___)
+
+kosten_datenblatt = kosten(datenblatt)
+print(f'Kosten für das Datenblatt: {kosten_datenblatt:.4f} V²')
+```
+Im Gerüst gehört `i` zu `b_werte` und `j` zu `m_werte`. Das Array `parameter`
+enthält die beiden Werte in der Reihenfolge `[m, b]`.
+````
+
+````{admonition} Lösung Teil 2
 :class: tip
 :class: dropdown
 ```python
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.style as style
-style.use('seaborn-v0_8')
-from scipy.optimize import minimize
+def kosten(parameter):
+    """Mittlere quadratische Abweichung in V² zwischen Messung und Kennlinie."""
+    abweichung = spannung - kennlinie(kraft, parameter)
+    return np.mean(abweichung**2)
 
-np.random.seed(7)
+kosten_datenblatt = kosten(datenblatt)
+print(f'Kosten für das Datenblatt: {kosten_datenblatt:.4f} V²')
 
-# --- Datenerzeugung ---
-a_wahr = 1500.0
-b_wahr = 0.12
-N_mess = np.array([1e4, 3e4, 1e5, 5e5, 2e6, 1e7])
-S_wahr = a_wahr * N_mess**(-b_wahr)
-S_mess = S_wahr * (1 + np.random.normal(0, 0.05, len(N_mess)))
+# Kosten auf einem Gitter, Zeile = b, Spalte = m
+m_werte = np.linspace(1.8, 2.3, 101)
+b_werte = np.linspace(-0.2, 0.3, 101)
+kosten_werte = np.zeros((len(b_werte), len(m_werte)))
+for i in range(len(b_werte)):
+    for j in range(len(m_werte)):
+        parameter = np.array([m_werte[j], b_werte[i]])
+        kosten_werte[i, j] = kosten(parameter)
 
-# --- Frage 1: Log-Log-Plot der Rohdaten ---
-fig, ax = plt.subplots()
-ax.loglog(N_mess, S_mess, 'o', label='Prüfdaten')
-ax.set_xlabel('Lastspielzahl N')
-ax.set_ylabel('Spannungsamplitude S in MPa')
-ax.set_title('Wöhlerkurve (Rohdaten)')
-ax.grid(True, which='both')
+fig, ax = plt.subplots(figsize=(7, 6))
+linien = ax.contour(m_werte, b_werte, kosten_werte,
+                    levels=[0.002, 0.005, 0.01, 0.02, 0.05])
+ax.clabel(linien, fontsize=8)
+ax.scatter(datenblatt[0], datenblatt[1], marker='x', s=80, color='red',
+           label='Datenblatt')
+ax.set_xlabel('m in V/kN')
+ax.set_ylabel('b in V')
+ax.set_title('Mittlere quadratische Abweichung in V²')
 ax.legend()
 plt.show()
+```
+Ausgabe:
 
-# --- Modell- und Kostenfunktion ---
+```text
+Kosten für das Datenblatt: 0.0159 V²
+```
+Das Minimum liegt bei etwa $m = 2.05\,\text{V/kN}$ und $b = 0.07\,\text{V}$.
+Das Tal ist nicht rund wie in Kapitel 8.3, sondern lang, schmal und schräg. Es
+verläuft von links oben nach rechts unten. Größere Werte von $m$ passen also
+fast genauso gut, wenn $b$ gleichzeitig kleiner wird.
+````
 
-def modell_woehler(N, a, b):
-    """Wöhlermodell: S = a * N^(-b)."""
-    return a * N**(-b)
+````{admonition} Teil 3: Gradientenverfahren und Vergleich mit NumPy
+:class: tip
+Bestimmen Sie $m$ und $b$ mit `gradientenverfahren_2d()`. Starten Sie beim
+Datenblatt, mit der Lernrate $0.3$, der Toleranz $10^{-4}$ und höchstens 1000
+Iterationen. Zeichnen Sie den Weg des Verfahrens in das Höhenlinienbild.
+Kopieren Sie dazu den Code für das Höhenlinienbild aus Teil 2 und ergänzen Sie
+vor `ax.legend()` eine Zeile mit `ax.plot()`.
 
-def kosten(a, b):
-    """MSE zwischen Modell und Messdaten."""
-    S_vorhergesagt = modell_woehler(N_mess, a, b)
-    return np.mean((S_mess - S_vorhergesagt)**2)
+Für eine Gerade gibt es eine Formel, die die mittlere quadratische Abweichung
+direkt minimiert. NumPy stellt sie als `np.polyfit(kraft, spannung, 1)` bereit.
+Die `1` steht für ein Polynom ersten Grades, also eine Gerade. Die Funktion
+gibt die Steigung und den Achsenabschnitt als Array zurück. Vergleichen Sie
+mit Ihrem Ergebnis.
 
-# --- Fragen 2 und 3: Gradient Descent ---
-dx = 1e-6
+Führen Sie zum Schluss den folgenden Code aus. Er probiert die Lernraten
+$0.45$ und $0.5$ aus und speichert das Ergebnis in `verlauf_test`, damit Ihr
+Ergebnis in `verlauf` erhalten bleibt. Was passiert? Wurde jeweils die
+Toleranz erreicht oder nur die Grenze von 1000 Iterationen?
 
-def dK_da(a, b):
-    return (kosten(a + dx, b) - kosten(a - dx, b)) / (2 * dx)
+```python
+# Größere Lernraten
+for lernrate in [0.45, 0.5]:
+    verlauf_test = gradientenverfahren_2d(kosten, datenblatt, lernrate,
+                                          1e-4, 1000)
+    anzahl_test = len(verlauf_test) - 1
+    print(f'Lernrate {lernrate}: {anzahl_test} Iterationen, '
+          f'[m, b] = {np.round(verlauf_test[-1], 4)}')
+```
+````
 
-def dK_db(a, b):
-    return (kosten(a, b + dx) - kosten(a, b - dx)) / (2 * dx)
-
-a_aktuell   = 500.0
-b_aktuell   = 0.05
-alpha_a     = 0.5
-alpha_b     = 1e-8
-n_iterationen = 10000
-
-for i in range(n_iterationen):
-    grad_a    = dK_da(a_aktuell, b_aktuell)
-    grad_b    = dK_db(a_aktuell, b_aktuell)
-    a_aktuell = a_aktuell - alpha_a * grad_a
-    b_aktuell = b_aktuell - alpha_b * grad_b
-
-print("--- Gradient Descent ---")
-print(f"a = {a_aktuell:.2f} MPa  (wahr: {a_wahr:.2f} MPa)")
-print(f"b = {b_aktuell:.4f}      (wahr: {b_wahr:.4f})")
-print(f"MSE = {kosten(a_aktuell, b_aktuell):.4f} MPa²")
-print()
-
-# Angepasste Kurve über Messdaten
-N_fein = np.logspace(4, 7, 300)
-fig, ax = plt.subplots()
-ax.loglog(N_mess, S_mess, 'o', label='Prüfdaten')
-ax.loglog(N_fein, modell_woehler(N_fein, a_aktuell, b_aktuell),
-          label='Gradient Descent')
-ax.set_xlabel('Lastspielzahl N')
-ax.set_ylabel('Spannungsamplitude S in MPa')
-ax.set_title('Wöhlerkurve: Kurvenanpassung')
-ax.grid(True, which='both')
-ax.legend()
-plt.show()
-
-# --- Frage 4: scipy ---
-def kosten_vektor(params):
-    return kosten(params[0], params[1])
-
-ergebnis = minimize(kosten_vektor, x0=[500.0, 0.05])
-a_scipy, b_scipy = ergebnis.x
-
-print("--- scipy.optimize.minimize ---")
-print(f"a = {a_scipy:.2f} MPa  (wahr: {a_wahr:.2f} MPa)")
-print(f"b = {b_scipy:.4f}      (wahr: {b_wahr:.4f})")
-print(f"MSE = {kosten(a_scipy, b_scipy):.4f} MPa²")
-print(f"Iterationen: {ergebnis.nit}")
-print()
-
-# --- Frage 5: Gradienten am Startpunkt ---
-grad_a_start = dK_da(500.0, 0.05)
-grad_b_start = dK_db(500.0, 0.05)
-print("--- Gradienten am Startpunkt (a=500, b=0.05) ---")
-print(f"dK/da = {grad_a_start:.2f}")
-print(f"dK/db = {grad_b_start:.2f}")
-print(f"Verhältnis |dK/db| / |dK/da| = {abs(grad_b_start)/abs(grad_a_start):.1f}")
+```{code-cell} python
+# Code-Zelle
 ```
 
-Zu Frage 1: Im Log-Log-Diagramm gilt
-$\log S = \log a - b \cdot \log N$, also eine Gerade mit Steigung $-b$.
-Jede Potenzfunktion $S = a \cdot N^{-b}$ wird im Log-Log-Diagramm zu einer
-Geraden.
+````{admonition} Tipp Teil 3
+:class: tip
+:class: dropdown
+Der Weg entsteht wie im dritten Abschnitt von Kapitel 8.3. Spalte 0 von
+`verlauf` enthält die Werte von $m$, Spalte 1 die Werte von $b$.
+```python
+# Gradientenverfahren vom Datenblatt aus
+verlauf = gradientenverfahren_2d(___, datenblatt, 0.3, 1e-4, 1000)
+parameter_optimal = ___
+anzahl = len(verlauf) - 1
+print(f'{anzahl} Iterationen')
+print('Gradientenverfahren [m, b]:', np.round(parameter_optimal, 4))
 
-Zu Frage 5: Der Gradient in $b$-Richtung ist um mehrere Größenordnungen
-größer als in $a$-Richtung, weil $\partial S / \partial b = -a \cdot N^{-b}
-\cdot \ln N$ den Faktor $\ln N$ enthält, der für $N = 10^4$ bis $10^7$
-zwischen 9 und 16 liegt, und weil $a \approx 1500$ die Empfindlichkeit
-weiter verstärkt. Das Verhältnis der Lernraten $\alpha_a / \alpha_b =
-0.5 / 10^{-8} = 5 \cdot 10^7$ gleicht diesen Unterschied der
-Gradientenbeträge aus.
+# Vergleich mit np.polyfit()
+parameter_polyfit = np.polyfit(___, ___, 1)
+print('np.polyfit()        [m, b]:', np.round(parameter_polyfit, 4))
+
+# Diese Zeile in den Code des Höhenlinienbilds aus Teil 2 einfügen
+ax.plot(___, ___, marker='o', markersize=4, color='red',
+        label='Weg des Verfahrens')
+```
+````
+
+````{admonition} Lösung Teil 3
+:class: tip
+:class: dropdown
+```python
+# Gradientenverfahren vom Datenblatt aus
+verlauf = gradientenverfahren_2d(kosten, datenblatt, 0.3, 1e-4, 1000)
+parameter_optimal = verlauf[-1]
+anzahl = len(verlauf) - 1
+print(f'{anzahl} Iterationen')
+print('Gradientenverfahren [m, b]:', np.round(parameter_optimal, 4))
+
+# Vergleich mit np.polyfit()
+parameter_polyfit = np.polyfit(kraft, spannung, 1)
+print('np.polyfit()        [m, b]:', np.round(parameter_polyfit, 4))
+
+# Höhenlinienbild aus Teil 2 mit dem Weg des Verfahrens
+fig, ax = plt.subplots(figsize=(7, 6))
+linien = ax.contour(m_werte, b_werte, kosten_werte,
+                    levels=[0.002, 0.005, 0.01, 0.02, 0.05])
+ax.clabel(linien, fontsize=8)
+ax.scatter(datenblatt[0], datenblatt[1], marker='x', s=80, color='red',
+           label='Datenblatt')
+ax.set_xlabel('m in V/kN')
+ax.set_ylabel('b in V')
+ax.set_title('Mittlere quadratische Abweichung in V²')
+ax.plot(verlauf[:, 0], verlauf[:, 1], marker='o', markersize=4, color='red',
+        label='Weg des Verfahrens')
+ax.legend()
+plt.show()
+
+# Größere Lernraten
+for lernrate in [0.45, 0.5]:
+    verlauf_test = gradientenverfahren_2d(kosten, datenblatt, lernrate,
+                                          1e-4, 1000)
+    anzahl_test = len(verlauf_test) - 1
+    print(f'Lernrate {lernrate}: {anzahl_test} Iterationen, '
+          f'[m, b] = {np.round(verlauf_test[-1], 4)}')
+```
+Ausgabe:
+
+```text
+39 Iterationen
+Gradientenverfahren [m, b]: [2.049  0.0694]
+np.polyfit()        [m, b]: [2.0488 0.0696]
+Lernrate 0.45: 1000 Iterationen, [m, b] = [2.0417 0.0638]
+Lernrate 0.5: 1000 Iterationen, [m, b] = [-2.32175471e+09 -2.77992362e+09]
+```
+Nach 39 Iterationen findet das Verfahren $m = 2.049\,\text{V/kN}$ und
+$b = 0.069\,\text{V}$. Das stimmt mit `np.polyfit()` bis auf wenige
+Zehntausendstel überein, den Unterschied bestimmt die Toleranz. Der erste
+Schritt führt quer über das schmale Tal hinweg. Danach läuft der Weg in kleinen
+Zickzackschritten den Talboden entlang zum Minimum.
+
+Mit beiden größeren Lernraten endet das Verfahren erst nach 1000 Iterationen,
+die Toleranz ist also nicht erreicht. Mit $0.45$ kommt es zwar in die Nähe des
+Minimums, springt aber quer zum schmalen Tal hin und her. Die Sprünge werden
+nur sehr langsam kleiner, die Toleranz wäre erst nach etwa 3800 Iterationen
+erreicht. Mit $0.5$ schaukeln sich die Sprünge dagegen auf, die Parameter
+wachsen auf Milliarden. Das schmale Tal ist quer zu seiner Richtung sehr
+steil, deshalb verträgt es nur kleine Lernraten. Die Grenze liegt hier knapp
+über $0.45$.
+````
+
+````{admonition} Teil 4: Was bringt die Kalibrierung?
+:class: tip
+Im Betrieb zeigt die Wägezelle $2.73\,\text{V}$. Lösen Sie die Kennlinie nach
+der Kraft auf:
+
+$$F = \frac{U - b}{m}.$$
+
+Berechnen Sie die Kraft einmal mit dem Datenblatt und einmal mit den
+kalibrierten Parametern aus Teil 3. Um wie viel Newton und um wie viel Prozent
+verschätzt sich das Datenblatt?
+````
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Tipp Teil 4
+:class: tip
+:class: dropdown
+Eine Kraft von $1\,\text{kN}$ sind $1000\,\text{N}$. Die prozentuale Abweichung
+beziehen wir auf die kalibrierte Kraft.
+```python
+# Kraft aus der gemessenen Spannung
+u_betrieb = 2.73
+kraft_datenblatt = (u_betrieb - ___) / ___
+kraft_kalibriert = (u_betrieb - ___) / ___
+
+# Abweichung in N und in Prozent
+abweichung_newton = ___
+abweichung_prozent = ___
+print(f'Kraft laut Datenblatt: {kraft_datenblatt:.4f} kN')
+print(f'Kraft kalibriert:      {kraft_kalibriert:.4f} kN')
+print(f'Abweichung: {abweichung_newton:.0f} N, {abweichung_prozent:.1f} %')
+```
+````
+
+````{admonition} Lösung Teil 4
+:class: tip
+:class: dropdown
+```python
+# Kraft aus der gemessenen Spannung
+u_betrieb = 2.73
+kraft_datenblatt = (u_betrieb - datenblatt[1]) / datenblatt[0]
+kraft_kalibriert = (u_betrieb - parameter_optimal[1]) / parameter_optimal[0]
+
+# Abweichung in N und in Prozent
+abweichung_newton = (kraft_datenblatt - kraft_kalibriert) * 1000
+abweichung_prozent = abweichung_newton / (kraft_kalibriert * 1000) * 100
+print(f'Kraft laut Datenblatt: {kraft_datenblatt:.4f} kN')
+print(f'Kraft kalibriert:      {kraft_kalibriert:.4f} kN')
+print(f'Abweichung: {abweichung_newton:.0f} N, {abweichung_prozent:.1f} %')
+```
+Ausgabe:
+
+```text
+Kraft laut Datenblatt: 1.3650 kN
+Kraft kalibriert:      1.2985 kN
+Abweichung: 67 N, 5.1 %
+```
+Mit dem Datenblatt läge die angezeigte Kraft um $67\,\text{N}$ über dem
+kalibrierten Wert, das sind rund $6.8\,\text{kg}$ Gewicht oder $5\,\%$. Je
+nach Anforderung der Anlage kann das erheblich sein. Etwa die Hälfte der
+Abweichung geht auf den Nullpunkt von $0.07\,\text{V}$ zurück, die andere
+Hälfte auf die etwas größere Steigung. Auch der kalibrierte Wert ist nur eine
+Schätzung aus 11 Messpunkten, aber eine deutlich bessere als das Datenblatt.
+````
+
+```{admonition} Abschlussfrage
+:class: tip
+Warum ist das Tal im Höhenlinienbild schmal und schräg? Denken Sie an die
+Messpunkte: Was passiert mit der Geraden, wenn wir $m$ etwas vergrößern und
+$b$ gleichzeitig etwas verkleinern?
+
+Rechnen Sie dazu im Kopf die Spannung der Geraden mit $[m, b] = [2.0, 0.12]$
+und mit $[m, b] = [2.1, 0.02]$ bei $0$, $1$ und $2\,\text{kN}$ aus und
+vergleichen Sie mit den Messwerten.
+```
+
+````{admonition} Lösung Abschlussfrage
+:class: tip
+:class: dropdown
+| Kraft | Messwert | $[2.0, 0.12]$ | $[2.1, 0.02]$ |
+| --- | --- | --- | --- |
+| $0\,\text{kN}$ | $0.121\,\text{V}$ | $0.12\,\text{V}$ | $0.02\,\text{V}$ |
+| $1\,\text{kN}$ | $2.116\,\text{V}$ | $2.12\,\text{V}$ | $2.12\,\text{V}$ |
+| $2\,\text{kN}$ | $4.165\,\text{V}$ | $4.12\,\text{V}$ | $4.22\,\text{V}$ |
+
+Bei $1\,\text{kN}$ liefern beide Geraden dieselbe Spannung. Vergrößern wir
+$m$, wird die Gerade steiler. Verkleinern wir gleichzeitig $b$, rutscht sie
+nach unten. Beides zusammen dreht die Gerade um einen Punkt in der Mitte der
+Messwerte. In der Mitte passt sie dann noch genauso gut, nur an den Enden
+weicht sie etwas ab, die eine Gerade links, die andere rechts. Beide haben
+deshalb fast dieselben Kosten, etwa $0.002\,\text{V}^2$. In dieser Richtung
+steigen die Kosten nur langsam an, und das Tal erstreckt sich von links oben
+nach rechts unten. Verschieben wir dagegen nur $b$, rutscht die ganze Gerade
+an allen Messpunkten gleichzeitig weg. Schon $0.1\,\text{V}$ mehr als im
+Minimum ergibt Kosten von $0.011\,\text{V}^2$. Quer zum Tal steigen die Kosten
+deshalb steil an.
+
+Für das Gradientenverfahren bedeutet das: Quer zum Tal ist die Steigung groß
+und begrenzt die Lernrate. Entlang des Tals ist sie klein, und mit dieser
+kleinen Lernrate kommt das Verfahren dort nur langsam voran. Je schmaler das
+Tal, desto mehr Iterationen braucht das Verfahren.
+````
+
+````{admonition} Zusatzaufgabe: Kraft in Newton statt Kilonewton (✩✩✩)
+:class: tip
+Ein Kollege rechnet lieber in Newton. Er multipliziert die Kräfte mit 1000 und
+startet beim Datenblatt, das jetzt $m = 0.002\,\text{V/N}$ und
+$b = 0\,\text{V}$ lautet.
+
+1. Schreiben Sie Kennlinie und Kostenfunktion für die Kraft in Newton.
+   Berechnen Sie den Gradienten am Datenblatt und vergleichen Sie seine beiden
+   Komponenten mit dem Gradienten am Datenblatt in Kilonewton.
+2. Starten Sie das Gradientenverfahren mit der Lernrate $0.3$. Suchen Sie dann
+   die größte Lernrate der Form $1 \cdot 10^{-k}$ oder $4 \cdot 10^{-k}$, mit
+   der das Verfahren nicht explodiert, und lassen Sie es 2000 Iterationen
+   laufen. Vergleichen Sie das Ergebnis mit `np.polyfit()`.
+3. Erklären Sie, warum die Wahl der Einheit über Erfolg und Misserfolg des
+   Verfahrens entscheidet, obwohl die Gerade dieselbe ist.
+````
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung Zusatzaufgabe
+:class: tip
+:class: dropdown
+1. Nur die Kraft und das Datenblatt ändern sich:
+
+   ```python
+   # Teilaufgabe 1: Kraft in N, Datenblatt in V/N und V
+   kraft_newton = kraft * 1000
+   datenblatt_newton = np.array([0.002, 0.0])
+
+   def kosten_newton(parameter):
+       """Mittlere quadratische Abweichung mit der Kraft in N."""
+       abweichung = spannung - kennlinie(kraft_newton, parameter)
+       return np.mean(abweichung**2)
+
+   print('Gradient in kN:', gradient(kosten, datenblatt, 1e-6))
+   print('Gradient in N: ', gradient(kosten_newton, datenblatt_newton, 1e-6))
+   ```
+
+   Ausgabe:
+
+   ```text
+   Gradient in kN: [-0.27596364 -0.23690909]
+   Gradient in N:  [-2.75963636e+02 -2.36909091e-01]
+   ```
+
+   Die Komponente für $b$ ist gleich geblieben. Die Komponente für $m$ ist
+   tausendmal so groß. Eine Änderung von $m$ um $1\,\text{V/N}$ ist eine
+   riesige Änderung, denn sie wird mit Kräften bis $2000\,\text{N}$
+   multipliziert.
+2. Wir probieren die Lernraten der Reihe nach aus:
+
+   ```python
+   # Teilaufgabe 2: verschiedene Lernraten mit der Kraft in N
+   for lernrate in [0.3, 1e-6, 4e-7]:
+       verlauf_newton = gradientenverfahren_2d(kosten_newton,
+                                               datenblatt_newton, lernrate,
+                                               1e-4, 2000)
+       anzahl_newton = len(verlauf_newton) - 1
+       print(f'Lernrate {lernrate:.0e}: {anzahl_newton} Iterationen, '
+             f'[m, b] = {verlauf_newton[-1]}')
+   print('np.polyfit():', np.polyfit(kraft_newton, spannung, 1))
+   ```
+
+   Ausgabe (die sehr großen Zahlen können je nach Rechner etwas abweichen):
+
+   ```text
+   Lernrate 3e-01: 3 Iterationen, [m, b] = [ 5.81958985e+13 -4.96732955e+04]
+   Lernrate 1e-06: 57 Iterationen, [m, b] = [ 3.70621357e+10 -8.19482317e+05]
+   Lernrate 4e-07: 2000 Iterationen, [m, b] = [2.09853567e-03 3.18968452e-05]
+   np.polyfit(): [0.00204882 0.06963636]
+   ```
+
+   Mit $0.3$ und mit $10^{-6}$ explodiert das Verfahren. Dass es trotzdem
+   nach drei beziehungsweise 57 Iterationen anhält, ist eine Falle. Die
+   Parameter sind dann so groß, dass sich `stelle + 1e-6` wegen der
+   Rundungsfehler aus Kapitel 7.2 nicht mehr von `stelle` unterscheidet. Der
+   zentrale Differenzenquotient wird exakt null, und das Abbruchkriterium
+   meldet ein Minimum, das keines ist. Ein erfülltes Abbruchkriterium allein
+   beweist also nichts, wir müssen uns das Ergebnis immer ansehen. Erst mit
+   $4 \cdot 10^{-7}$ bleibt das Verfahren stabil. Nach 2000 Iterationen steht
+   $b$ aber
+   noch immer bei $0.00003\,\text{V}$ statt bei $0.07\,\text{V}$. Auch $m$
+   liegt mit $0.00210\,\text{V/N}$ daneben, weil das Verfahren den zu kleinen
+   Nullpunkt mit einer zu steilen Geraden ausgleicht.
+3. Die Gerade ist dieselbe, aber das Tal der Kostenfunktion sieht in den neuen
+   Einheiten anders aus. In Richtung $m$ ist es tausendmal steiler als in
+   Kilonewton, in Richtung $b$ gleich geblieben. Die Lernrate muss so klein
+   sein, dass die steile Richtung nicht explodiert. Mit dieser kleinen
+   Lernrate kommt das Verfahren in der flachen Richtung $b$ kaum noch voran.
+   Deshalb wählen wir die Einheiten so, dass eine Änderung jedes Parameters
+   die Kosten ähnlich stark beeinflusst. Dann passt eine Lernrate für alle
+   Richtungen. Im maschinellen Lernen heißt dieser Schritt
+   **Skalierung** der Daten und gehört vor jedes Training.
 ````

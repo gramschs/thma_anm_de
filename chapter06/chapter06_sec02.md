@@ -604,8 +604,8 @@ Winkel auf Zentimeter und Grad gerundet sind. Die Kurve hat genau ein Minimum.
 Bei jedem anderen Gierwinkel läge der Reflektor woanders in der Halle, bei
 $210°$ sogar mehr als $5\,\text{m}$ von seiner Lage laut Karte entfernt. Eine
 Funktion, deren kleinster Wert die gesuchte Größe liefert, heißt
-**Kostenfunktion**. In Kapitel 8.1 lernen wir mit Gradient Descent ein
-Verfahren kennen, das ihr Minimum findet, ohne alle Werte auszuprobieren.
+**Kostenfunktion**. In Kapitel 8.1 lernen wir das Gradientenverfahren kennen,
+das ihr Minimum findet, ohne alle Werte auszuprobieren.
 
 Ist auch die Position unbekannt, suchen wir drei Größen $x$, $y$ und $\psi$.
 Ein Reflektor legt nur fest, dass der Scanner im Abstand $r$ vom Reflektor
