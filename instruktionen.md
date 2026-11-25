@@ -98,6 +98,31 @@ Motivation, keine Lernziele, keine Zusammenfassung.
   Konstanten (`np.pi`), Attribute (`.shape`) und Datentypen (`int`) bleiben
   ohne Klammern.
 
+## Zahlen und Einheiten im Fließtext
+
+Dezimaltrennzeichen ist wie im Code der Punkt: `$0.4\,\text{m/s}$`, nicht
+`0,4`.
+
+**In LaTeX** stehen:
+
+- Zahlen mit Einheit, immer mit schmalem Abstand `\,` und der Einheit in
+  `\text{}`: `$54.7\,\text{kWh}$`, `$45\,\text{min}$`, `$0.4\,\text{m/s}^2$`
+- Zahlen ohne Einheit, die zu einer Größe gehören, deren Einheit nur am
+  Partner steht, damit beide gleich aussehen: "zwischen `$10$` und
+  `$15\,\text{min}$`", "von `$150$` zu `$112.5\,\text{kW}$`"
+- Rechnungen und Formeln, auch ein einzelner Wert, der in einer Rechnung
+  steht: `$(58.61 + 50.27)/2 = 54.44\,\text{kWh}$`, eine Lernrate
+  `$10^{-6}$`
+
+**Ohne LaTeX** stehen:
+
+- Prozent und Prozentpunkte, ausgeschrieben als Wort: "10 Prozent",
+  "2 Prozentpunkte pro Minute", auch neben einer Größe in LaTeX ("70 Prozent
+  von `$75\,\text{kWh}$`")
+- Beträge in Euro, weil KaTeX das €-Zeichen nicht darstellen kann
+- Anzahlen und Nummern: "46 Werte", "sieben Einträge", "Kapitel 9.1",
+  "Teil 2", ebenso einfache Faktoren in einem Satz wie "teilen wir durch 60"
+
 ## Didaktik: Werkzeug, Code, Deutung
 
 - Vor jeder Code-Zelle nennen wir in wenigen Sätzen das Modell und die
@@ -357,8 +382,8 @@ nötig.
 3. Im Text davor ein Satz zur Bedienung: "Ein Klick auf das Bild startet das
    …, das Kreuz oben rechts schließt es wieder."
 
-```html
-<!-- markdownlint-disable -->
+```markdown
+% <!-- markdownlint-disable -->
 <details class="applet-overlay">
 <summary>
 <img src="pics/<applet>_vorschau.png"
@@ -373,8 +398,20 @@ nötig.
 </iframe>
 </div>
 </details>
-<!-- markdownlint-enable -->
+
+% <!-- markdownlint-enable -->
 ```
+
+### HTML-Blöcke und markdownlint
+
+Jeder HTML-Block (Applet, iframe, Overlay) steht zwischen
+`% <!-- markdownlint-disable -->` und `% <!-- markdownlint-enable -->`, ohne
+Regelnummer. Das `%` davor ist nötig: Es macht die Zeile zu einem
+MyST-Kommentar, den mystmd nicht ausgibt. Ein reiner HTML-Kommentar erscheint
+seit mystmd 1.14 als sichtbarer Text auf der Seite. markdownlint erkennt die
+Anweisung trotzdem. Vor der `enable`-Zeile steht immer eine Leerzeile, sonst
+zählt sie noch zum HTML-Block und wird wieder sichtbar. Der Konverter im
+EN-Repo erkennt Applet-Blöcke an genau diesen beiden Zeilen.
 
 ## Variablennamen im Code
 

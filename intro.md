@@ -10,9 +10,10 @@ site:
 
 TH Mannheim
 
-<!-- markdownlint-disable MD001 -->
+% <!-- markdownlint-disable -->
 ### Vorlesungsskript ANM
-<!-- markdownlint-enable MD001 -->
+
+% <!-- markdownlint-enable -->
 
 ![Künstlich generiertes fiktives Labor mit Computer](title.png)
 

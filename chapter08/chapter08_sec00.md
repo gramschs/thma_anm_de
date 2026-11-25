@@ -56,7 +56,7 @@ Browser gespeichert. Beim nächsten Durchlauf kommen die falsch beantworteten
 Fragen zuerst. Ein Klick auf das Bild startet das Quiz, das Kreuz oben rechts
 schließt es wieder.
 
-<!-- markdownlint-disable -->
+% <!-- markdownlint-disable -->
 <details class="applet-overlay">
 <summary>
 <img src="pics/chap08_sec00_quiz_vorschau.png"
@@ -72,7 +72,8 @@ schließt es wieder.
 </iframe>
 </div>
 </details>
-<!-- markdownlint-enable -->
+
+% <!-- markdownlint-enable -->
 
 ## Was Sie wiederholen können
 

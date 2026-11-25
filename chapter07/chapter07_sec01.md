@@ -39,7 +39,7 @@ Anfahrt in Zeitlupe. Mit "Bis zur nächsten Meldung" fährt das FTF bis zur
 nächsten Meldung und hält dort an. In der Sicht der Leitsteuerung verschwindet
 das FTF, und es bleibt nur, was bei der Leitsteuerung ankommt.
 
-<!-- markdownlint-disable -->
+% <!-- markdownlint-disable -->
 <div class="applet-container applet-720">
 <iframe
   src="https://gramschs.github.io/thma_anm_assets/interactive/chapter07/chap07_sec01_ftf_meldungen.html"
@@ -48,7 +48,8 @@ das FTF, und es bleibt nur, was bei der Leitsteuerung ankommt.
   scrolling="no">
 </iframe>
 </div>
-<!-- markdownlint-enable -->
+
+% <!-- markdownlint-enable -->
 
 Die Zeitpunkte der Meldungen stehen im Array `t`, die zurückgelegten Strecken
 im Array `s`. Den Zeitabstand zwischen zwei Meldungen nennen wir

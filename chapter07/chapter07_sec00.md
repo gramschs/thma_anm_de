@@ -53,7 +53,7 @@ Browser gespeichert. Beim nächsten Durchlauf kommen die falsch beantworteten
 Fragen zuerst. Ein Klick auf das Bild startet das Quiz, das Kreuz oben rechts
 schließt es wieder.
 
-<!-- markdownlint-disable -->
+% <!-- markdownlint-disable -->
 <details class="applet-overlay">
 <summary>
 <img src="pics/chap07_sec00_quiz_vorschau.png"
@@ -69,7 +69,8 @@ schließt es wieder.
 </iframe>
 </div>
 </details>
-<!-- markdownlint-enable -->
+
+% <!-- markdownlint-enable -->
 
 ## Was Sie wiederholen können
 
@@ -102,7 +103,7 @@ Parabel $f(x) = x^2 - 2x + 3$ im Punkt $x_0 = 2$. Verkleinern Sie mit dem
 Schieberegler $\Delta x$ und beobachten Sie, wie sich die Sekante der Tangente
 nähert.
 
-<!-- markdownlint-disable -->
+% <!-- markdownlint-disable -->
 <div class="applet-container applet-750">
 <iframe
   src="https://gramschs.github.io/thma_anm_assets/interactive/chapter04/sekante-tangente.html"
@@ -111,7 +112,8 @@ nähert.
   scrolling="no">
 </iframe>
 </div>
-<!-- markdownlint-enable -->
+
+% <!-- markdownlint-enable -->
 
 ```{dropdown} Video "Mittlere Änderungsrate" von Mathematrick
 <iframe width="560" height="315" src="https://www.youtube.com/embed/sXxK-JATrc0?si=bdcHhSJOUHSl3fNg"
