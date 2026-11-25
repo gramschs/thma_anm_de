@@ -4,223 +4,444 @@ kernelspec:
   display_name: 'Python 3'
 ---
 
-# 9.2 Übungen zur Trapezregel
+# 9.2 Ladezustand aus der Ladekurve
 
-```{admonition} Warnung
-:class: warning
-Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
-```
+In Kapitel 9.1 haben Sie aus dem Protokoll einer Schnellladesäule die geladene
+Energie berechnet. Jetzt bleibt das E-Auto länger an der Säule, und Sie
+verfolgen mit der aufaddierten Energie den Ladezustand des Akkus Minute für
+Minute. Bearbeiten Sie die Teile möglichst zu zweit und der Reihe nach.
 
-````{admonition} Übung 9.1 (✩)
+````{admonition} Projekt: Bis 80 Prozent laden oder weiterfahren? (✩✩)
 :class: tip
-Gegeben ist der folgende Code, der den Bremsweg mit einer Variante der
-Trapezregel berechnet.
+Eine Familie ist mit dem E-Auto aus Kapitel 9.1 in den Urlaub unterwegs. An
+einer Raststätte kommt das Auto mit 10 Prozent Ladezustand an. Während der
+Mittagspause hängt es $45\,\text{min}$ an der Schnellladesäule. Beim Abfahren
+zeigt das Auto 96 Prozent an. Die App der Säule hat diesmal jede Minute die
+Ladeleistung protokolliert. Ladeverluste vernachlässigen wir wie in Kapitel
+9.1.
 
-```python
-import numpy as np
+| Größe | Wert |
+| --- | --- |
+| Kapazität des Akkus | $75\,\text{kWh}$ |
+| Ladezustand bei Ankunft | 10 Prozent |
+| Ladezustand laut Anzeige nach $45\,\text{min}$ | 96 Prozent |
+| Protokoll | Ladeleistung in kW, jede Minute von $0$ bis $45\,\text{min}$ |
 
-def trapez_paarweise(t, v):
-    n   = len(v)
-    dt  = t[1] - t[0]
-    summe = 0.0
-    for i in range(0, n - 1, 2):
-        summe += 0.5 * (v[i] + v[i + 1]) * dt
-    return summe
-
-t_a = np.array([0.0, 1.0, 2.0, 3.0, 4.0])
-v_a = np.array([20.0, 16.0, 12.0, 8.0, 4.0])
-
-t_b = np.array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0])
-v_b = np.array([20.0, 16.0, 12.0, 8.0, 4.0, 0.0])
-
-print(f"Ergebnis a: {trapez_paarweise(t_a, v_a):.1f} m")
-print(f"Ergebnis b: {trapez_paarweise(t_b, v_b):.1f} m")
-```
-
-1. Über welche Indizes läuft `range(0, n-1, 2)` für `n=5`?
-   Welche Intervalle werden verwendet, welches wird übersprungen?
-   Beantworten Sie die Frage ohne Code.
-2. Berechnen Sie `Ergebnis a` von Hand. Zeigen Sie jede Trapezfläche einzeln.
-3. Für `n=6` läuft `range(0, n-1, 2)` über andere Indizes. Welche?
-   Was ändert sich gegenüber `n=5`, und welchen Wert erwarten Sie für
-   `Ergebnis b`?
-4. Vergleichen Sie beide Ergebnisse mit `np.trapezoid()`. Was stellen Sie
-   fest? Was schlussfolgern Sie über `trapez_paarweise()` als
-   Integrationsmethode?
-5. Führen Sie den Code aus und überprüfen Sie Ihre Vorhersagen.
+Viele Ratgeber empfehlen, auf langen Fahrten nur bis 80 Prozent zu laden.
+Gesucht ist, wann der Akku 80 und 95 Prozent erreicht und ob sich das
+Weiterladen über 80 Prozent hinaus lohnt.
 ````
+
+Führen Sie zuerst die folgenden beiden Zellen aus. Die erste enthält die Daten
+des Akkus und das Protokoll der Säule, die zweite zeichnet die Ladekurve.
 
 ```{code-cell} python
-# Code-Zelle
-```
-
-````{admonition} Lösung
-:class: tip
-:class: dropdown
-```python
-import numpy as np
-
-def trapez_paarweise(t, v):
-    n     = len(v)
-    dt    = t[1] - t[0]
-    summe = 0.0
-    for i in range(0, n - 1, 2):
-        summe += 0.5 * (v[i] + v[i + 1]) * dt
-    return summe
-
-t_a = np.array([0.0, 1.0, 2.0, 3.0, 4.0])
-v_a = np.array([20.0, 16.0, 12.0, 8.0, 4.0])
-
-t_b = np.array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0])
-v_b = np.array([20.0, 16.0, 12.0, 8.0, 4.0, 0.0])
-
-print(f"Ergebnis a:     {trapez_paarweise(t_a, v_a):.1f} m")
-print(f"Ergebnis b:     {trapez_paarweise(t_b, v_b):.1f} m")
-print()
-print(f"np.trapezoid a: {np.trapezoid(v_a, t_a):.1f} m")
-print(f"np.trapezoid b: {np.trapezoid(v_b, t_b):.1f} m")
-```
-
-Erwartete Ausgabe:
-```
-Ergebnis a:     28.0 m
-Ergebnis b:     30.0 m
-
-np.trapezoid a: 48.0 m
-np.trapezoid b: 50.0 m
-```
-
-Zu Frage 1: Für `n=5` gilt `n-1=4`, also `range(0, 4, 2)` = [0, 2].
-Die Schleife bildet zwei Trapeze: Intervall [0, 1] und Intervall [2, 3].
-Das letzte Intervall [3, 4] wird übersprungen, weil Index 3 nicht in
-`range(0, 4, 2)` liegt.
-
-Zu Frage 2: Handrechnung für `t_a`, `v_a`:
-- Trapez [0, 1]: $(20 + 16) / 2 \cdot 1.0 = 18.0$ m
-- Trapez [2, 3]: $(12 +  8) / 2 \cdot 1.0 = 10.0$ m
-- Gesamtergebnis: $18.0 + 10.0 = 28.0$ m
-
-Zu Frage 3: Für `n=6` gilt `n-1=5`, also `range(0, 5, 2)` = [0, 2, 4].
-Es entstehen drei Trapeze: [0,1], [2,3] und [4,5]. Das letzte Intervall
-wird jetzt einbezogen:
-- Trapez [4, 5]: $(4 + 0) / 2 \cdot 1.0 = 2.0$ m
-- Gesamtergebnis: $18.0 + 10.0 + 2.0 = 30.0$ m
-
-Zu Frage 4: `np.trapezoid()` liefert 48.0 m und 50.0 m, also deutlich mehr.
-`trapez_paarweise()` überspringt bei ungerader Punktanzahl das letzte
-Intervall und bei gerader Punktanzahl alle Intervalle mit ungeradem
-Startindex. Das Ergebnis hängt damit nicht nur von den Daten, sondern auch
-von der Parität von $n$ ab. `trapez_paarweise()` ist keine korrekte
-Implementierung der Trapezregel.
-````
-
-````{admonition} Übung 9.2 (✩✩)
-:class: tip
-Ein Fahrzeug führt eine Notbremsung aus einer Anfangsgeschwindigkeit von
-100 km/h durch. Der Fahrzeugsensor misst die Geschwindigkeit in Abständen
-von 0.5 s. Das Bremsmodell folgt einem exponentiellen Abfall:
-
-$$v(t) = v_0 \cdot e^{-k t},$$
-
-mit $v_0 = 100\,\text{km/h}$ und $k = 0.35\,\text{s}^{-1}$.
-
-Der folgende Code erzeugt die Messdaten mit realistischem Sensorrauschen:
-
-```python
-import numpy as np
-
-np.random.seed(12)
-
-v0 = 100 / 3.6        # Anfangsgeschwindigkeit in m/s
-k  = 0.35             # Abklingkonstante in 1/s
-T  = 8.0              # Messdauer in s
-dt = 0.5              # Abtastrate des Sensors in s
-
-t_mess  = np.arange(0, T + dt, dt)
-v_exakt = v0 * np.exp(-k * t_mess)
-rauschen = np.random.normal(0, 0.3, size=len(t_mess))  # normalverteiltes Sensorrauschen ±0.3 m/s
-v_mess   = np.maximum(v_exakt + rauschen, 0.0)         # Geschwindigkeit >= 0
-```
-
-1. Berechnen Sie den zurückgelegten Weg nach 8 Sekunden mit `np.trapezoid()`.
-   Geben Sie das Ergebnis in Metern aus.
-2. Berechnen Sie den analytischen zurückgelegten Weg $s_\text{exakt} = \int_0^T
-   v_0\,e^{-k t}\,\mathrm{d}t = \frac{v_0}{k}(1 - e^{-kT})$ und vergleichen Sie
-   mit dem numerischen Ergebnis. Wie groß ist der relative Fehler in Prozent?
-3. Stellen Sie `v_exakt` und `v_mess` im selben Plot dar. Beschriften Sie Achsen
-   mit Einheiten und fügen Sie eine Legende ein.
-4. Warum ist der relative Fehler in Teilaufgabe 2 so klein, obwohl das Signal
-   verrauscht ist? Formulieren Sie eine Erklärung in zwei Sätzen, ohne Code.
-````
-
-```{code-cell} python
-# Code-Zelle
-```
-
-````{admonition} Lösung
-:class: tip
-:class: dropdown
-```python
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.style as style
-style.use('seaborn-v0_8')
 
-np.random.seed(12)
+# Kapazität des Akkus in kWh
+kapazitaet = 75.0
+# Ladezustand bei Ankunft und laut Anzeige bei Abfahrt in Prozent
+ladezustand_start = 10.0
+ladezustand_anzeige = 96.0
 
-# --- Eingabe: Bremsmodell und Messdaten ---
-v0 = 100 / 3.6        # Anfangsgeschwindigkeit in m/s
-k  = 0.35             # Abklingkonstante in 1/s
-T  = 8.0              # Messdauer in s
-dt = 0.5              # Abtastrate in s
+# Protokoll im Minutentakt: Zeitpunkte in min und Ladeleistung in kW
+t = np.linspace(0, 45, 46)
+leistung = np.array([
+    150.0, 150.0, 150.0, 150.0, 150.0, 150.0, 150.0, 150.0, 150.0, 150.0,
+    150.0, 150.0, 150.0, 135.0, 122.7, 112.5, 103.8, 96.4, 90.0, 84.4,
+    79.4, 75.0, 71.1, 67.5, 64.3, 61.4, 58.7, 56.3, 54.0, 51.9,
+    50.0, 48.2, 46.6, 45.0, 43.5, 42.2, 40.9, 39.7, 38.6, 37.5,
+    36.5, 35.5, 34.6, 33.8, 32.9, 32.1,
+])
+```
 
-t_mess   = np.arange(0, T + dt, dt)
-v_exakt  = v0 * np.exp(-k * t_mess)
-rauschen = np.random.normal(0, 0.3, size=len(t_mess))
-v_mess   = np.maximum(v_exakt + rauschen, 0.0)
-
-# --- Teilaufgabe 1: numerischer Weg ---
-weg_trapez = np.trapezoid(v_mess, t_mess)
-print(f"Zurückgelegter Weg (Trapezregel): {weg_trapez:.2f} m")
-
-# --- Teilaufgabe 2: analytischer Weg und relativer Fehler ---
-# Stammfunktion von v0*exp(-k*t): -v0/k * exp(-k*t)
-# Auswertung von 0 bis T ergibt v0/k * (1 - exp(-k*T))
-weg_exakt  = (v0 / k) * (1 - np.exp(-k * T))
-relativer_fehler = abs(weg_trapez - weg_exakt) / weg_exakt * 100
-
-print(f"Zurückgelegter Weg (analytisch): {weg_exakt:.2f} m")
-print(f"Relativer Fehler: {relativer_fehler:.3f} %")
-
-# --- Teilaufgabe 3: Plot ---
-fig, ax = plt.subplots(figsize=(8, 4))
-ax.plot(t_mess, v_exakt, color='#005A94', linewidth=2,
-        label='Modell $v(t) = v_0 e^{-kt}$')
-ax.plot(t_mess, v_mess,  color='#E60000', linewidth=1, linestyle='--',
-        marker='o', markersize=4, label='Sensormessung (mit Rauschen)')
-ax.set_xlabel('Zeit in s')
-ax.set_ylabel('Geschwindigkeit in m/s')
-ax.set_title('Notbremsung: Geschwindigkeitsverlauf')
-ax.legend()
+```{code-cell} python
+# Diagramm: Ladeleistung über der Zeit
+fig, ax = plt.subplots(figsize=(7, 4))
+ax.plot(t, leistung, marker='.')
+ax.set_xlabel('Zeit in min')
+ax.set_ylabel('Ladeleistung in kW')
+ax.set_title('Protokoll der Schnellladesäule an der Raststätte')
 ax.grid(True)
-plt.tight_layout()
 plt.show()
 ```
 
-Erwartete Ausgabe:
-```
-Zurückgelegter Weg (Trapezregel): 74.84 m
-Zurückgelegter Weg (analytisch):  74.54 m
-Relativer Fehler:       0.405 %
+```{admonition} Teil 1: Geladene Energie und Probe
+:class: tip
+Berechnen Sie mit `np.trapezoid()` die Energie, die der Akku in den
+$45\,\text{min}$ aufgenommen hat. Achten Sie auf die Einheit.
+
+Zur Probe berechnen Sie die Energie ein zweites Mal aus der Anzeige des Autos:
+Von 10 auf 96 Prozent sind 86 Prozent der Kapazität hinzugekommen. Stimmen
+beide Werte überein? Warum müssen sie nicht genau übereinstimmen?
 ```
 
-Der numerische zurückgelegte Weg beträgt knapp 75 m bei einer Notbremsung aus
-100 km/h. Das entspricht typischen Werten auf nasser Straße.
+```{code-cell} python
+# Code-Zelle
+```
 
-Zu Frage 4: Das Sensorrauschen ist normalverteilt mit Erwartungswert null.
-Über 17 Messpunkte heben sich positive und negative Abweichungen weitgehend
-auf, sodass die Summe aller Trapezflächen kaum verfälscht wird. Numerische
-Integration ist deshalb deutlich robuster gegenüber Messrauschen als
-numerische Differentiation, bei der bereits ein einzelner Ausreißer den
-lokalen Gradienten stark verfälscht.
+````{admonition} Tipp Teil 1
+:class: tip
+:class: dropdown
+Gehen Sie vor wie im letzten Abschnitt von Kapitel 9.1: Rechnen Sie die
+Zeitpunkte zuerst in Stunden um, dann liefert `np.trapezoid()` Kilowattstunden.
+```python
+# Energie aus dem Protokoll mit der Trapezregel
+t_h = ___
+energie_trapez = np.trapezoid(___, ___)
+
+# Energie aus der Anzeige des Autos
+energie_anzeige = (___ - ___) / 100 * kapazitaet
+
+print(f'Energie laut Protokoll: {energie_trapez:.2f} kWh')
+print(f'Energie laut Anzeige:   {energie_anzeige:.2f} kWh')
+```
+````
+
+````{admonition} Lösung Teil 1
+:class: tip
+:class: dropdown
+```python
+# Energie aus dem Protokoll mit der Trapezregel
+t_h = t / 60
+energie_trapez = np.trapezoid(leistung, t_h)
+
+# Energie aus der Anzeige des Autos
+energie_anzeige = (ladezustand_anzeige - ladezustand_start) / 100 * kapazitaet
+
+print(f'Energie laut Protokoll: {energie_trapez:.2f} kWh')
+print(f'Energie laut Anzeige:   {energie_anzeige:.2f} kWh')
+```
+Ausgabe:
+
+```text
+Energie laut Protokoll: 64.68 kWh
+Energie laut Anzeige:   64.50 kWh
+```
+Die beiden Werte unterscheiden sich nur um $0.18\,\text{kWh}$. Das Auto zeigt
+den Ladezustand in ganzen Prozent an. Hinter der Anzeige 96 Prozent kann alles
+zwischen 95.5 und 96.5 Prozent stecken, das sind zwischen $64.13$ und
+$64.88\,\text{kWh}$. Der Wert aus dem Protokoll liegt in diesem Bereich, die
+Probe passt also. Genauer lässt sich die Trapezregel mit der Anzeige nicht
+prüfen, denn die Rundung verdeckt einen kleinen Fehler der Näherung.
+````
+
+````{admonition} Teil 2: Ladezustand Minute für Minute
+:class: tip
+Addieren Sie die Trapeze wie im zweiten Abschnitt von Kapitel 9.1 in einer
+Schleife auf. Danach steht in `energie[k]` die Energie, die der Akku bis zum
+Zeitpunkt `t[k]` aufgenommen hat. Daraus folgt der Ladezustand in Prozent:
+
+$$\text{Ladezustand} = 10 + \frac{\text{aufgenommene Energie}}{75\,\text{kWh}}
+\cdot 100.$$
+
+Berechnen Sie das Array `ladezustand` und zeichnen Sie es über der Zeit. Das
+Diagramm ist schon vorbereitet, Sie ergänzen nur die Lücke:
+
+```python
+# Diagramm: Ladezustand über der Zeit mit Linien bei 80 und 95 Prozent
+fig, ax = plt.subplots(figsize=(7, 4))
+ax.plot(t, ___, marker='.', label='Ladezustand')
+ax.plot([0, 45], [80, 80], color='gray', linestyle='--', label='80 Prozent')
+ax.plot([0, 45], [95, 95], color='gray', linestyle=':', label='95 Prozent')
+ax.set_xlabel('Zeit in min')
+ax.set_ylabel('Ladezustand in Prozent')
+ax.set_title('Ladezustand an der Raststätte')
+ax.legend()
+ax.grid(True)
+plt.show()
+```
+
+Welchen Ladezustand haben Sie nach $45\,\text{min}$ berechnet? Wie verändert
+sich die Steigung der Kurve, und warum?
+````
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Tipp Teil 2
+:class: tip
+:class: dropdown
+Die Schrittweite ist jetzt eine Minute, also $1/60\,\text{h}$. Den
+Ladezustand berechnen Sie nach der Schleife in einer einzigen Zeile, denn
+NumPy rechnet mit dem ganzen Array `energie` auf einmal.
+```python
+# Schrittweite in h
+dt = ___
+
+# Aufaddierte Energie in kWh
+energie = np.zeros(len(leistung))
+for k in range(len(leistung) - 1):
+    trapez = ___
+    energie[k + 1] = ___
+
+# Ladezustand in Prozent
+ladezustand = ___
+print(f'Ladezustand nach 45 min: {ladezustand[-1]:.1f} Prozent')
+```
+````
+
+````{admonition} Lösung Teil 2
+:class: tip
+:class: dropdown
+```python
+# Schrittweite in h
+dt = 1 / 60
+
+# Aufaddierte Energie in kWh
+energie = np.zeros(len(leistung))
+for k in range(len(leistung) - 1):
+    trapez = (leistung[k] + leistung[k + 1]) / 2 * dt
+    energie[k + 1] = energie[k] + trapez
+
+# Ladezustand in Prozent
+ladezustand = ladezustand_start + energie / kapazitaet * 100
+print(f'Ladezustand nach 45 min: {ladezustand[-1]:.1f} Prozent')
+
+# Diagramm: Ladezustand über der Zeit mit Linien bei 80 und 95 Prozent
+fig, ax = plt.subplots(figsize=(7, 4))
+ax.plot(t, ladezustand, marker='.', label='Ladezustand')
+ax.plot([0, 45], [80, 80], color='gray', linestyle='--', label='80 Prozent')
+ax.plot([0, 45], [95, 95], color='gray', linestyle=':', label='95 Prozent')
+ax.set_xlabel('Zeit in min')
+ax.set_ylabel('Ladezustand in Prozent')
+ax.set_title('Ladezustand an der Raststätte')
+ax.legend()
+ax.grid(True)
+plt.show()
+```
+Ausgabe:
+
+```text
+Ladezustand nach 45 min: 96.2 Prozent
+```
+Der berechnete Ladezustand von 96.2 Prozent passt zur Anzeige. Er beruht auf
+derselben Energie wie in Teil 1, denn die Schleife rechnet genau wie
+`np.trapezoid()`. In den ersten $12\,\text{min}$ steigt der Ladezustand
+gleichmäßig um gut 3 Prozentpunkte pro Minute, denn $150\,\text{kW}$ für eine
+Minute sind $2.5\,\text{kWh}$, und das sind 3.33 Prozent von $75\,\text{kWh}$.
+Nach $12\,\text{min}$ erreicht er so 50 Prozent. Danach wird die Kurve immer
+flacher. Ihre Steigung ist proportional zur Ladeleistung, und die sinkt, je
+voller der Akku ist.
+````
+
+````{admonition} Teil 3: Wann sind 80 und 95 Prozent erreicht?
+:class: tip
+Suchen Sie mit einer Schleife den ersten Zeitpunkt im Protokoll, an dem der
+Ladezustand mindestens 80 Prozent beträgt. Sobald er gefunden ist, beenden Sie
+die Schleife mit `break` wie in Kapitel 8.1. Suchen Sie genauso den ersten
+Zeitpunkt mit mindestens 95 Prozent.
+
+Wie lange dauert das Laden von 10 auf 80 Prozent, und wie lange dauern die
+weiteren 15 Prozentpunkte bis 95 Prozent?
+````
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Tipp Teil 3
+:class: tip
+:class: dropdown
+Die Schleife läuft über alle Indizes. Die Bedingung prüfen Sie mit `if`. Für
+95 Prozent kopieren Sie die Schleife und ändern die Grenze.
+```python
+# Erster Zeitpunkt mit mindestens 80 Prozent
+for k in range(len(ladezustand)):
+    if ___:
+        t_80 = ___
+        break
+
+print(f'80 Prozent nach {t_80:.0f} min')
+```
+````
+
+````{admonition} Lösung Teil 3
+:class: tip
+:class: dropdown
+```python
+# Erster Zeitpunkt mit mindestens 80 Prozent
+for k in range(len(ladezustand)):
+    if ladezustand[k] >= 80:
+        t_80 = t[k]
+        break
+
+# Erster Zeitpunkt mit mindestens 95 Prozent
+for k in range(len(ladezustand)):
+    if ladezustand[k] >= 95:
+        t_95 = t[k]
+        break
+
+print(f'80 Prozent nach {t_80:.0f} min')
+print(f'95 Prozent nach {t_95:.0f} min')
+print(f'Von 80 auf 95 Prozent: {t_95 - t_80:.0f} min')
+```
+Ausgabe:
+
+```text
+80 Prozent nach 28 min
+95 Prozent nach 44 min
+Von 80 auf 95 Prozent: 16 min
+```
+Für die ersten 70 Prozentpunkte braucht der Akku $28\,\text{min}$, für die
+nächsten 15 Prozentpunkte noch einmal $16\,\text{min}$. Genau genommen
+erreicht er 80 Prozent zwischen zwei Protokolleinträgen: Nach
+$27\,\text{min}$ sind es 79.5 Prozent, nach $28\,\text{min}$ schon 80.7
+Prozent. Unsere Schleife liefert aber nur volle Protokollminuten. Verbinden
+wir die beiden Werte durch eine Gerade, können wir den Zeitpunkt auf etwa
+$27.4\,\text{min}$ schätzen. Das setzt aber voraus, dass der
+Ladezustand zwischen den beiden Einträgen gleichmäßig steigt.
+````
+
+```{admonition} Abschlussfrage
+:class: tip
+1. Auf der Autobahn verbraucht das Auto etwa $20\,\text{kWh}$ pro
+   $100\,\text{km}$. Wie viele Kilometer Reichweite gewinnt es pro Minute
+   Ladezeit beim Laden von 10 auf 80 Prozent, und wie viele beim Laden von 80
+   auf 95 Prozent? Was raten Sie der Familie, wenn entlang der Autobahn etwa
+   alle $50\,\text{km}$ eine Schnellladesäule steht?
+2. Die Ladeelektronik stellt die Leistung nach dem Ladezustand ein. Angenommen,
+   Sie kennen diese Regel als Formel, aber keinen einzigen Messwert. Wie
+   könnten Sie den Ladezustand trotzdem Minute für Minute vorausberechnen?
+   Beschreiben Sie die Idee in Worten, ohne Code.
+```
+
+````{admonition} Lösung Abschlussfrage
+:class: tip
+:class: dropdown
+1. Von 10 auf 80 Prozent nimmt der Akku 70 Prozent von $75\,\text{kWh}$ auf,
+   also $52.5\,\text{kWh}$. Das reicht für
+   $52.5 / 20 \cdot 100\,\text{km} = 262.5\,\text{km}$. Verteilt auf
+   $28\,\text{min}$ sind das etwa $9.4\,\text{km}$ pro Minute. Von 80 auf 95
+   Prozent kommen nur $11.25\,\text{kWh}$ hinzu, das reicht für etwa
+   $56\,\text{km}$. Verteilt auf $16\,\text{min}$ sind das nur etwa
+   $3.5\,\text{km}$ pro Minute, also nur gut ein Drittel davon.
+
+   Steht alle $50\,\text{km}$ eine Säule, sollte die Familie bei 80 Prozent
+   weiterfahren und erst wieder laden, wenn der Akku bei etwa 20 Prozent
+   steht. Mit 20 Prozent, also $15\,\text{kWh}$, kommt das Auto noch etwa
+   $75\,\text{km}$ weit und erreicht die nächste Säule mit Reserve. Unter 50
+   Prozent steigt der Ladezustand um gut 3 Prozentpunkte pro Minute.
+   Dieselben 15 Prozentpunkte dauern dort nur $4.5\,\text{min}$ statt
+   $16\,\text{min}$. Über 80 Prozent zu laden lohnt sich vor allem, wenn die
+   nächste Säule weit entfernt ist oder die Pause ohnehin länger dauert, wie
+   hier beim Mittagessen.
+2. Wir beginnen mit dem bekannten Ladezustand von 10 Prozent. Aus der Regel
+   folgt die Leistung zu Beginn. Nehmen wir an, dass sie eine Minute lang
+   gleich bleibt, kennen wir die Energie, die der Akku in dieser Minute
+   aufnimmt. Das ist genau ein Rechteck der Linkssumme aus Kapitel 9.1. Damit
+   kennen wir den Ladezustand nach einer Minute, daraus die neue Leistung, und
+   so weiter. Die Trapezregel können wir dabei nicht direkt verwenden, denn
+   sie braucht den Wert am rechten Rand, und den kennen wir erst nach dem
+   Schritt. Diese Idee heißt **Euler-Verfahren**. Wir lernen sie in Kapitel 10
+   kennen.
+````
+
+````{admonition} Zusatzaufgabe: Protokoll mit Lücken (✩✩✩)
+:class: tip
+Stellen Sie sich vor, die App hätte wegen eines Funklochs von derselben Ladung
+nur sieben Einträge gespeichert, in ungleichen Abständen:
+
+```python
+# Protokoll mit Lücken: Zeitpunkte in min und Ladeleistung in kW
+t_luecke = np.array([0.0, 5.0, 10.0, 15.0, 20.0, 30.0, 45.0])
+leistung_luecke = np.array([150.0, 150.0, 150.0, 112.5, 79.4, 50.0, 32.1])
+```
+
+1. Berechnen Sie die aufgenommene Energie mit `np.trapezoid()` und vergleichen
+   Sie sie mit dem Ergebnis aus Teil 1.
+2. Die Schleife aus Teil 2 setzt gleiche Abstände voraus. Ändern Sie sie so,
+   dass jedes Trapez seine eigene Breite `t_luecke[k + 1] - t_luecke[k]` hat.
+   Prüfen Sie, dass Sie dasselbe Ergebnis wie mit `np.trapezoid()` erhalten.
+3. Beantworten Sie ohne Code: In welchen Intervallen liefern die Trapeze zu
+   viel Energie, in welchen zu wenig? Denken Sie an den Knick der Ladekurve bei
+   $12\,\text{min}$.
+4. Ergänzen Sie einen Eintrag bei $12\,\text{min}$ mit $150\,\text{kW}$.
+   Vermuten Sie zuerst ohne Code: Rückt das Ergebnis näher an das
+   vollständige Protokoll aus Teil 1? Prüfen Sie Ihre Vermutung dann mit
+   `np.trapezoid()`.
+````
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung Zusatzaufgabe
+:class: tip
+:class: dropdown
+1. `np.trapezoid()` berechnet die Breite jedes Trapezes selbst aus den
+   Zeitpunkten:
+
+   ```python
+   # Teilaufgabe 1: Protokoll mit Lücken
+   t_luecke = np.array([0.0, 5.0, 10.0, 15.0, 20.0, 30.0, 45.0])
+   leistung_luecke = np.array([150.0, 150.0, 150.0, 112.5, 79.4, 50.0, 32.1])
+   energie_luecke = np.trapezoid(leistung_luecke, t_luecke / 60)
+   print(f'Energie mit Lücken: {energie_luecke:.2f} kWh')
+   ```
+
+   Ausgabe:
+
+   ```text
+   Energie mit Lücken: 64.98 kWh
+   ```
+
+   Das sind nur $0.30\,\text{kWh}$ mehr als mit dem vollständigen Protokoll,
+   obwohl sieben statt 46 Werte vorliegen.
+2. In der Schleife berechnen wir die Breite für jedes Intervall neu, in
+   Stunden:
+
+   ```python
+   # Teilaufgabe 2: Trapeze mit eigener Breite
+   energie_schleife = np.zeros(len(leistung_luecke))
+   for k in range(len(leistung_luecke) - 1):
+       breite = (t_luecke[k + 1] - t_luecke[k]) / 60
+       trapez = (leistung_luecke[k] + leistung_luecke[k + 1]) / 2 * breite
+       energie_schleife[k + 1] = energie_schleife[k] + trapez
+   print('Aufaddierte Energie in kWh:', np.round(energie_schleife, 2))
+   ```
+
+   Ausgabe:
+
+   ```text
+   Aufaddierte Energie in kWh: [ 0.   12.5  25.   35.94 43.93 54.72 64.98]
+   ```
+
+   Der letzte Wert stimmt mit `np.trapezoid()` überein.
+3. Zwischen $10$ und $15\,\text{min}$ liegt der Knick. Die Strecke von
+   $150$ zu $112.5\,\text{kW}$ schneidet die Ecke ab, das Trapez ist um etwa
+   $0.55\,\text{kWh}$ zu klein. Danach hängt die Ladekurve durch, die
+   Strecken zwischen zwei Einträgen verlaufen über der Kurve. Dort sind die
+   Trapeze zu groß. Am meisten fällt das in den beiden langen Intervallen ins
+   Gewicht: von $20$ bis $30\,\text{min}$ sind es etwa $0.37\,\text{kWh}$, von
+   $30$ bis $45\,\text{min}$ etwa $0.32\,\text{kWh}$. Die Fehler heben sich
+   zum Teil auf.
+4. Wir fügen den Eintrag an der passenden Stelle in beide Arrays ein:
+
+   ```python
+   # Teilaufgabe 4: zusätzlicher Eintrag bei 12 min
+   t_mit_12 = np.array([0.0, 5.0, 10.0, 12.0, 15.0, 20.0, 30.0, 45.0])
+   leistung_mit_12 = np.array([150.0, 150.0, 150.0, 150.0, 112.5, 79.4, 50.0,
+                               32.1])
+   energie_mit_12 = np.trapezoid(leistung_mit_12, t_mit_12 / 60)
+   print(f'Energie mit Eintrag bei 12 min: {energie_mit_12:.2f} kWh')
+   ```
+
+   Ausgabe:
+
+   ```text
+   Energie mit Eintrag bei 12 min: 65.60 kWh
+   ```
+
+   Das Ergebnis wird schlechter: Es liegt jetzt $0.92\,\text{kWh}$ statt
+   $0.30\,\text{kWh}$ über dem vollständigen Protokoll. Der neue Eintrag
+   beseitigt zwar die abgeschnittene Ecke, das Trapez von $12$ bis
+   $15\,\text{min}$ ist nur noch um etwa $0.08\,\text{kWh}$ zu groß. Bisher
+   hat die zu kleine Fläche an der Ecke aber die zu großen Trapeze nach
+   $15\,\text{min}$ teilweise ausgeglichen. Dieser Ausgleich fehlt jetzt. Ein
+   gutes Gesamtergebnis heißt also nicht, dass jedes einzelne Trapez gut ist,
+   und ein zusätzlicher Messwert macht das Ergebnis nicht automatisch
+   genauer.
 ````

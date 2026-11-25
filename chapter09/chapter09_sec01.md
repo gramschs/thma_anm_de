@@ -4,307 +4,151 @@ kernelspec:
   display_name: 'Python 3'
 ---
 
-# 9.1 Rechteck- und Trapezregel
+# 9.1 Energie aus der Ladekurve
 
-```{admonition} Warnung
-:class: warning
-Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
-```
+In Kapitel 7.1 haben wir aus der Strecke des FTF seine Geschwindigkeit
+berechnet, also abgeleitet. Jetzt gehen wir den umgekehrten Weg. Ein E-Auto
+lädt an einer Schnellladesäule. Die App der Säule protokolliert alle fünf
+Minuten die Ladeleistung in Kilowatt. Auf der Abrechnung steht aber die
+geladene Energie in Kilowattstunden. *Wie berechnen wir aus den protokollierten
+Leistungen die geladene Energie?*
 
-In Kapitel 7 haben wir aus diskreten Positionsmessungen eine Geschwindigkeit
-berechnet: Ableitung als Differenzenquotient. In Kapitel 8 haben wir eine
-Kostenfunktion minimiert, um Modellparameter aus Messdaten zu schätzen. Jetzt
-kehren wir zur Kinematik zurück und stellen die Frage anders: Ein Sensor
-liefert den Geschwindigkeitsverlauf $v(t_i)$ eines bremsenden Fahrzeugs. Wie
-weit fährt es noch, bis es steht?
-
-Der Bremsweg ist das Integral $s = \int_0^T v(t)\,\mathrm{d}t$. Die
-Geschwindigkeit liegt aber nur als Zahlenfolge vor, nicht als Formel. Wir
-brauchen ein Verfahren, das ein bestimmtes Integral aus diskreten Messwerten
-berechnet. Das nennt man **numerische Quadratur**.
+Die Energie ist das Integral der Leistung über der Zeit, anschaulich die
+Fläche unter der Ladekurve. Die Leistung kennen wir aber nur zu einzelnen
+Zeitpunkten, als Zahlenfolge und nicht als Formel. Wir nähern das Integral
+deshalb aus den Messwerten an. Diese Näherung heißt **numerische Integration**
+oder auch **Quadratur**.
 
 ## Lernziele
 
 ```{admonition} Lernziele
 :class: attention
-* [ ] Sie können die **linke und rechte Rechtecksregel** (oft auch *Linkssumme*
-  bzw. *Rechtssumme* genannt) und die **Mittelpunktregel** als Varianten der
-  Rechteckregel erklären und implementieren.
-* [ ] Sie können begründen, welche Variante bei einem monoton fallenden
-  Geschwindigkeitsverlauf über- und welche unterschätzt, ohne Code
-  auszuführen.
-* [ ] Sie können die **Trapezregel** aus der Idee der linearen Interpolation
-  herleiten und als Python-Schleife implementieren.
-* [ ] Sie können `np.trapezoid()` einsetzen und das Ergebnis mit der eigenen
-  Implementierung vergleichen.
+* [ ] Sie können die Energie als Fläche unter der Leistungskurve deuten und
+  sie mit der **Linkssumme** und der **Rechtssumme** annähern.
+* [ ] Sie können begründen, welche der beiden Summen bei fallender Leistung zu
+  viel und welche zu wenig Energie liefert.
+* [ ] Sie können die **Trapezregel** erklären und als Schleife programmieren,
+  die die Energie Schritt für Schritt aufaddiert.
+* [ ] Sie können `np.trapezoid()` einsetzen und wissen, welche Einheit das
+  Ergebnis hat.
 ```
 
-+++
+## Wie viel Energie wurde geladen?
 
-## Die Rechteckregel
-
-Wir erzeugen zunächst ein vereinfachtes Bremsmodell: das Fahrzeug startet bei
-100 km/h und bremst gleichmäßig (mit konstanter Verzögerung, in der Realität
-nur näherungsweise erfüllt) bis zum Stillstand in 5 Sekunden. Physikalisch
-entspricht gleichmäßig bremsen einer **konstanten Verzögerung** $a$. Für
-konstante $a$ gilt $v(t) = v_0 + a t$; mit der Bedingung $v(T) = 0$ folgt $a =
--v_0/T$ und damit
-
-\begin{equation*}
-v(t) = v_0 \bigl(1 - t/T\bigr).
-\end{equation*}
-
-Diesen linearen Verlauf setzen wir im Code bei den Messzeitpunkten $t_i$ als
-$v(t_i)$ ein. Der exakte Bremsweg ergibt sich aus dem bestimmten Integral $s =
-\int_0^T v_0(1 - t/T)\,\mathrm{d}t$ bzw. $s = v_0 \cdot \tfrac{T}{2}$.
+Das E-Auto hat einen Akku mit $75\,\text{kWh}$ und kommt mit 10 Prozent
+Ladezustand an der Säule an. Der **Ladezustand** gibt an, welcher Anteil der
+$75\,\text{kWh}$ im Akku gespeichert ist. Nach einer halben Stunde fährt das
+Auto weiter. Die Abrechnung der Säule zeigt $54.72\,\text{kWh}$. Diesen Wert
+misst ein Zähler in der Säule laufend, nicht nur alle fünf Minuten. Wir
+prüfen, ob das Protokoll der App dazu passt. Ladeverluste vernachlässigen wir
+dabei: Die Energie, die die Säule liefert, kommt vollständig im Akku an.
 
 ```{code-cell} python
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.style as style
-style.use('seaborn-v0_8')
 
-# --- Bremsvorgang: diskrete Messwerte ---
-# Anfangsgeschwindigkeit 100 km/h = 27.78 m/s, lineare Verzögerung bis v = 0
-v0 = 100 / 3.6  # Anfangsgeschwindigkeit in m/s
-T  = 5.0        # Bremsdauer in s
-n  = 6          # Anzahl Messpunkte (bewusst klein für Visualisierung)
+# Zeitpunkte der Protokolleinträge in min
+t = np.array([0.0, 5.0, 10.0, 15.0, 20.0, 25.0, 30.0])
+# Ladeleistung in kW
+leistung = np.array([150.0, 150.0, 150.0, 112.5, 79.4, 61.4, 50.0])
+```
 
-t_mess = np.linspace(0, T, n)   # Zeitpunkte in s
-v_mess = v0 * (1 - t_mess / T)  # Geschwindigkeit in m/s (linear fallend)
+Ein Diagramm zeigt, wie sich die Ladeleistung während der halben Stunde
+ändert.
 
-# Analytischer Bremsweg als Referenz: Integral von v0*(1 - t/T) von 0 bis T
-bremsweg_exakt = v0 * T / 2     # = 69.44 m
-
-print(f"Anfangsgeschwindigkeit: {v0:.2f} m/s ({v0 * 3.6:.1f} km/h)")
-print(f"Bremsdauer:             {T:.1f} s")
-print(f"Exakter Bremsweg:       {bremsweg_exakt:.2f} m")
-print()
-print("Messwerte:")
-for ti, vi in zip(t_mess, v_mess):
-    print(f"  t = {ti:.1f} s  -->  v = {vi:.2f} m/s")
-
-# Visualisierung
-fig, ax = plt.subplots()
-ax.scatter(t_mess, v_mess, color='#E60000', s=40)
-ax.set_title('Bremsvorgang mit konstanter Verzögerung -5.55 m/s^2')
-ax.set_xlabel('Zeit in s')
-ax.set_ylabel('Geschwindigkeit in m/s')
+```{code-cell} python
+# Diagramm: Ladeleistung über der Zeit
+fig, ax = plt.subplots(figsize=(7, 4))
+ax.plot(t, leistung, marker='o')
+ax.set_xlabel('Zeit in min')
+ax.set_ylabel('Ladeleistung in kW')
+ax.set_title('Protokoll der Schnellladesäule')
 ax.grid(True)
-
-```
-
-Mit $n = 6$ Messpunkten entsteht ein Zeitraster mit Schrittweite
-$\Delta t = 1$ s. Die einfachste Näherung für das Integral ersetzt die
-Fläche unter der Kurve durch Rechtecke. Je nachdem, welcher Funktionswert
-die Höhe des Rechtecks bestimmt, unterscheiden wir drei Varianten.
-
-```{code-cell} python
-import numpy as np
-
-# --- Schrittweite (gleichmäßiges Raster vorausgesetzt) ---
-dt = t_mess[1] - t_mess[0]   # Schrittweite in s
-
-# --- Linkssumme: Höhe = v am linken Rand jedes Intervalls ---
-# Intervall [t_0, t_1], [t_1, t_2], ..., [t_{n-2}, t_{n-1}]
-# verwendet v_mess[0], v_mess[1], ..., v_mess[n-2]  (alle außer dem letzten)
-s_links = np.sum(v_mess[:-1]) * dt
-
-# --- Rechtssumme: Höhe = v am rechten Rand jedes Intervalls ---
-# verwendet v_mess[1], v_mess[2], ..., v_mess[n-1]  (alle außer dem ersten)
-s_rechts = np.sum(v_mess[1:]) * dt
-
-# --- Mittelpunktregel: Höhe = v in der Mitte jedes Intervalls ---
-# Mittelpunkte durch Mittelwert benachbarter Messpunkte
-t_mitte = 0.5 * (t_mess[:-1] + t_mess[1:])
-v_mitte = 0.5 * (v_mess[:-1] + v_mess[1:])
-s_mitte = np.sum(v_mitte) * dt
-
-print(f"Exakter Bremsweg:  {bremsweg_exakt:.4f} m")
-print()
-print(f"Linkssumme:        {s_links:.4f} m  (Fehler: {s_links - bremsweg_exakt:+.4f} m)")
-print(f"Rechtssumme:       {s_rechts:.4f} m  (Fehler: {s_rechts - bremsweg_exakt:+.4f} m)")
-print(f"Mittelpunktregel:  {s_mitte:.4f} m  (Fehler: {s_mitte - bremsweg_exakt:+.4f} m)")
-```
-
-Die Ergebnisse unterscheiden sich deutlich. Um zu verstehen warum, visualisieren
-wir alle drei Varianten.
-
-```{code-cell} python
-import matplotlib.pyplot as plt
-import matplotlib.style as style
-style.use('seaborn-v0_8')
-
-# --- Feiner aufgelöste Kurve als Referenz ---
-t_fein = np.linspace(0, T, 300)
-v_fein = v0 * (1 - t_fein / T)
-
-fig, ax = plt.subplots(1, 3, figsize=(12, 4), sharey=True)
-varianten = [
-    ("Linkssumme",       v_mess[:-1], t_mess[:-1]),
-    ("Rechtssumme",      v_mess[1:],  t_mess[:-1]),
-    ("Mittelpunktregel", v_mitte,     t_mess[:-1]),
-]
-
-for axes, (titel, hoehen, x_start) in zip(ax, varianten):
-    # Rechtecke einzeichnen
-    for xi, hi in zip(x_start, hoehen):
-        axes.bar(xi, hi, width=dt, align='edge',
-                 color='#CCDEE9', edgecolor='#005A94', linewidth=1.2)
-    # Genaue Kurve darüber
-    axes.plot(t_fein, v_fein, color='#005A94', linewidth=2, label='v(t) exakt')
-    axes.scatter(t_mess, v_mess, color='#E60000', s=40)
-    axes.set_title(titel)
-    axes.set_xlabel('Zeit in s')
-    axes.grid(True)
-
-ax[0].set_ylabel('Geschwindigkeit in m/s')
-plt.tight_layout()
 plt.show()
 ```
 
-```{admonition} Mini-Übung
-:class: tip
-Betrachten Sie die drei Plots für den monoton fallenden Geschwindigkeitsverlauf.
+In den ersten zehn Minuten zeigt das Protokoll die volle Leistung. Danach
+sinkt sie, je voller der Akku wird. Beim Schnellladen drosselt die
+Ladeelektronik ab einem bestimmten Ladezustand den Strom, um den Akku zu
+schonen. Bei diesem Auto liegt die Grenze bei 50 Prozent.
 
-1. Welche Variante überschätzt den Bremsweg, welche unterschätzt ihn?
-   Begründen Sie Ihre Antwort in einem Satz, ohne Code auszuführen.
-2. Wie würde sich die Antwort ändern, wenn das Fahrzeug nicht bremsen,
-   sondern beschleunigen würde (monoton steigender Geschwindigkeitsverlauf)?
-3. Die Mittelpunktregel hat hier keinen Fehler. Liegt das an der Methode oder
-   an der Geschwindigkeitsfunktion? Begründen Sie kurz.
+Bei konstanter Leistung ist die Energie einfach Leistung mal Zeit. In den
+ersten zehn Minuten, also in $1/6\,\text{h}$, nimmt der Akku deshalb diese
+Energie auf:
+
+$$E = 150\,\text{kW} \cdot \frac{1}{6}\,\text{h} = 25\,\text{kWh}.$$
+
+Im Diagramm ist das die Fläche eines Rechtecks mit Höhe $150\,\text{kW}$ und
+Breite $10\,\text{min}$. Ändert sich die Leistung, wird aus dem Rechteck die
+Fläche unter der Kurve. Mathematisch ist das ein bestimmtes Integral:
+
+$$E = \int_{0}^{T} P(t)\,\mathrm{d}t.$$
+
+```{admonition} Aus der Mathematik: Integral als Fläche
+:class: note
+Das bestimmte Integral $\int_a^b f(t)\,\mathrm{d}t$ ist die Fläche zwischen
+dem Graphen von $f$ und der $t$-Achse im Bereich von $a$ bis $b$. Liegt der
+Graph unter der Achse, zählt die Fläche dort negativ. Hat der Integrand eine
+Einheit, hat das Integral die Einheit des Integranden mal die Einheit von $t$,
+hier also Kilowatt mal Stunden.
 ```
 
-```{admonition} Lösung
-:class: tip
-:class: dropdown
-Zu Frage 1: Bei einem monoton fallenden Verlauf liegt der linke Rand jedes
-Intervalls höher als der rechte. Die Linkssumme verwendet den linken
-(höheren) Rand als Rechteckhöhe und überschätzt daher das Integral. Die
-Rechtssumme verwendet den rechten (niedrigeren) Rand und unterschätzt es.
-Die Mittelpunktregel liegt dazwischen.
+Die einfachste Näherung zerlegt die Fläche in Rechtecke, eines pro
+Zeitintervall zwischen zwei Protokolleinträgen. Als Höhe nehmen wir die
+Leistung am Anfang des Intervalls, also am linken Rand. Das ergibt die
+**Linkssumme**. Mit $n$ Intervallen der Breite $\Delta t$ und den Messwerten
+$P_0, P_1, \dots, P_n$ lautet sie
 
-Zu Frage 2: Bei einem monoton steigenden Verlauf kehrt sich das Vorzeichen
-der Fehler um: die Linkssumme unterschätzt, die Rechtssumme überschätzt.
+$$E \approx \bigl(P_0 + P_1 + \dots + P_{n-1}\bigr)\,\Delta t.$$
 
-Zu Frage 3: Das liegt an der Geschwindigkeitsfunktion. Eine lineare Funktion hat
-in jedem Intervall ihren Mittelpunkt exakt auf der Geraden. Die zusammengesetzte
-Mittelpunktregel ist für global lineare Funktionen (Polynome ersten Grades)
-exakt. Für einen nichtlinearen Geschwindigkeitsverlauf hätte die
-Mittelpunktregel ebenfalls einen Fehler.
-```
-
-+++
-
-## Die Trapezregel
-
-Die Rechteckregel approximiert die Fläche unter der Kurve durch
-Rechtecke. Eine bessere Idee: wir verbinden benachbarte Messpunkte durch
-Geraden und berechnen die Fläche unter diesem Streckenzug. Jedes Teilstück
-ergibt ein **Trapez**.
-
-Für ein einzelnes Intervall $[t_i, t_{i+1}]$ ist die Trapezfläche der
-Mittelwert der beiden Randwerte mal die Breite:
-
-$$\Delta s_i = \frac{v(t_i) + v(t_{i+1})}{2} \cdot \Delta t.$$
-
-Die Summe über alle Intervalle ergibt die **Trapezregel**:
-
-\begin{equation*}
-s \approx \Delta t \cdot \left(\frac{v(t_0)}{2} + v(t_1) + \cdots +
-v(t_{n-2}) + \frac{v(t_{n-1})}{2}\right).
-\end{equation*}
-
-Die Randpunkte gehen also mit dem halben Gewicht ein, alle inneren Punkte
-mit vollem Gewicht.
+Der letzte Messwert $P_n$ kommt nicht vor, denn er ist der rechte Rand des
+letzten Intervalls. Damit Kilowattstunden herauskommen, rechnen wir die
+Schrittweite von Minuten in Stunden um.
 
 ```{code-cell} python
-import numpy as np
+# Schrittweite in h: 5 min sind 5/60 h
+dt = 5 / 60
 
-# --- Trapezregel: manuelle Implementierung ---
-# Wir iterieren über alle n-1 Intervalle und addieren die Trapezflächen.
-dt = t_mess[1] - t_mess[0]
-
-bremsweg_trapez = 0.0
-for i in range(len(v_mess) - 1):
-    # Trapezfläche = Mittelwert der beiden Randwerte * Breite
-    trapez = 0.5 * (v_mess[i] + v_mess[i + 1]) * dt
-    bremsweg_trapez += trapez
-
-print(f"Trapezregel (Schleife): {bremsweg_trapez:.4f} m")
-print(f"Exakter Bremsweg:       {bremsweg_exakt:.4f} m")
-print(f"Fehler:                 {bremsweg_trapez - bremsweg_exakt:+.4f} m")
+# Linkssumme: Rechteckhöhe ist die Leistung am Anfang des Intervalls
+energie_links = 0.0
+for k in range(len(leistung) - 1):
+    energie_links = energie_links + leistung[k] * dt
+print(f'Linkssumme: {energie_links:.2f} kWh')
 ```
 
-Der folgende Python-Code visualisert die Trapezregel.
+Die Linkssumme liefert $58.61\,\text{kWh}$, fast $4\,\text{kWh}$ mehr als die
+Abrechnung. Um zu sehen, woher die Abweichung kommt, zeichnen wir die
+Rechtecke ein. `ax.bar()` zeichnet Balken an den Stellen `t[:-1]`, das sind
+alle Zeitpunkte außer dem letzten. Mit `align='edge'` beginnt jeder Balken an
+seinem Zeitpunkt, mit `width=5` ist er fünf Minuten breit.
 
 ```{code-cell} python
-import matplotlib.pyplot as plt
-import matplotlib.style as style
-style.use('seaborn-v0_8')
-
-# --- Feiner aufgelöste Kurve als Referenz ---
-t_fein = np.linspace(0, T, 300)
-v_fein = v0 * (1 - t_fein / T)
-
-fig, ax = plt.subplots(figsize=(6, 4))
-
-# --- Trapeze einzeichnen: lineare Verbindung der Messpunkte ---
-for i in range(len(t_mess) - 1):
-    x_trap = [t_mess[i],   t_mess[i + 1]]
-    y_trap = [v_mess[i],   v_mess[i + 1]]
-    ax.fill_between(x_trap, y_trap, color='#CCDEE9',
-                    edgecolor='#005A94', linewidth=1.2, alpha=0.9)
-
-# Exakte Kurve und Messpunkte
-ax.plot(t_fein, v_fein, color='#005A94', linewidth=2, label='v(t) exakt')
-ax.scatter(t_mess, v_mess, color='#E60000', s=40, label='Messpunkte')
-
-ax.set_title('Trapezregel für den Bremsvorgang')
-ax.set_xlabel('Zeit in s')
-ax.set_ylabel('Geschwindigkeit in m/s')
-ax.grid(True)
+# Diagramm: Rechtecke der Linkssumme und Messwerte
+fig, ax = plt.subplots(figsize=(7, 4))
+ax.bar(t[:-1], leistung[:-1], width=5, align='edge', alpha=0.3,
+       edgecolor='black', label='Rechtecke der Linkssumme')
+ax.plot(t, leistung, marker='o', label='Messwerte')
+ax.set_xlabel('Zeit in min')
+ax.set_ylabel('Ladeleistung in kW')
+ax.set_title('Linkssumme')
 ax.legend()
-plt.tight_layout()
+ax.grid(True)
 plt.show()
 ```
 
-NumPy bietet seit Version 2.0 die Funktion `np.trapezoid()`, die dieselbe
-Rechnung in einer Zeile erledigt. In älteren NumPy-Versionen heißt die Funktion
-`np.trapz()`; sie ist inhaltlich gleich.
+Ab $10\,\text{min}$ ragen die Rechtecke über die Kurve hinaus. Weil die
+Leistung fällt, ist der Wert am linken Rand der größte im Intervall. Die
+Linkssumme liefert bei fallender Leistung deshalb zu viel Energie.
 
-```{code-cell} python
-import numpy as np
-
-# --- Trapezregel: np.trapezoid (seit NumPy 2.0) ---
-# np.trapezoid(y, x) berechnet das Integral der Werte y über die Stützstellen x.
-# Das x-Array kann ungleichmäßige Abstände haben; hier ist es gleichmäßig.
-bremsweg_np = np.trapezoid(v_mess, t_mess)
-
-print(f"np.trapezoid:     {bremsweg_np:.4f} m")
-print(f"Schleife:         {bremsweg_trapez:.4f} m")
-print(f"Übereinstimmung:  {np.isclose(bremsweg_np, bremsweg_trapez)}")
-```
-
-Die Trapezregel liefert für diesen linearen Geschwindigkeitsverlauf das
-exakte Ergebnis: Die lineare Verbindung zweier Punkte auf einer Geraden
-liegt exakt auf der Geraden. Für nichtlineare Verläufe entsteht ein Fehler,
-dessen Größe wir in Abschnitt 9.3 analysieren.
-
-```{admonition} Mini-Übung
+```{admonition} Mini-Übung (✩)
 :class: tip
-Ein Fahrzeug misst die Geschwindigkeit an drei Zeitpunkten:
-
-| $t$ in s | 0 | 1 | 2 |
-|----------|---|---|---|
-| $v$ in m/s | 20 | 15 | 5 |
-
-1. Berechnen Sie den Bremsweg mit der Trapezregel per Handrechnung.
-   Zeigen Sie beide Trapezflächen einzeln.
-2. Implementieren Sie die Berechnung mit `np.trapezoid()` und überprüfen
-   Sie Ihr Handrechenresultat.
-3. Warum ergibt die Linkssumme für diese drei Punkte einen anderen Wert?
-   Berechnen Sie auch diesen per Hand und vergleichen Sie.
+1. Mit der Leistung am Ende des Intervalls als Rechteckhöhe entsteht die
+   **Rechtssumme**. Ändern Sie die Schleife und berechnen Sie die
+   Rechtssumme.
+2. Beantworten Sie ohne Code: Liefert die Rechtssumme zu viel oder zu wenig
+   Energie? Begründen Sie in einem Satz.
+3. Beantworten Sie ohne Code: Warum sind die Rechtecke der Linkssumme und der
+   Rechtssumme in den ersten zehn Minuten gleich?
 ```
 
 ```{code-cell} python
@@ -314,49 +158,294 @@ Ein Fahrzeug misst die Geschwindigkeit an drei Zeitpunkten:
 ````{admonition} Lösung
 :class: tip
 :class: dropdown
-```python
-import numpy as np
+1. Statt `leistung[k]` verwenden wir `leistung[k + 1]`, den Wert am rechten
+   Rand des Intervalls:
 
-t = np.array([0.0, 1.0, 2.0])   # Zeitpunkte in s
-v = np.array([20.0, 15.0, 5.0]) # Geschwindigkeit in m/s
+   ```python
+   # Teilaufgabe 1: Rechtssumme
+   energie_rechts = 0.0
+   for k in range(len(leistung) - 1):
+       energie_rechts = energie_rechts + leistung[k + 1] * dt
+   print(f'Rechtssumme: {energie_rechts:.2f} kWh')
+   ```
 
-# Handrechnung:
-# Intervall [0, 1]: (20 + 15) / 2 * 1 = 17.5 m
-# Intervall [1, 2]: (15 +  5) / 2 * 1 = 10.0 m
-# Gesamt: 17.5 + 10.0 = 27.5 m
-bremsweg_hand = 17.5 + 10.0
-print(f"Handrechnung:    {bremsweg_hand:.1f} m")
-
-# np.trapezoid
-bremsweg_np = np.trapezoid(v, t)
-print(f"np.trapezoid:    {bremsweg_np:.1f} m")
-
-# Linkssumme zum Vergleich
-dt = 1.0
-s_links = np.sum(v[:-1]) * dt   # (20 + 15) * 1 = 35 m
-print(f"Linkssumme:      {s_links:.1f} m")
-```
-
-Zu Frage 3: Die Linkssumme verwendet $v = 20$ und $v = 15$ als
-Rechteckhöhen und ergibt $(20 + 15) \cdot 1 = 35$ m. Sie überschätzt
-den Bremsweg, weil der fallende Verlauf im jeweils nächsten Messpunkt
-bereits tiefer liegt, als die Rechteckhöhe suggeriert. Die Trapezregel
-berücksichtigt beide Randwerte und liegt näher an der tatsächlichen
-Fläche.
+   Die Rechtssumme liefert $50.27\,\text{kWh}$.
+2. Die Rechtssumme liefert zu wenig Energie. Bei fallender Leistung ist der
+   Wert am rechten Rand der kleinste im Intervall, die Rechtecke bleiben also
+   unter der Kurve.
+3. In den ersten zehn Minuten ist die Leistung konstant $150\,\text{kW}$. Linker
+   und rechter Rand haben denselben Wert, beide Rechtecke sind gleich hoch und
+   stimmen genau mit der Fläche unter der Kurve überein.
 ````
 
-+++
+## Rechtecke oder Trapeze?
+
+Die Linkssumme liefert zu viel, die Rechtssumme zu wenig. Eine bessere Idee
+liefert das Diagramm selbst: `ax.plot()` verbindet benachbarte Messpunkte
+durch Strecken. Die Fläche unter einer solchen Strecke ist ein **Trapez**.
+Seine Fläche ist der Mittelwert der beiden Randwerte mal die Breite:
+
+$$\Delta E_k = \frac{P_k + P_{k+1}}{2}\,\Delta t.$$
+
+Addieren wir alle Trapeze, erhalten wir die **Trapezregel**:
+
+$$E \approx \Bigl(\frac{P_0}{2} + P_1 + \dots + P_{n-1} + \frac{P_n}{2}\Bigr)
+\,\Delta t.$$
+
+Die inneren Messwerte gehören zu zwei Trapezen und zählen voll, die beiden
+Randwerte gehören nur zu einem Trapez und zählen halb.
+
+Wir addieren die Trapeze in einer Schleife auf. Dabei merken wir uns nach
+jedem Intervall, wie viel Energie bis dahin geladen ist. Das Array `energie`
+legen wir dazu vorher mit `np.zeros()` an. Am Anfang ist noch keine Energie
+geladen, `energie[0]` bleibt also null. Jeder weitere Eintrag ist der vorige
+plus das nächste Trapez.
+
+```{code-cell} python
+# Aufaddierte Energie: energie[k] ist die bis zum Zeitpunkt t[k] geladene
+# Energie in kWh
+energie = np.zeros(len(leistung))
+for k in range(len(leistung) - 1):
+    trapez = (leistung[k] + leistung[k + 1]) / 2 * dt
+    energie[k + 1] = energie[k] + trapez
+print('Aufaddierte Energie in kWh:', np.round(energie, 2))
+```
+
+Nach $30\,\text{min}$ sind laut Trapezregel $54.44\,\text{kWh}$ geladen. Das
+sind nur $0.28\,\text{kWh}$ weniger, als der Zähler der Säule misst. Die
+Linkssumme lag um fast $4\,\text{kWh}$ daneben, die Rechtssumme um gut
+$4\,\text{kWh}$. Das Diagramm zeigt oben die Trapeze und unten die aufaddierte
+Energie. `ax.fill_between()` füllt die Fläche zwischen dem Streckenzug und der
+Zeitachse, das sind genau die Trapeze. `ax.vlines()` zeichnet an jedem
+Messzeitpunkt eine senkrechte Linie von null bis zum Messwert und trennt so die
+Trapeze voneinander.
+
+```{code-cell} python
+# Diagramm: Trapeze unter der Ladekurve und aufaddierte Energie
+fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(7, 6), sharex=True)
+
+ax[0].fill_between(t, leistung, alpha=0.3, label='Trapeze')
+ax[0].vlines(t, 0, leistung, color='gray', linewidth=1)
+ax[0].plot(t, leistung, marker='o', label='Messwerte')
+ax[0].set_ylabel('Ladeleistung in kW')
+ax[0].set_title('Trapezregel')
+
+ax[1].plot(t, energie, marker='o', label='Trapezregel')
+ax[1].plot(30, 54.72, marker='D', color='gray', label='Abrechnung')
+ax[1].set_xlabel('Zeit in min')
+ax[1].set_ylabel('geladene Energie in kWh')
+
+for einzelachse in ax:
+    einzelachse.legend()
+    einzelachse.grid(True)
+plt.tight_layout()
+plt.show()
+```
+
+Die aufaddierte Energie steigt in den ersten zehn Minuten gleichmäßig, danach
+immer flacher. Die Steigung jeder Strecke ist die mittlere Ladeleistung im
+Intervall. Je höher die Leistung, desto schneller wächst also die Energie.
+Für die tatsächlich geladene Energie als Funktion der Zeit gilt sogar: Ihre
+Ableitung ist die Ladeleistung. Integrieren und Ableiten sind Umkehrungen
+voneinander.
+
+```{admonition} Mini-Übung (✩)
+:class: tip
+Ein E-Transporter lädt an der Wallbox des Betriebs. Die Wallbox
+protokolliert alle $30\,\text{min}$ die Ladeleistung:
+
+| Zeit in min | 0 | 30 | 60 | 90 |
+|---|---|---|---|---|
+| Ladeleistung in kW | 11 | 11 | 7 | 3 |
+
+1. Berechnen Sie ohne Code die drei Trapezflächen und die gesamte geladene
+   Energie. Achten Sie auf die Einheit der Schrittweite.
+2. Prüfen Sie Ihr Ergebnis mit der Schleife aus diesem Abschnitt.
+3. Beantworten Sie ohne Code: Warum liefert die Trapezregel immer genau den
+   Mittelwert aus Linkssumme und Rechtssumme?
+```
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+1. Die Schrittweite beträgt $30\,\text{min} = 0.5\,\text{h}$. Die drei Trapeze
+   haben die Flächen $(11 + 11)/2 \cdot 0.5 = 5.5\,\text{kWh}$,
+   $(11 + 7)/2 \cdot 0.5 = 4.5\,\text{kWh}$ und
+   $(7 + 3)/2 \cdot 0.5 = 2.5\,\text{kWh}$. Zusammen sind das
+   $12.5\,\text{kWh}$.
+2. Wir übernehmen die Schleife mit den neuen Messwerten:
+
+   ```python
+   # Teilaufgabe 2: Messwerte der Wallbox, Schrittweite in h
+   leistung_wallbox = np.array([11.0, 11.0, 7.0, 3.0])
+   dt_wallbox = 0.5
+
+   # Teilaufgabe 2: aufaddierte Energie mit der Trapezregel
+   energie_wallbox = np.zeros(len(leistung_wallbox))
+   for k in range(len(leistung_wallbox) - 1):
+       trapez = (leistung_wallbox[k] + leistung_wallbox[k + 1]) / 2 * dt_wallbox
+       energie_wallbox[k + 1] = energie_wallbox[k] + trapez
+   print('Aufaddierte Energie in kWh:', energie_wallbox)
+   ```
+
+   Die Ausgabe `[ 0.   5.5 10.  12.5]` bestätigt die Handrechnung.
+3. Jedes Trapez hat die Fläche $(P_k + P_{k+1})/2 \cdot \Delta t$. Das ist der
+   Mittelwert aus dem Rechteck der Linkssumme $P_k\,\Delta t$ und dem Rechteck
+   der Rechtssumme $P_{k+1}\,\Delta t$. Weil das für jedes Intervall gilt, gilt
+   es auch für die Summe. Für die Schnellladesäule ergibt sich
+   $(58.61 + 50.27)/2 = 54.44\,\text{kWh}$.
+````
+
+## Was kommt bei np.trapezoid() heraus?
+
+NumPy bietet die Trapezregel als Funktion `np.trapezoid(y, x)` an. Als erstes
+Argument erhält sie die Funktionswerte, als zweites die Stellen, zu denen sie
+gehören. Die Schrittweite berechnet die Funktion selbst aus den Abständen der
+Stellen. In NumPy-Versionen vor 2.0 heißt die Funktion `np.trapz()`. Wir
+übergeben das Protokoll der Säule so, wie es vorliegt.
+
+```{code-cell} python
+# Trapezregel mit NumPy: erst die Funktionswerte, dann die Zeitpunkte
+energie_np = np.trapezoid(leistung, t)
+print(f'np.trapezoid(): {energie_np:.1f}')
+```
+
+Das Ergebnis $3266.5$ ist rund sechzigmal so groß wie das unserer Schleife.
+*Hat NumPy falsch gerechnet?* Nein. Die Zeitpunkte in `t` stehen in Minuten,
+also hat das Ergebnis die Einheit Kilowatt mal Minuten. Teilen wir durch 60,
+erhalten wir wieder $54.44\,\text{kWh}$. In unserer Schleife haben wir die
+Schrittweite in Stunden umgerechnet. Bei `np.trapezoid()` rechnen wir
+stattdessen die Zeitpunkte um.
+
+```{code-cell} python
+# Zeitpunkte in h umrechnen, dann ergibt sich die Energie in kWh
+t_h = t / 60
+energie_np = np.trapezoid(leistung, t_h)
+print(f'np.trapezoid(): {energie_np:.2f} kWh')
+```
+
+```{admonition} Stolperfalle: Einheit des Ergebnisses
+:class: warning
+`np.trapezoid()` kennt keine Einheiten. Das Ergebnis hat die Einheit der
+Funktionswerte mal die Einheit der Stellen. Rechnen Sie die Stellen deshalb
+vorher in die passende Einheit um, zum Beispiel Minuten in Stunden.
+```
+
+Die Trapezregel lag mit dem Fünf-Minuten-Protokoll $0.28\,\text{kWh}$ unter
+dem Zähler. Die App kann das Protokoll auch im Minutentakt exportieren. Bei
+$0, 5, 10, \dots, 30\,\text{min}$ enthält es dieselben Werte wie oben.
+
+```{code-cell} python
+# Protokoll im Minutentakt: Zeitpunkte in min und Ladeleistung in kW
+t_fein = np.linspace(0, 30, 31)
+leistung_fein = np.array([
+    150.0, 150.0, 150.0, 150.0, 150.0, 150.0, 150.0, 150.0, 150.0, 150.0,
+    150.0, 150.0, 150.0, 135.0, 122.7, 112.5, 103.8, 96.4, 90.0, 84.4,
+    79.4, 75.0, 71.1, 67.5, 64.3, 61.4, 58.7, 56.3, 54.0, 51.9,
+    50.0,
+])
+```
+
+Für das feine Protokoll rechnen wir die Zeitpunkte ebenfalls in Stunden um.
+
+```{code-cell} python
+# Trapezregel für das Protokoll im Minutentakt
+energie_fein = np.trapezoid(leistung_fein, t_fein / 60)
+print(f'Minutentakt: {energie_fein:.2f} kWh')
+```
+
+Mit dem Minutentakt liefert die Trapezregel $54.74\,\text{kWh}$, nur noch
+$0.02\,\text{kWh}$ mehr als der Zähler. Woher der größere Fehler im
+Fünf-Minuten-Takt kommt, zeigt ein Diagramm beider Protokolle.
+
+```{code-cell} python
+# Diagramm: Protokoll im Minutentakt und im Fünf-Minuten-Takt
+fig, ax = plt.subplots(figsize=(7, 4))
+ax.plot(t_fein, leistung_fein, marker='.', label='Minutentakt')
+ax.plot(t, leistung, marker='o', label='Fünf-Minuten-Takt')
+ax.set_xlabel('Zeit in min')
+ax.set_ylabel('Ladeleistung in kW')
+ax.set_title('Ladekurve in zwei Auflösungen')
+ax.legend()
+ax.grid(True)
+plt.show()
+```
+
+Bei $12\,\text{min}$ erreicht der Akku 50 Prozent Ladezustand, und die
+Ladeelektronik beginnt zu drosseln. Die Ladekurve hat dort einen Knick. Das
+Fünf-Minuten-Protokoll verbindet $150\,\text{kW}$ bei $10\,\text{min}$ direkt
+mit $112.5\,\text{kW}$ bei $15\,\text{min}$ und schneidet die Ecke ab. Allein
+in diesem Intervall fehlt dadurch gut eine halbe Kilowattstunde. Was zwischen
+zwei Messwerten passiert, sieht die Trapezregel nicht. Je kleiner die
+Schrittweite, desto weniger fällt das in der Regel ins Gewicht. Wie schnell
+der Fehler mit der Schrittweite sinkt, untersuchen wir in Kapitel 9.3.
+
+`np.trapezoid()` hat noch einen Vorteil gegenüber unserer Schleife: Die
+Abstände der Stellen dürfen verschieden groß sein. Jedes Trapez erhält dann
+seine eigene Breite.
+
+```{admonition} Mini-Übung (✩)
+:class: tip
+1. Beantworten Sie ohne Code: Welchen Wert liefert
+   `np.trapezoid(leistung, t) / 60`, und in welcher Einheit?
+2. Berechnen Sie mit `np.trapezoid()` aus dem Protokoll im Minutentakt die
+   Energie, die in den ersten $12\,\text{min}$ geladen wurde. `t_fein[:13]`
+   liefert die ersten 13 Einträge, also die Zeitpunkte von $0$ bis
+   $12\,\text{min}$. Welchen Ladezustand hat der Akku nach $12\,\text{min}$?
+3. Beantworten Sie ohne Code: Nach $15\,\text{min}$ verläuft der Streckenzug
+   des Fünf-Minuten-Protokolls über der Kurve des Minutentakts. Liefern die
+   Trapeze dort zu viel oder zu wenig Energie?
+```
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+1. `np.trapezoid(leistung, t)` liefert $3266.5\,\text{kW} \cdot \text{min}$.
+   Geteilt durch 60 ergibt das $54.44\,\text{kWh}$, denselben Wert wie mit
+   den Zeitpunkten in Stunden.
+2. Wir übergeben nur die ersten 13 Einträge beider Arrays:
+
+   ```python
+   # Teilaufgabe 2: Energie in den ersten 12 min
+   energie_12 = np.trapezoid(leistung_fein[:13], t_fein[:13] / 60)
+
+   # Teilaufgabe 2: Ladezustand nach 12 min, Start bei 10 Prozent
+   ladezustand_12 = 10 + energie_12 / 75 * 100
+   print(f'Energie nach 12 min:     {energie_12:.1f} kWh')
+   print(f'Ladezustand nach 12 min: {ladezustand_12:.0f} Prozent')
+   ```
+
+   In den ersten $12\,\text{min}$ wird der Akku mit konstant $150\,\text{kW}$
+   geladen, er nimmt also $150\,\text{kW} \cdot 0.2\,\text{h} = 30\,\text{kWh}$
+   auf. Das sind 40 Prozent von $75\,\text{kWh}$. Der Akku hat dann 50 Prozent
+   Ladezustand, genau dort beginnt die Ladeelektronik zu drosseln.
+3. Liegt der Streckenzug über der Kurve, sind die Trapeze größer als die
+   Fläche unter der Kurve. Die Trapezregel liefert dort zu viel Energie. Das
+   gleicht einen Teil der fehlenden Energie zwischen $10$ und $15\,\text{min}$
+   aus, deshalb liegt das Gesamtergebnis nur $0.28\,\text{kWh}$ unter dem
+   Zähler.
+````
 
 ## Zusammenfassung und Ausblick
 
-Die Rechteckregel nähert das Integral durch konstante Funktionswerte
-pro Intervall an. Linkssumme und Rechtssumme liefern bei monotonen
-Verläufen einen systematischen Fehler, der sich erst mit vielen
-Messpunkten verringert. Die Trapezregel verbessert die Näherung durch
-lineare Interpolation zwischen den Messpunkten. Mit `np.trapezoid()` steht
-sie als fertiges NumPy-Werkzeug zur Verfügung.
+Die Energie ist das Integral der Leistung über der Zeit, also die Fläche unter
+der Ladekurve. Liegt die Leistung nur als Messreihe vor, nähern wir diese
+Fläche an. Die Linkssumme und die Rechtssumme verwenden Rechtecke. Bei
+fallender Leistung liefert die Linkssumme zu viel und die Rechtssumme zu wenig
+Energie. Die Trapezregel verbindet die Messpunkte durch Strecken und ist der
+Mittelwert aus beiden. Addieren wir die Trapeze in einer Schleife auf, erhalten
+wir die bis zu jedem Zeitpunkt geladene Energie. NumPy bietet die Trapezregel
+als `np.trapezoid()`. Das Ergebnis hat die Einheit der Funktionswerte mal die
+Einheit der Stellen, deshalb rechnen wir Minuten vorher in Stunden um.
 
-In Abschnitt 9.2 wenden wir die Trapezregel auf einen realistischen
-Notbremsvorgang an. In Abschnitt 9.3 lernen wir die Simpson-Regel kennen,
-die durch quadratische Interpolation eine wesentlich höhere Genauigkeit
-erreicht.
+In Kapitel 9.2 bleibt das E-Auto länger an der Säule. Mit der aufaddierten
+Energie berechnen Sie, wann der Akku 80 Prozent erreicht, und entscheiden, ob
+es sich lohnt, bis 95 Prozent weiterzuladen.
