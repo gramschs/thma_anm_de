@@ -4,294 +4,422 @@ kernelspec:
   display_name: 'Python 3'
 ---
 
-# 9.4 Übungen zu Simpson-Regel und scipy.integrate.quad
+# 9.4 Verdichtungsarbeit aus dem p-V-Diagramm
 
-```{admonition} Warnung
-:class: warning
-Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
-```
+In Kapitel 9.3 haben wir das Volumen eines Weinfasses mit der Trapezregel, der
+Simpson-Regel und `quad()` berechnet. Jetzt setzen Sie dieselben drei Werkzeuge
+in der Thermodynamik ein: Aus Druckmessungen im Zylinder eines Kompressors
+berechnen Sie, wie viel Arbeit der Kolben beim Verdichten der Luft verrichtet.
+Bearbeiten Sie die Teile möglichst zu zweit und der Reihe nach.
 
-````{admonition} Übung 9.3 (✩)
+````{admonition} Projekt: Welcher Motor für den Kompressor? (✩✩)
 :class: tip
-Gegeben ist der folgende Code. Die Funktion `simpson()` entspricht der
-Implementierung aus Abschnitt 9.3.
+Eine Werkstatt plant einen neuen Kolbenkompressor für ihre Druckluftwerkzeuge.
+Bei jeder Umdrehung saugt der Kolben $1.0\,\text{L}$ Luft mit
+$1.0\,\text{bar}$ an. Dann schließen beide Ventile, und der Kolben verdichtet
+die Luft auf $0.2\,\text{L}$. Erst danach öffnet das Auslassventil, und der
+Kolben schiebt die verdichtete Luft in den Druckluftkessel. Alle Drücke sind
+absolute Drücke.
 
-```python
-import numpy as np
-from scipy.integrate import quad
+Auf dem Prüfstand des Herstellers hat ein Sensor den Druck im Zylinder während
+des Verdichtens gemessen. Die Messwerte sind dem Volumen zugeordnet, alle
+$0.1\,\text{L}$ ein Wert.
 
-def simpson(t, v):
-    n  = len(v)
-    dt = t[1] - t[0]
-    if n % 2 == 0:
-        raise ValueError(
-            f"Simpson-Regel erfordert ungerade Punktanzahl, erhalten: {n}"
-        )
-    gewichte         = np.ones(n)
-    gewichte[1:-1:2] = 4
-    gewichte[2:-2:2] = 2
-    return (dt / 3) * np.dot(gewichte, v)
+| Größe | Wert |
+| --- | --- |
+| Drehzahl | $1450$ Umdrehungen pro Minute |
+| Volumen zu Beginn des Verdichtens | $1.0\,\text{L}$ |
+| Volumen am Ende des Verdichtens | $0.2\,\text{L}$ |
+| Druck zu Beginn des Verdichtens | $1.0\,\text{bar}$ |
+| Messwerte | Druck in bar, neun Werte von $0.2$ bis $1.0\,\text{L}$ |
 
-# Experiment A
-t_a = np.linspace(0, 4, 8)
-v_a = t_a**2
-print(f"Experiment A: {simpson(t_a, v_a):.4f}")
-
-# Experiment B
-t_b = np.linspace(0, 4, 9)
-v_b = t_b**2
-print(f"Experiment B: {simpson(t_b, v_b):.4f}")
-
-# Experiment C
-ergebnis_c, fehler_c = quad(lambda x: x**2, 0, 4)
-print(f"Experiment C: {ergebnis_c:.4f},  Fehlerabschätzung: {fehler_c:.2e}")
-```
-
-1. Was gibt Experiment A aus? Begründen Sie ohne Code.
-2. Das exakte Integral $\int_0^4 x^2\,\mathrm{d}x = 64/3 \approx 21.3333$.
-   Experiment B liefert ebenfalls exakt $21.3333$, obwohl nur 9 Punkte
-   verwendet werden. Wie ist das möglich? Überlegen Sie, welche Polynomgrade
-   die Simpson-Regel exakt integriert.
-3. Welchen Wert gibt Experiment C aus? Ist der Fehlerabschätzungswert
-   `fehler_c` ein Zeichen für eine ungenaue Berechnung? Begründen Sie.
-4. Führen Sie den Code aus und überprüfen Sie Ihre Vorhersagen.
+Gesucht sind die Arbeit, die der Kolben bei einer Verdichtung an der Luft
+verrichtet, und die Leistung, die der Antrieb allein dafür aufbringen muss.
+Der Hersteller bietet Motoren mit $5.5$ und mit $7.5\,\text{kW}$ an.
 ````
+
+Führen Sie zuerst die folgenden beiden Zellen aus. Die erste enthält die
+Messwerte, die zweite zeichnet das **p-V-Diagramm**, also den Druck über dem
+Volumen.
 
 ```{code-cell} python
-# Code-Zelle
-```
-
-````{admonition} Lösung
-:class: tip
-:class: dropdown
-
-Zu Frage 1: `np.linspace(0, 4, 8)` erzeugt 8 Punkte. Die Funktion
-`simpson()` prüft `n % 2 == 0` und wirft einen `ValueError`, weil 8
-gerade ist. Der `ValueError` kann mit `try-except` folgendermaßen
-abgefangen werden:
-
-```python
-import numpy as np
-from scipy.integrate import quad
-
-def simpson(t, v):
-    n  = len(v)
-    dt = t[1] - t[0]
-    if n % 2 == 0:
-        raise ValueError(
-            f"Simpson-Regel erfordert ungerade Punktanzahl, erhalten: {n}"
-        )
-    gewichte         = np.ones(n)
-    gewichte[1:-1:2] = 4
-    gewichte[2:-2:2] = 2
-    return (dt / 3) * np.dot(gewichte, v)
-
-# Experiment A: n=8 gerade -> ValueError
-t_a = np.linspace(0, 4, 8)
-v_a = t_a**2
-try:
-    print(f"Experiment A: {simpson(t_a, v_a):.4f}")
-except ValueError as e:
-    print(f"Experiment A: ValueError: {e}")
-
-# Experiment B: n=9 ungerade -> ok
-t_b = np.linspace(0, 4, 9)
-v_b = t_b**2
-print(f"Experiment B: {simpson(t_b, v_b):.4f}")
-
-# Experiment C
-ergebnis_c, fehler_c = quad(lambda x: x**2, 0, 4)
-print(f"Experiment C: {ergebnis_c:.4f},  Fehlerabschätzung: {fehler_c:.2e}")
-```
-
-Erwartete Ausgabe:
-```
-Experiment A: ValueError: Simpson-Regel erfordert ungerade Punktanzahl, erhalten: 8
-Experiment B: 21.3333
-Experiment C: 21.3333,  Fehlerabschätzung: 2.37e-13
-```
-
-
-
-Zu Frage 2: Die Simpson-Regel leitet ihre Formel aus einem Parabelfit ab und ist
-daher für alle Polynome bis Grad 3 exakt. $f(x) = x^2$ ist ein Polynom zweiten
-Grades. Simpson macht also keinen Diskretisierungsfehler, unabhängig von der
-Anzahl der Punkte, solange die Schrittweite konstant ist und die Punktanzahl
-ungerade (Simpson-Voraussetzung).
-
-Zu Frage 3: `quad()` liefert ebenfalls $21.3333$, identisch zum
-analytischen Wert. Die Fehlerabschätzung $2.37 \cdot 10^{-13}$ liegt
-im Bereich der Maschinengenauigkeit und ist kein Zeichen für eine
-ungenaue Berechnung, sondern für eine sehr gute. Ein Problem wäre
-eine Fehlerabschätzung, die deutlich größer als die gewünschte
-Genauigkeit ist, zum Beispiel $10^{-2}$ bei einem Ergebnis der
-Größenordnung $10^0$.
-````
-
-````{admonition} Übung 9.4 (✩✩)
-:class: tip
-Ein Ingenieur vermisst die Kennlinie eines nichtlinearen Federelements.
-Dabei wird die Federkraft $F$ bei verschiedenen Auslenkungen $x$ gemessen.
-Die Kennlinie folgt dem Modell
-
-$$F(x) = k_1\,x + k_3\,x^3,$$
-
-mit linearem Anteil $k_1$ und kubischem Anteil $k_3$. Die geleistete Arbeit beim
-langsamen Einfedern (Zusammendrücken) von $x = 0$ bis $x = x_\text{max}$ ist
-
-$$W = \int_0^{x_\text{max}} F(x)\,\mathrm{d}x.$$
-
-Der folgende Code erzeugt die Messdaten:
-
-```python
-import numpy as np
-
-np.random.seed(7)
-
-k1    = 200.0   # linearer Federanteil in N/m
-k3    = 500.0   # kubischer Federanteil in N/m^3
-x_max = 0.30    # maximale Auslenkung in m
-
-x_mess  = np.linspace(0, x_max, 13)
-F_exakt = k1 * x_mess + k3 * x_mess**3
-F_mess  = F_exakt + np.random.normal(0, 0.4, size=len(x_mess))
-F_mess[0] = 0.0   # Federkraft bei x = 0 ist null
-```
-
-1. Berechnen Sie die geleistete Arbeit $W$ mit `np.trapezoid()` auf den
-   Messdaten. Geben Sie das Ergebnis in Joule aus.
-2. Berechnen Sie $W$ mit `scipy.integrate.quad()` auf dem analytischen Modell
-   $F(x) = k_1\,x + k_3\,x^3$ mit den gegebenen Parametern.
-3. Das exakte Integral lautet $W_\text{exakt} = k_1 x_\text{max}^2/2 + k_3
-   x_\text{max}^4/4$. Berechnen Sie den relativen Fehler beider Methoden in
-   Prozent.
-4. Stellen Sie `F_exakt` und `F_mess` im selben Plot über $x$ dar. Beschriften
-   Sie Achsen mit Einheiten und fügen Sie eine Legende ein.
-5. Warum stimmt `quad()` mit dem analytischen Wert praktisch exakt überein,
-   während `np.trapezoid()` einen kleinen Fehler hat? Antworten Sie in zwei
-   Sätzen ohne Code.
-6. Verwenden Sie die in Abschnitt 9.3 implementierte Funktion `simpson(t, v)`,
-   um die Arbeit $W$ auf der **glatten** Modellkennlinie `F_exakt` zu
-   berechnen (setzen Sie dazu `t = x_mess`, `v = F_exakt`). Vergleichen Sie den
-   relativen Fehler dieser Simpson-Lösung mit dem relativen Fehler der
-   Trapezregel aus Teilaufgabe 1 und interpretieren Sie das Ergebnis in zwei
-   Sätzen.
-````
-
-```{code-cell} python
-# Code-Zelle
-```
-
-````{admonition} Lösung
-:class: tip
-:class: dropdown
-```python
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.style as style
-style.use('seaborn-v0_8')
-from scipy.integrate import quad
 
-np.random.seed(7)
+# Volumen im Zylinder in L, von 0.2 bis 1.0 L in Schritten von 0.1 L
+volumen = np.linspace(0.2, 1.0, 9)
+# gemessener Druck in bar
+druck = np.array([8.103, 4.783, 3.291, 2.462, 1.943,
+                  1.590, 1.337, 1.147, 1.000])
+```
 
-# --- Eingabe: Federkennlinie ---
-k1    = 200.0
-k3    = 500.0
-x_max = 0.30
-
-x_mess  = np.linspace(0, x_max, 13)
-F_exakt = k1 * x_mess + k3 * x_mess**3
-F_mess  = F_exakt + np.random.normal(0, 0.4, size=len(x_mess))
-F_mess[0] = 0.0
-
-# --- Teilaufgabe 1: Trapezregel auf Messdaten ---
-W_trapez = np.trapezoid(F_mess, x_mess)
-print(f"Arbeit (Trapezregel): {W_trapez:.4f} J")
-
-# --- Teilaufgabe 2: quad auf analytischem Modell ---
-def F_modell(x):
-    """Analytisches Federmodell: F(x) = k1*x + k3*x^3."""
-    return k1 * x + k3 * x**3
-
-W_quad, fehler_quad = quad(F_modell, 0, x_max)
-print(f"Arbeit (quad):        {W_quad:.4f} J  (Fehlerabsch.: {fehler_quad:.2e})")
-
-# --- Teilaufgabe 3: relativer Fehler ---
-# Analytisch: Stammfunktion k1*x^2/2 + k3*x^4/4, ausgewertet von 0 bis x_max
-W_exakt = k1 * x_max**2 / 2 + k3 * x_max**4 / 4
-print(f"Arbeit (exakt):       {W_exakt:.4f} J")
-print()
-print(f"Rel. Fehler Trapez:   {abs(W_trapez - W_exakt) / W_exakt * 100:.3f} %")
-print(f"Rel. Fehler quad:     {abs(W_quad   - W_exakt) / W_exakt * 100:.3f} %")
-
-# --- Teilaufgabe 4: Plot ---
+```{code-cell} python
+# Diagramm: Druck über dem Volumen
 fig, ax = plt.subplots(figsize=(7, 4))
-ax.plot(x_mess * 100, F_exakt, color='#005A94', linewidth=2,
-        label='Modell $F = k_1 x + k_3 x^3$')
-ax.plot(x_mess * 100, F_mess,  color='#E60000', linewidth=1, linestyle='--',
-        marker='o', markersize=5, label='Messung')
-ax.set_xlabel('Auslenkung $x$ in cm')
-ax.set_ylabel('Federkraft $F$ in N')
-ax.set_title('Nichtlineare Federkennlinie')
-ax.legend()
+ax.plot(volumen, druck, marker='o')
+ax.set_xlabel('Volumen in L')
+ax.set_ylabel('Druck in bar')
+ax.set_title('p-V-Diagramm beim Verdichten')
 ax.grid(True)
-plt.tight_layout()
 plt.show()
 ```
 
-Erwartete Ausgabe:
+Beim Verdichten wird das Volumen kleiner, im Diagramm läuft die Verdichtung
+also von rechts nach links. Die Arbeit, die der Kolben dabei an der Luft
+verrichtet, ist die Fläche unter der Kurve zwischen $0.2$ und $1.0\,\text{L}$:
+
+$$W = \int_{0.2\,\text{L}}^{1.0\,\text{L}} p(V)\,\mathrm{d}V.$$
+
+```{admonition} Teil 1: Arbeit mit der Trapezregel
+:class: tip
+Berechnen Sie die Arbeit $W$ mit `np.trapezoid()` in Joule. Achten Sie auf die
+Einheiten: Ein Joule ist ein Pascal mal ein Kubikmeter, ein Bar entspricht
+$10^5\,\text{Pa}$ und ein Liter $10^{-3}\,\text{m}^3$.
+
+Liegt das Ergebnis über oder unter der tatsächlichen Arbeit? Begründen Sie mit
+dem Diagramm.
 ```
-Arbeit (Trapezregel): 10.0046 J
-Arbeit (quad):        10.0125 J  (Fehlerabsch.: 1.11e-13)
-Arbeit (exakt):       10.0125 J
 
-Rel. Fehler Trapez:   0.079 %
-Rel. Fehler quad:     0.000 %
+```{code-cell} python
+# Code-Zelle
 ```
 
-Die geleistete Arbeit beim Einfedern auf 30 cm beträgt rund 10 J.
-Der kubische Term trägt dabei etwa $k_3\,x_\text{max}^4/4 \approx 1.0$ J
-bei, also rund 10 % der Gesamtarbeit.
-
-Zu Frage 5: `quad()` übergibt das analytische Modell direkt an den
-Integrator, der intern adaptiv auswertet und die Genauigkeit bis zur
-Maschinengenauigkeit treibt. `np.trapezoid()` kann nur auf den 13
-Messpunkten arbeiten und macht daher einen kleinen Diskretisierungsfehler,
-der zudem das Messrauschen widerspiegelt.
-
-Zu Frage 6: Implementierung
+````{admonition} Tipp Teil 1
+:class: tip
+:class: dropdown
+Gehen Sie vor wie im ersten Abschnitt von Kapitel 9.3. Dort haben wir das
+Ergebnis von Kubikmetern in Liter umgerechnet. Hier ergibt Bar mal Liter
+$10^5\,\text{Pa} \cdot 10^{-3}\,\text{m}^3 = 100\,\text{J}$.
 ```python
-# --- Teilaufgabe 6: Simpson ---
-def simpson(t, v):
-    """Zusammengesetzte Simpson-Regel für gleichmäßiges Raster."""
-    n  = len(v)
-    dt = t[1] - t[0]
-    if n % 2 == 0:
-        raise ValueError(
-            f"Simpson-Regel erfordert ungerade Punktanzahl, erhalten: {n}"
-        )
-    gewichte         = np.ones(n)
-    gewichte[1:-1:2] = 4
-    gewichte[2:-2:2] = 2
-    return (dt / 3) * np.dot(gewichte, v)
+# Arbeit mit der Trapezregel, von bar·L in J umgerechnet
+arbeit_trapez = np.trapezoid(___, ___) * ___
+print(f'Trapezregel: {arbeit_trapez:.2f} J')
+```
+````
 
-# Simpson-Regel auf glatter Modellkennlinie F_exakt
-W_simpson = simpson(x_mess, F_exakt)
-rel_fehler_simpson = abs(W_simpson - W_exakt) / W_exakt * 100
+````{admonition} Lösung Teil 1
+:class: tip
+:class: dropdown
+```python
+# Arbeit mit der Trapezregel, von bar·L in J umgerechnet
+arbeit_trapez = np.trapezoid(druck, volumen) * 100
+print(f'Trapezregel: {arbeit_trapez:.2f} J')
+```
+Ausgabe:
 
-print(f"Arbeit (Simpson, glatt): {W_simpson:.4f} J")
-print(f"Rel. Fehler Simpson:     {rel_fehler_simpson:.6f} %")
+```text
+Trapezregel: 211.05 J
+```
+Bei jeder Verdichtung verrichtet der Kolben laut Trapezregel gut
+$211\,\text{J}$ an der Luft. Das Ergebnis liegt über der tatsächlichen Arbeit.
+Der Druck steigt zu kleinen Volumen hin immer schneller an, die Kurve hängt
+also durch wie beim Eimer in Kapitel 9.3. Die Strecken zwischen den
+Messpunkten verlaufen über der Kurve, die Trapeze sind zu groß. Am stärksten
+gekrümmt ist die Kurve zwischen $0.2$ und $0.3\,\text{L}$, dort ist auch der
+Überschuss des Trapezes am größten.
+````
+
+````{admonition} Teil 2: Simpson-Regel und Modell
+:class: tip
+Berechnen Sie die Arbeit mit `simpson()` aus den Messwerten.
+
+Laut Hersteller folgt der Druck beim Verdichten recht genau einer
+**Polytrope**:
+
+$$p(V) = p_1 \cdot \Bigl(\frac{V_1}{V}\Bigr)^{n}$$
+
+mit $p_1 = 1.0\,\text{bar}$, $V_1 = 1.0\,\text{L}$ und dem
+**Polytropenexponenten** $n = 1.3$. Der Exponent liegt zwischen $1$ und
+$1.4$, weil sich die Luft beim Verdichten erwärmt und einen Teil der Wärme an
+die Zylinderwand abgibt. Schreiben Sie das Modell als Python-Funktion und
+berechnen Sie die Arbeit mit `quad()`.
+
+Um wie viel Joule liegen die Trapezregel und die Simpson-Regel über dem Wert
+des Modells?
+````
+
+```{code-cell} python
+# Code-Zelle
 ```
 
-Erwartete zusätzliche Ausgabe (ungefähr):
+````{admonition} Tipp Teil 2
+:class: tip
+:class: dropdown
+Beide Funktionen kommen aus `scipy.integrate`. `simpson()` erhält die Stellen
+mit dem Namen `x` wie in Kapitel 9.3. Für `quad()` gehen Sie vor wie im letzten
+Abschnitt von Kapitel 9.3: erst die Funktion definieren, dann `quad()` mit der
+Funktion ohne Klammern und den beiden Grenzen aufrufen.
+```python
+from scipy.integrate import simpson, quad
+
+# Arbeit mit der Simpson-Regel in J
+arbeit_simpson = simpson(___, x=___) * ___
+
+# Polytrope als Modell für den Druck
+def druck_modell(v):
+    """Druck in bar beim Volumen v in L."""
+    return ___
+
+# Arbeit mit quad() in J
+ergebnis, fehlerschaetzung = quad(___, ___, ___)
+arbeit_quad = ___
+
+# Abweichungen vom Modell in J
+abweichung_trapez = arbeit_trapez - arbeit_quad
+abweichung_simpson = ___
+print(f'Simpson-Regel: {arbeit_simpson:.2f} J')
+print(f'quad():        {arbeit_quad:.2f} J')
+print(f'Abweichung Trapezregel: {abweichung_trapez:+.2f} J')
+print(f'Abweichung Simpson:     {abweichung_simpson:+.2f} J')
 ```
-Arbeit (Simpson, glatt): 10.0125 J
-Rel. Fehler Simpson:     0.000000 %
+````
+
+````{admonition} Lösung Teil 2
+:class: tip
+:class: dropdown
+```python
+from scipy.integrate import simpson, quad
+
+# Arbeit mit der Simpson-Regel in J
+arbeit_simpson = simpson(druck, x=volumen) * 100
+
+# Polytrope als Modell für den Druck
+def druck_modell(v):
+    """Druck in bar beim Volumen v in L."""
+    return 1.0 * (1.0 / v)**1.3
+
+# Arbeit mit quad() in J
+ergebnis, fehlerschaetzung = quad(druck_modell, 0.2, 1.0)
+arbeit_quad = ergebnis * 100
+
+# Abweichungen vom Modell in J
+abweichung_trapez = arbeit_trapez - arbeit_quad
+abweichung_simpson = arbeit_simpson - arbeit_quad
+print(f'Simpson-Regel: {arbeit_simpson:.2f} J')
+print(f'quad():        {arbeit_quad:.2f} J')
+print(f'Abweichung Trapezregel: {abweichung_trapez:+.2f} J')
+print(f'Abweichung Simpson:     {abweichung_simpson:+.2f} J')
+```
+Ausgabe:
+
+```text
+Simpson-Regel: 207.24 J
+quad():        206.89 J
+Abweichung Trapezregel: +4.16 J
+Abweichung Simpson:     +0.36 J
+```
+Mit denselben neun Messwerten liegt die Simpson-Regel nur $0.36\,\text{J}$
+über dem Modell, die Trapezregel $4.16\,\text{J}$. Die Parabeln der
+Simpson-Regel folgen der Krümmung der Kurve viel besser als die Strecken. Ganz
+verschwindet die Abweichung nicht, denn auch eine Parabel trifft die stark
+gekrümmte Kurve zwischen $0.2$ und $0.4\,\text{L}$ nicht genau. Im Vergleich
+zur Arbeit von gut $200\,\text{J}$ sind aber beide Abweichungen klein: Die
+Trapezregel liegt etwa 2 Prozent darüber, die Simpson-Regel weniger als 0.2
+Prozent.
+````
+
+````{admonition} Teil 3: Leistung für das Verdichten
+:class: tip
+Bei jeder Umdrehung verdichtet der Kolben einmal. Die Leistung ist die Arbeit
+pro Verdichtung mal der Anzahl der Verdichtungen pro Sekunde:
+
+$$P = W \cdot \frac{1450}{60\,\text{s}}.$$
+
+Berechnen Sie die Leistung in Kilowatt für alle drei Werte der Arbeit aus Teil
+1 und Teil 2. Wie stark hängt das Ergebnis davon ab, welche Regel Sie
+verwenden?
+````
+
+```{code-cell} python
+# Code-Zelle
 ```
 
-Die Simpson-Regel integriert Polynome bis Grad 3 auf einem gleichmäßigen Raster
-exakt. Da $F(x) = k_1 x + k_3 x^3$ genau ein Polynom dritten Grades ist,
-liefert Simpson auf `F_exakt` (glatte Modellkennlinie) praktisch keinen
-Diskretisierungsfehler, während die Trapezregel auf den verrauschten Messdaten
-einen kleinen Fehler aufweist.
+````{admonition} Tipp Teil 3
+:class: tip
+:class: dropdown
+NumPy rechnet mit einem ganzen Array auf einmal. Legen Sie die drei Werte der
+Arbeit in ein Array, dann genügt eine Zeile für alle drei Leistungen.
+```python
+# Verdichtungen pro Sekunde
+pro_sekunde = ___
+
+# Arbeit in J: Trapezregel, Simpson-Regel, quad()
+arbeit = np.array([___, ___, ___])
+
+# Leistung in kW
+leistung = ___
+print('Leistung in kW:', np.round(leistung, 2))
+```
+````
+
+````{admonition} Lösung Teil 3
+:class: tip
+:class: dropdown
+```python
+# Verdichtungen pro Sekunde
+pro_sekunde = 1450 / 60
+
+# Arbeit in J: Trapezregel, Simpson-Regel, quad()
+arbeit = np.array([arbeit_trapez, arbeit_simpson, arbeit_quad])
+
+# Leistung in kW
+leistung = arbeit * pro_sekunde / 1000
+print('Leistung in kW:', np.round(leistung, 2))
+```
+Ausgabe:
+
+```text
+Leistung in kW: [5.1  5.01 5.  ]
+```
+Bei $1450$ Umdrehungen pro Minute verdichtet der Kolben gut 24-mal pro
+Sekunde. Allein für das Verdichten muss der Antrieb deshalb etwa
+$5.0\,\text{kW}$ aufbringen. Die Trapezregel liefert $5.1\,\text{kW}$, also
+nur etwa $0.1\,\text{kW}$ mehr. Für die Wahl des Motors spielt es hier kaum
+eine Rolle, welche Regel wir verwenden.
+````
+
+```{admonition} Abschlussfrage
+:class: tip
+1. Ihr Ergebnis aus Teil 3 liegt unter $5.5\,\text{kW}$. Reicht der kleinere
+   Motor? Denken Sie daran, was nach dem Verdichten geschieht, und beschreiben
+   Sie, welche weiteren Leistungen der Motor aufbringen muss. Eine Rechnung ist
+   nicht nötig.
+2. Der Prüfstand soll den Druck künftig mit 1000 Werten pro Verdichtung
+   aufzeichnen. Schätzen Sie mit der Fehlerordnung, wie weit die Trapezregel
+   dann noch vom Modell abweicht. Lohnt sich die Simpson-Regel in diesem
+   Fall?
+```
+
+````{admonition} Lösung Abschlussfrage
+:class: tip
+:class: dropdown
+1. Nein. Teil 3 erfasst nur das Verdichten. Danach schiebt der Kolben die Luft
+   gegen gut $8\,\text{bar}$ in den Kessel. Schiebt er sie vollständig aus,
+   ist das im p-V-Diagramm ein Rechteck mit der Höhe $8.1\,\text{bar}$ und der
+   Breite $0.2\,\text{L}$, also noch einmal gut $160\,\text{J}$. Beim Ansaugen
+   drückt dagegen die angesaugte Luft mit $1\,\text{bar}$ auf den Kolben und
+   gibt $100\,\text{J}$ zurück. Ohne Verluste braucht der Antrieb deshalb pro
+   Umdrehung etwa $207 + 162 - 100 = 269\,\text{J}$, das sind rund
+   $6.5\,\text{kW}$. Dazu
+   kommen die Reibung von Kolben und Lagern und die Verluste im Motor selbst.
+   Die Werkstatt sollte also den Motor mit $7.5\,\text{kW}$ wählen.
+2. Bei 1000 Werten gibt es 999 statt acht Intervalle. Die Schrittweite ist
+   etwa 125-mal kleiner. Bei Fehlerordnung 2 wird die Abweichung der
+   Trapezregel etwa $125^2 \approx 15600$-mal kleiner, also
+   $4.16\,\text{J} / 15600 \approx 3 \cdot 10^{-4}\,\text{J}$. Bei einer
+   Arbeit von gut $200\,\text{J}$ spielt das keine Rolle mehr. Die
+   Simpson-Regel wäre zwar noch genauer, aber der Gewinn ist praktisch
+   bedeutungslos.
+   Beide Regeln sind dann gleich gut geeignet. Die Simpson-Regel lohnt sich
+   vor allem, wenn nur wenige Messwerte vorliegen, wie bei den neun Werten in
+   diesem Projekt.
+````
+
+````{admonition} Zusatzaufgabe: Messpunkte klug verteilen (✩✩✩)
+:class: tip
+Der Sensor des Prüfstands kann pro Verdichtung nur neun Werte liefern. Sie
+dürfen aber selbst festlegen, bei welchen Volumen er misst.
+
+1. Berechnen Sie für jedes der acht Intervalle aus den Messwerten die Fläche
+   des Trapezes und mit `quad()` die Fläche unter dem Modell `druck_modell()`
+   aus Teil 2, beide in Joule. In welchem Intervall weicht die Trapezregel am
+   stärksten ab, und welchen Anteil an den $4.16\,\text{J}$ aus Teil 2 hat
+   dieses Intervall?
+2. Verteilen Sie die neun Volumen dichter dort, wo die Druckkurve stark
+   gekrümmt ist, zum Beispiel so:
+
+   ```python
+   # neun Volumen in L, dicht bei kleinen Volumen
+   volumen_neu = np.array([0.2, 0.25, 0.3, 0.35, 0.4, 0.5, 0.6, 0.8, 1.0])
+   ```
+
+   Berechnen Sie den Druck an diesen Stellen mit `druck_modell()` und die
+   Arbeit mit `np.trapezoid()`. Wie groß ist jetzt die Abweichung vom Wert aus
+   `quad()`?
+3. Berechnen Sie die Arbeit an den Stellen `volumen_neu` auch mit
+   `simpson()`. Hilft die neue Verteilung der Simpson-Regel ebenfalls?
+````
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung Zusatzaufgabe
+:class: tip
+:class: dropdown
+1. Wir berechnen in einer Schleife für jedes Intervall beide Flächen:
+
+   ```python
+   # Teilaufgabe 1: Trapez und Modell für jedes Intervall, in J
+   for k in range(len(volumen) - 1):
+       breite = volumen[k + 1] - volumen[k]
+       trapez = (druck[k] + druck[k + 1]) / 2 * breite * 100
+       flaeche_modell, fehler = quad(druck_modell, volumen[k], volumen[k + 1])
+       abweichung = trapez - flaeche_modell * 100
+       print(f'{volumen[k]:.1f} bis {volumen[k + 1]:.1f} L: '
+             f'Abweichung {abweichung:+.3f} J')
+   ```
+
+   Ausgabe:
+
+   ```text
+   0.2 bis 0.3 L: Abweichung +2.557 J
+   0.3 bis 0.4 L: Abweichung +0.818 J
+   0.4 bis 0.5 L: Abweichung +0.352 J
+   0.5 bis 0.6 L: Abweichung +0.181 J
+   0.6 bis 0.7 L: Abweichung +0.106 J
+   0.7 bis 0.8 L: Abweichung +0.068 J
+   0.8 bis 0.9 L: Abweichung +0.046 J
+   0.9 bis 1.0 L: Abweichung +0.031 J
+   ```
+
+   Alle Trapeze sind zu groß. Allein das erste Intervall von $0.2$ bis
+   $0.3\,\text{L}$ trägt $2.56\,\text{J}$ bei, das sind gut 60 Prozent der
+   gesamten Abweichung. Dort ist die Druckkurve am stärksten gekrümmt.
+2. Wir werten das Modell an den neuen Stellen aus:
+
+   ```python
+   # Teilaufgabe 2: neun Volumen in L, dicht bei kleinen Volumen
+   volumen_neu = np.array([0.2, 0.25, 0.3, 0.35, 0.4, 0.5, 0.6, 0.8, 1.0])
+   druck_neu = druck_modell(volumen_neu)
+
+   # Teilaufgabe 2: Trapezregel und Abweichung vom Modell, in J
+   arbeit_neu = np.trapezoid(druck_neu, volumen_neu) * 100
+   abweichung_neu = arbeit_neu - arbeit_quad
+   print(f'Trapezregel: {arbeit_neu:.2f} J')
+   print(f'Abweichung:  {abweichung_neu:+.2f} J')
+   ```
+
+   Ausgabe:
+
+   ```text
+   Trapezregel: 209.24 J
+   Abweichung:  +2.35 J
+   ```
+
+   Mit derselben Anzahl von Messwerten sinkt die Abweichung von $4.16$ auf
+   $2.35\,\text{J}$. Die zusätzlichen Werte bei kleinen Volumen verkleinern
+   die großen Trapezfehler dort. Die breiteren Intervalle bei großen Volumen
+   kosten wenig, weil die Druckkurve dort nur schwach gekrümmt ist.
+3. `simpson()` kommt wie `np.trapezoid()` mit ungleichen Abständen zurecht:
+
+   ```python
+   # Teilaufgabe 3: Simpson-Regel an den neuen Stellen, in J
+   arbeit_neu_simpson = simpson(druck_neu, x=volumen_neu) * 100
+   abweichung_neu_simpson = arbeit_neu_simpson - arbeit_quad
+   print(f'Simpson-Regel: {arbeit_neu_simpson:.2f} J')
+   print(f'Abweichung:    {abweichung_neu_simpson:+.2f} J')
+   ```
+
+   Ausgabe:
+
+   ```text
+   Simpson-Regel: 206.99 J
+   Abweichung:    +0.10 J
+   ```
+
+   Auch die Simpson-Regel profitiert: Ihre Abweichung sinkt von $0.36$ auf
+   $0.10\,\text{J}$. Dichte Messpunkte dort, wo die Kurve stark gekrümmt ist,
+   helfen also beiden Regeln. Mit neun klug verteilten Werten bleibt die
+   Simpson-Regel deutlich genauer als die Trapezregel.
 ````

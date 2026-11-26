@@ -4,142 +4,127 @@ kernelspec:
   display_name: 'Python 3'
 ---
 
-# 9.3 Simpson-Regel und scipy.integrate.quad
+# 9.3 Volumen eines Weinfasses
 
-```{admonition} Warnung
-:class: warning
-Dieses Kapitel befindet sich derzeit im Umbau und wird rechtzeitig vor der Vorlesung im WiSe 2026/27 zur Verfügung stehen.
-```
+In Kapitel 9.1 haben wir die Fläche unter der Ladekurve mit Trapezen
+angenähert. Die Trapezregel verbindet benachbarte Messpunkte durch Strecken. Ist
+die Kurve dazwischen gekrümmt, entsteht ein Fehler, der erst bei kleiner
+Schrittweite verschwindet. *Geht es mit denselben Messwerten genauer?*
 
-In Abschnitt 9.1 haben wir die Trapezregel kennengelernt: lineare Interpolation
-zwischen Messpunkten. *Geht es noch genauer?* Ja, wenn wir statt einer Geraden
-eine Parabel durch je drei aufeinanderfolgende Punkte legen. Das ist die Idee
-der Simpson-Regel. Außerdem lernen wir `scipy.integrate.quad()` kennen, das
-Werkzeug der Wahl, wenn nicht Messdaten, sondern ein analytisches Modell
-vorliegt.
+Diese Frage stellte sich schon Johannes Kepler. Als er 1613 Wein für seine
+Hochzeit kaufte, maß der Händler jedes Fass mit einem einzigen Stab durch das
+Spundloch aus. Kepler zweifelte an dieser Methode und befasste sich mit dem
+Volumen von Weinfässern. Nach ihm ist die **Keplersche Fassregel** benannt, aus
+der wir in diesem Kapitel die Simpson-Regel entwickeln.
 
 ## Lernziele
 
 ```{admonition} Lernziele
 :class: attention
-* [ ] Sie können die **Simpson-Regel** als Formel aufschreiben und als
-  Python-Funktion implementieren.
-* [ ] Sie wissen, warum die Simpson-Regel eine ungerade Punktanzahl
-  erfordert, und können die Fehlerordnungen $O(\Delta t^2)$
-  (Trapezregel) und $O(\Delta t^4)$ (Simpson) benennen.
-* [ ] Sie wissen, wann Simpson der Trapezregel vorzuziehen ist und wann
-  nicht.
-* [ ] Sie können `scipy.integrate.quad()` auf eine analytische Funktion
-  anwenden und den zurückgegebenen Fehlerabschätzungswert interpretieren.
-* [ ] Sie können `scipy.integrate.quad()` für ein uneigentliches Integral
-  mit unendlicher oberer Grenze einsetzen.
+* [ ] Sie können das Volumen eines Behälters als Integral der
+  Querschnittsfläche über der Höhe deuten und mit der Trapezregel annähern.
+* [ ] Sie können erklären, warum die Keplersche Fassregel und die
+  **Simpson-Regel** mit Parabeln genauer sind als die Trapezregel mit Strecken.
+* [ ] Sie können die Simpson-Regel mit `simpson()` aus SciPy anwenden.
+* [ ] Sie können im doppelt logarithmischen Diagramm ablesen, dass die
+  Trapezregel die Fehlerordnung 2 und die Simpson-Regel die Fehlerordnung 4
+  hat.
+* [ ] Sie können mit `quad()` aus SciPy integrieren, wenn der Integrand als
+  Formel vorliegt.
 ```
 
-+++
+## Wie viel Wein passt in das Fass?
 
-## Die Simpson-Regel: Parabelapproximation statt Geraden
+Ein Weingut hat ein neues Eichenfass gekauft. Das Fass steht aufrecht, sein
+Innenraum ist $90\,\text{cm}$ hoch. Der Innenradius beträgt an Boden und Deckel
+$25.2\,\text{cm}$ und in der Mitte, am Bauch des Fasses, $30\,\text{cm}$. Die
+Küferei hat das Fass vor der Auslieferung **ausgelitert**: Sie hat es mit
+Wasser gefüllt und die Wassermenge mit einem Zähler gemessen. Das Ergebnis
+lautet $228.6\,\text{L}$. Wir prüfen, wie nah wir diesem Wert mit gemessenen
+Radien kommen.
 
-Die Trapezregel verbindet je zwei benachbarte Messpunkte durch eine
-Gerade. Die **Simpson-Regel** legt stattdessen eine Parabel durch je
-drei aufeinanderfolgende Punkte und integriert diese analytisch. Das
-Ergebnis für ein Doppelintervall $[t_i, t_{i+2}]$ lautet:
+Dazu denken wir uns das Fass in dünne waagerechte Scheiben zerlegt. Eine
+Scheibe in der Höhe $z$ mit der Dicke $\Delta z$ ist fast ein flacher Zylinder.
+Ihr Volumen ist $A(z)\,\Delta z$, wobei $A(z) = \pi\,r(z)^2$ die
+**Querschnittsfläche** in dieser Höhe ist. Addieren wir alle Scheiben und
+lassen ihre Dicke gegen null gehen, erhalten wir das Volumen als Integral:
 
-$$\Delta s_i = \frac{\Delta t}{3}\bigl(v_i + 4\,v_{i+1} + v_{i+2}\bigr).$$
+$$V = \int_0^H A(z)\,\mathrm{d}z = \int_0^H \pi\,r(z)^2\,\mathrm{d}z.$$
 
-Der mittlere Punkt geht mit dem vierfachen Gewicht ein. Summiert man
-über alle Doppelintervalle, erhält man die zusammengesetzte
-Simpson-Regel:
+Das ist dieselbe Rechnung wie in Kapitel 9.1, nur mit anderen Größen: Statt der
+Ladeleistung über der Zeit integrieren wir die Querschnittsfläche über der
+Höhe. Fläche mal Länge ergibt ein Volumen.
 
-$$s \approx \frac{\Delta t}{3}\bigl(v_0 + 4v_1 + 2v_2 + 4v_3 + \cdots
-+ 2v_{n-3} + 4v_{n-2} + v_{n-1}\bigr).$$
-
-Weil immer drei Punkte ein Doppelintervall bilden, muss die Anzahl der
-Intervalle gerade sein, also $n$ (Anzahl Punkte) ungerade.
+Das Datenblatt der Küferei nennt den Innenradius an neun Stellen in gleichen
+Abständen, vom Boden bei $z = 0$ bis zum Deckel bei $z = 0.9\,\text{m}$.
+`np.linspace(0, 0.9, 9)` erzeugt diese neun Höhen.
 
 ```{code-cell} python
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.style as style
-style.use('seaborn-v0_8')
 
-# --- Bremsdaten aus Abschnitt 9.2 (gleicher Seed = identische Werte) ---
-np.random.seed(12)
-
-v0_bremsung = 100 / 3.6   # Anfangsgeschwindigkeit in m/s
-k_bremsung  = 0.35        # Abklingkonstante in 1/s
-T_bremsung  = 8.0         # Messdauer (Gesamtdauer der Messung) in s
-dt_sensor   = 0.5         # Messintervall (Zeitabstand zwischen zwei Messungen) in s
-
-t_mess  = np.arange(0, T_bremsung + dt_sensor, dt_sensor)
-v_exakt = v0_bremsung * np.exp(-k_bremsung * t_mess)
-v_mess  = np.maximum(v_exakt + np.random.normal(0, 0.3, size=len(t_mess)), 0.0)
-
-# np.arange(0, 8.5, 0.5) ergibt 17 Punkte: ungerade, gut für Simpson
-print(f"Anzahl Messpunkte: {len(t_mess)}  (ungerade: {len(t_mess) % 2 == 1})")
+# Höhen der Messstellen in m, vom Boden bis zum Deckel
+hoehe = np.linspace(0, 0.9, 9)
+# Innenradius in m laut Datenblatt der Küferei
+radius = np.array([0.252, 0.273, 0.288, 0.297, 0.300,
+                   0.297, 0.288, 0.273, 0.252])
+# Querschnittsfläche in m²
+flaeche = np.pi * radius**2
 ```
+
+Kepler kannte nur drei Radien: an Boden, Bauch und Deckel. Das sind der erste,
+der mittlere und der letzte Eintrag. `hoehe[::4]` nimmt jeden vierten Eintrag,
+also genau diese drei. Mit `np.trapezoid()` berechnen wir das Volumen einmal
+aus drei und einmal aus allen neun Radien. Fläche in Quadratmetern mal Höhe in
+Metern ergibt Kubikmeter. Ein Kubikmeter entspricht 1000 Litern.
 
 ```{code-cell} python
-import numpy as np
+# Nur Boden, Bauch und Deckel: jeder vierte Eintrag
+hoehe_3 = hoehe[::4]
+flaeche_3 = flaeche[::4]
 
-def simpson(t, v):
-    """Zusammengesetzte Simpson-Regel für gleichmäßiges Raster.
-
-    Parameters
-    ----------
-    t : np.ndarray
-        Zeitpunkte mit konstantem Abstand (gleichmäßiges Raster),
-        ungerade Anzahl erforderlich. Diese Funktion setzt ein
-        gleichmäßiges Raster voraus, überprüft dies aber nicht zur
-        Laufzeit.
-    v : np.ndarray
-        Funktionswerte an den Zeitpunkten.
-
-    Returns
-    -------
-    float
-        Näherungswert des Integrals.
-    """
-    n  = len(v)
-    dt = t[1] - t[0]
-
-    # Simpson erfordert ungerade Punktanzahl (gerade Anzahl von Intervallen)
-    if n % 2 == 0:
-        raise ValueError(
-            f"Simpson-Regel erfordert ungerade Punktanzahl, erhalten: {n}"
-        )
-
-    # Gewichtsvektor aufbauen: 1, 4, 2, 4, 2, ..., 4, 1
-    gewichte         = np.ones(n)
-    gewichte[1:-1:2] = 4   # ungerade Indizes (1, 3, 5, ...): Gewicht 4
-    gewichte[2:-2:2] = 2   # gerade Indizes innen (2, 4, 6, ...): Gewicht 2
-
-    return (dt / 3) * np.dot(gewichte, v)
-
-# --- Vergleich auf den Bremsdaten ---
-bremsweg_exakt   = (v0_bremsung / k_bremsung) * (1 - np.exp(-k_bremsung * T_bremsung))
-bremsweg_trapez  = np.trapezoid(v_mess, t_mess)
-bremsweg_simpson = simpson(t_mess, v_mess)
-
-print(f"Exakter Bremsweg: {bremsweg_exakt:.4f} m")
-print()
-print(f"Trapezregel:   {bremsweg_trapez:.4f} m  "
-      f"(Fehler: {bremsweg_trapez - bremsweg_exakt:+.4f} m)")
-print(f"Simpson-Regel: {bremsweg_simpson:.4f} m  "
-      f"(Fehler: {bremsweg_simpson - bremsweg_exakt:+.4f} m)")
+# Trapezregel, Volumen von m³ in L umgerechnet
+volumen_3 = np.trapezoid(flaeche_3, hoehe_3) * 1000
+volumen_9 = np.trapezoid(flaeche, hoehe) * 1000
+print(f'Trapezregel mit drei Radien: {volumen_3:.2f} L')
+print(f'Trapezregel mit neun Radien: {volumen_9:.2f} L')
 ```
 
-Beide Methoden liefern hier sehr ähnliche Ergebnisse. Der Grund: bei
-verrauschten Messdaten dominiert das Rauschen den Gesamtfehler, nicht
-die Integrationsmethode. Wie viel genauer Simpson bei rauschfreien
-Funktionen ist, zeigt der nächste Unterabschnitt.
+Mit drei Radien fehlen $11.6\,\text{L}$ zum ausgeliterten Wert, mit neun Radien
+noch $0.7\,\text{L}$. Beide Ergebnisse sind zu klein. *Warum unterschätzt die
+Trapezregel das Volumen?* Das zeigt ein Diagramm der Querschnittsfläche über
+der Höhe.
 
-```{admonition} Mini-Übung
+```{code-cell} python
+# Diagramm: Querschnittsfläche aus neun und aus drei Radien
+fig, ax = plt.subplots(figsize=(7, 4))
+ax.plot(hoehe, flaeche, marker='o', label='neun Radien')
+ax.plot(hoehe_3, flaeche_3, marker='s', label='drei Radien')
+ax.set_xlabel('Höhe in m')
+ax.set_ylabel('Querschnittsfläche in m²')
+ax.set_title('Querschnittsfläche des Fasses')
+ax.legend()
+ax.grid(True)
+plt.show()
+```
+
+Vom Boden zum Bauch wächst die Querschnittsfläche erst schnell, dann immer
+langsamer. Die neun Messpunkte liegen deshalb auf einer nach oben gewölbten
+Kurve, wie der Bauch des Fasses. Jede Strecke zwischen zwei Messpunkten
+verläuft unter dieser Kurve, jedes Trapez ist also zu klein. Mit drei Radien
+schneiden die beiden Strecken den ganzen Bauch ab, mit neun Radien fehlen nur
+noch schmale Streifen.
+
+```{admonition} Mini-Übung (✩)
 :class: tip
-1. Warum erfordert die Simpson-Regel eine ungerade Punktanzahl?
-   Begründen Sie anhand der Formel in einem Satz, ohne Code.
-2. Berechnen Sie den Bremsweg für die drei Punkte
-   $t = [0, 1, 2]$ s, $v = [20, 15, 5]$ m/s mit der Simpson-Regel
-   per Handrechnung. Überprüfen Sie das Ergebnis mit `simpson()`.
+1. Beantworten Sie ohne Code: Liefert die Trapezregel mit fünf Radien, also
+   mit jedem zweiten Eintrag, mehr oder weniger als $228.6\,\text{L}$?
+   Begründen Sie in einem Satz.
+2. Berechnen Sie das Volumen aus den fünf Radien `radius[::2]` an den Höhen
+   `hoehe[::2]`.
+3. Berechnen Sie für drei, fünf und neun Radien die Abweichung vom
+   ausgeliterten Wert. Um welchen Faktor wird die Abweichung jeweils kleiner,
+   wenn sich der Abstand der Messstellen halbiert?
 ```
 
 ```{code-cell} python
@@ -149,170 +134,149 @@ Funktionen ist, zeigt der nächste Unterabschnitt.
 ````{admonition} Lösung
 :class: tip
 :class: dropdown
+1. Weniger. Auch die Strecken zwischen fünf Messpunkten verlaufen unter der
+   nach oben gewölbten Kurve, jedes Trapez ist zu klein.
+2. Wir übergeben jeden zweiten Eintrag beider Arrays:
 
-Zu Frage 1: Die Formel fasst immer drei Punkte zu einem Doppelintervall
-zusammen. Bei gerader Punktanzahl bleibt am Ende ein einzelner Punkt
-übrig, der kein vollständiges Doppelintervall bilden kann.
+   ```python
+   # Teilaufgabe 2: Trapezregel mit fünf Radien
+   volumen_5 = np.trapezoid(flaeche[::2], hoehe[::2]) * 1000
+   print(f'Trapezregel mit fünf Radien: {volumen_5:.2f} L')
+   ```
 
-Zu Frage 2:
+   Die Trapezregel liefert $225.76\,\text{L}$.
+3. Wir ziehen jeweils den ausgeliterten Wert ab:
 
-```python
-import numpy as np
+   ```python
+   # Teilaufgabe 3: Abweichungen vom ausgeliterten Wert
+   abweichung_3 = volumen_3 - 228.6
+   abweichung_5 = volumen_5 - 228.6
+   abweichung_9 = volumen_9 - 228.6
+   print(f'drei Radien: {abweichung_3:+.2f} L')
+   print(f'fünf Radien: {abweichung_5:+.2f} L')
+   print(f'neun Radien: {abweichung_9:+.2f} L')
+   ```
 
-t = np.array([0.0, 1.0, 2.0])
-v = np.array([20.0, 15.0, 5.0])
-
-# Handrechnung: dt = 1, Gewichte = [1, 4, 1]
-# s = (1/3) * (1*20 + 4*15 + 1*5) = (1/3) * 85 ≈ 28.33 m
-s_hand    = (1.0 / 3) * (1 * 20 + 4 * 15 + 1 * 5)
-s_simpson = simpson(t, v)
-
-print(f"Handrechnung:   {s_hand:.4f} m")
-print(f"simpson():      {s_simpson:.4f} m")
-print(f"np.trapezoid:   {np.trapezoid(v, t):.4f} m")
-```
-
-Simpson liefert $85/3 \approx 28.33$ m, `np.trapezoid()` liefert
-$27.5$ m. Bei diesem kleinen Datensatz ist der Unterschied gering;
-bei glatten Funktionen und mehr Punkten wächst der Vorteil von Simpson
-deutlich.
+   Die Abweichungen betragen $-11.59$, $-2.84$ und $-0.68\,\text{L}$. Von drei
+   auf fünf Radien halbiert sich der Abstand, und die Abweichung wird um den
+   Faktor $11.59 / 2.84 \approx 4.1$ kleiner. Von fünf auf neun Radien beträgt
+   der Faktor $2.84 / 0.68 \approx 4.2$. Halber Abstand, etwa ein Viertel der
+   Abweichung: Diesen Zusammenhang untersuchen wir im letzten Abschnitt
+   genauer.
 ````
 
-+++
+## Wie rechnete Kepler mit drei Radien?
 
-## Fehlerordnung und Methodenwahl
+Die Trapezregel verbindet die drei Messpunkte durch zwei Strecken und schneidet
+dabei den Bauch ab. Kepler legte stattdessen eine **Parabel** durch die drei
+Punkte. Sie ist gewölbt und folgt der Form des Fasses viel besser. Die
+Abbildung zeigt beide Näherungen für die Querschnittsfläche. Gelb markiert ist
+die Fläche, die die Strecken abschneiden und die Parabel erfasst.
 
-Die Trapezregel hat Fehlerordnung $O(\Delta t^2)$, die Simpson-Regel
-erreicht $O(\Delta t^4)$. Das bedeutet: halbiert man die Schrittweite,
-wird der Fehler der Trapezregel ungefähr durch vier geteilt, der der
-Simpson-Regel ungefähr durch sechzehn.
+```{figure} pics/chap09_fassregel.svg
+:alt: Querschnittsfläche des Fasses über der Höhe mit drei Punkten an Boden, Bauch und Deckel. Zwei orange Strecken verbinden die Punkte, die Fläche darunter ist hellblau. Eine dunkelblaue Parabel durch dieselben drei Punkte verläuft darüber, die Fläche zwischen Strecken und Parabel ist gelb.
+:align: center
+:label: fig_chap09_fassregel
 
-```{admonition} Fehlerordnungen im Überblick
+Trapezregel und Keplersche Fassregel mit drei Querschnittsflächen.
+(Quelle: eigene Abbildung; Lizenz [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0))
+```
+
+Die Fläche unter der Parabel lässt sich exakt berechnen. Das ergibt die
+Keplersche Fassregel:
+
+$$V \approx \frac{H}{6}\bigl(A_\text{Boden} + 4\,A_\text{Bauch} +
+A_\text{Deckel}\bigr).$$
+
+Der Wert in der Mitte zählt viermal so viel wie jeder der beiden Randwerte.
+
+```{admonition} Aus der Mathematik: Parabel durch drei Punkte
 :class: note
-| Methode | Fehlerordnung | Halbierung von $\Delta t$ bewirkt |
-|---|---|---|
-| Trapezregel | $O(\Delta t^2)$ | Fehler sinkt auf ein Viertel |
-| Simpson-Regel | $O(\Delta t^4)$ | Fehler sinkt auf ein Sechzehntel |
-
-Dieselbe Logik wie in Kapitel 7: dort $O(\Delta x^2)$ für den zentralen
-Differenzenquotienten, hier $O(\Delta t^4)$ für Simpson.
+Durch drei Punkte mit verschiedenen Stellen geht genau eine Parabel. Integrieren
+wir sie, bleiben nur die drei Funktionswerte mit den Gewichten 1, 4 und 1
+übrig. Deshalb ist die Fassregel für jede Parabel exakt, sogar für jedes
+Polynom dritten Grades.
 ```
 
-Den Vorteil von Simpson sieht man nur bei rauschfreien, glatten
-Funktionen. Wir demonstrieren das kurz am analytischen Bremsmodell ohne
-Rauschen:
+Wir wenden die Fassregel auf die drei Querschnittsflächen aus dem vorigen
+Abschnitt an. Die Höhe des Fasses ist $H = 0.9\,\text{m}$.
 
 ```{code-cell} python
-import numpy as np
-
-# --- Fehlervergleich auf rauschfreier Testfunktion ---
-v0_test = 100 / 3.6
-k_test  = 0.35
-T_test  = 8.0
-
-# Exaktes Integral als Referenz
-integral_exakt = (v0_test / k_test) * (1 - np.exp(-k_test * T_test))
-
-# Zwei Auflösungen zum Vergleich: grob (n=9) und fein (n=17)
-for n in [9, 17]:
-    t = np.linspace(0, T_test, n)
-    v = v0_test * np.exp(-k_test * t)   # kein Rauschen
-    dt = T_test / (n - 1)
-
-    fehler_t = abs(np.trapezoid(v, t) - integral_exakt)
-    fehler_s = abs(simpson(t, v)      - integral_exakt)
-
-    print(f"n = {n:2d}  (dt = {dt:.3f} s):  "
-          f"Trapez = {fehler_t:.2e} m,  "
-          f"Simpson = {fehler_s:.2e} m,  "
-          f"Faktor = {fehler_t/fehler_s:.0f}x")
+# Keplersche Fassregel mit Boden, Bauch und Deckel, Volumen in L
+volumen_kepler = 0.9 / 6 * (flaeche_3[0] + 4 * flaeche_3[1]
+                            + flaeche_3[2]) * 1000
+print(f'Keplersche Fassregel: {volumen_kepler:.2f} L')
 ```
 
-Bei rauschfreien Daten ist Simpson hier deutlich genauer. Bei den verrauschten
-Sensordaten aus der Übung war der Unterschied dagegen vernachlässigbar, weil das
-Rauschen den Integrationsfehler überwog.
+Mit denselben drei Radien wie die Trapezregel liegt die Fassregel nur
+$0.9\,\text{L}$ über dem ausgeliterten Wert statt $11.6\,\text{L}$ darunter.
 
-**Faustregel:** Simpson für glatte analytische Funktionen, Trapezregel
-für verrauschte Messdaten.
+Mit neun Radien geht es noch genauer. Wir fassen je zwei benachbarte Intervalle
+zu einem **Doppelintervall** der Breite $2\,\Delta z$ mit drei Punkten
+zusammen. Auf jedes Doppelintervall wenden wir die Fassregel an, mit
+$2\,\Delta z / 6 = \Delta z / 3$ statt $H/6$. Die Punkte an den Grenzen zwischen zwei Doppelintervallen gehören zu
+beiden und zählen deshalb doppelt. Mit $n$ Intervallen und den Flächen
+$A_0, A_1, \dots, A_n$ ergibt das die **Simpson-Regel**:
 
-+++
+$$V \approx \frac{\Delta z}{3}\bigl(A_0 + 4A_1 + 2A_2 + 4A_3 + \dots +
+2A_{n-2} + 4A_{n-1} + A_n\bigr).$$
 
-## scipy.integrate.quad für analytische Modelle
+Die Formel braucht eine gerade Anzahl von Intervallen, also eine ungerade
+Anzahl von Werten. Die Abbildung zeigt das für die neun Radien: vier
+Doppelintervalle mit je einer Parabel und über jedem Punkt sein Gewicht.
 
-Wenn das analytische Modell bekannt ist, muss man es nicht erst auf
-einem Gitter auswerten. `scipy.integrate.quad()` integriert eine
-Python-Funktion direkt und schätzt die Genauigkeit automatisch ab.
+```{figure} pics/chap09_simpson.svg
+:alt: Querschnittsfläche des Fasses über der Höhe mit neun Punkten. Gestrichelte Linien teilen die Höhe in vier Doppelintervalle, abwechselnd hellblau und gelb gefüllt, in jedem verläuft eine Parabel durch drei Punkte. Über den Punkten stehen die Gewichte 1, 4, 2, 4, 2, 4, 2, 4, 1.
+:align: center
+:label: fig_chap09_simpson
+
+Simpson-Regel mit neun Querschnittsflächen.
+(Quelle: eigene Abbildung; Lizenz [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0))
+```
+
+Die Simpson-Regel programmieren wir nicht selbst. Die Bibliothek **SciPy** baut
+auf NumPy auf und bietet viele numerische Verfahren, darunter `simpson()` aus
+dem Modul `scipy.integrate`. Die Funktionswerte übergeben wir wie bei
+`np.trapezoid()` als erstes Argument, die Stellen aber mit dem Namen `x`. Bei
+einer geraden Anzahl von Werten behandelt `simpson()` das überzählige Intervall
+gesondert, und auch ungleiche Abstände sind erlaubt.
 
 ```{code-cell} python
-from scipy.integrate import quad
-import numpy as np
+from scipy.integrate import simpson
 
-# --- Analytisches Bremsmodell als Python-Funktion ---
-v0_modell = 100 / 3.6   # Anfangsgeschwindigkeit in m/s
-k_modell  = 0.35        # Abklingkonstante in 1/s
-
-def v_brems(t):
-    """Analytisches Bremsmodell: v(t) = v0 * exp(-k*t)."""
-    return v0_modell * np.exp(-k_modell * t)
-
-# --- quad(funktion, untere_grenze, obere_grenze) ---
-# Rückgabe: (Integralwert, geschätzter absoluter Fehler)
-bremsweg_quad, fehlerabschaetzung = quad(v_brems, 0, 8.0)
-
-# Analytischer Referenzwert: Stammfunktion von v0*exp(-k*t) ausgewertet von 0 bis T
-bremsweg_exakt = (v0_modell / k_modell) * (1 - np.exp(-k_modell * 8.0))
-
-print(f"scipy.integrate.quad:  {bremsweg_quad:.6f} m")
-print(f"Analytisch exakt:      {bremsweg_exakt:.6f} m")
-print(f"Fehlerabschätzung:     {fehlerabschaetzung:.2e} m")
-print(f"Tatsächlicher Fehler:  {abs(bremsweg_quad - bremsweg_exakt):.2e} m")
+# Simpson-Regel mit drei und mit neun Radien, Volumen in L
+volumen_simpson_3 = simpson(flaeche_3, x=hoehe_3) * 1000
+volumen_simpson_9 = simpson(flaeche, x=hoehe) * 1000
+print(f'Simpson-Regel mit drei Radien: {volumen_simpson_3:.2f} L')
+print(f'Simpson-Regel mit neun Radien: {volumen_simpson_9:.2f} L')
 ```
 
-`quad()` gibt zwei Werte zurück: den Integralwert und eine Schätzung des
-absoluten Fehlers. Die Fehlerabschätzung liegt hier im Bereich der
-Maschinengenauigkeit, weil die Funktion glatt und gut konditioniert ist.
+Mit drei Radien stimmt `simpson()` mit der Fassregel überein. Mit neun Radien
+liefert die Simpson-Regel $228.63\,\text{L}$, auf eine Nachkommastelle gerundet
+genau den ausgeliterten Wert. Die Trapezregel lag mit denselben neun Radien
+$0.7\,\text{L}$ darunter. Die Simpson-Regel braucht also keine zusätzlichen
+Messungen, nur andere Gewichte.
 
-`quad()` kann auch **uneigentliche Integrale** mit unendlicher Grenze
-berechnen. Dazu übergibt man `np.inf`:
-
-```{code-cell} python
-from scipy.integrate import quad
-import numpy as np
-
-v0_modell = 100 / 3.6
-k_modell  = 0.35
-
-# --- Theoretischer Gesamtbremsweg: obere Grenze = unendlich ---
-# Analytisch: Integral von v0*exp(-k*t) von 0 bis inf = v0/k
-bremsweg_inf, fehler_inf = quad(v_brems, 0, np.inf)
-
-print(f"Theoretischer Gesamtbremsweg (quad):  {bremsweg_inf:.4f} m")
-print(f"Analytisch (v0/k):                    {v0_modell / k_modell:.4f} m")
-print(f"Bremsweg bis T = 8 s:                 {bremsweg_exakt:.4f} m")
-print(f"Anteil nach T = 8 s:                  "
-      f"{bremsweg_exakt / bremsweg_inf * 100:.1f} %")
-```
-
-Das Integral bis Unendlich gibt den theoretischen Gesamtbremsweg an, das den
-Stillstand nur asymptotisch erreicht. Bei $T = 8$ s sind bereits 93.9 % dieses
-Weges zurückgelegt.
-
-```{admonition} Wann welches Werkzeug?
-:class: note
-| Methode | Eingabe | Anwendungsfall |
-|---|---|---|
-| `np.trapezoid()` | Messdaten `v[i]` | Sensordaten, diskrete Messung |
-| `simpson()` | Messdaten `v[i]`, $n$ ungerade | Glatte Daten ohne Rauschen |
-| `quad(f, a, b)` | Funktion `f(t)` | Analytisches Modell bekannt |
-```
-
-```{admonition} Mini-Übung
+```{admonition} Mini-Übung (✩)
 :class: tip
-1. Berechnen Sie $\int_0^\infty e^{-t}\,\mathrm{d}t$ mit `quad()` und
-   `np.inf`. Welchen Wert erwarten Sie analytisch?
-2. Das Ergebnis von `quad()` enthält immer eine Fehlerabschätzung.
-   Wofür ist dieser Wert praktisch nützlich? Nennen Sie ein Szenario,
-   in dem eine große Fehlerabschätzung ein Warnsignal wäre.
+Ein Eimer hat eine gerade Wand und ist innen $30\,\text{cm}$ hoch. Sein
+Innenradius wächst gleichmäßig von $12\,\text{cm}$ am Boden über
+$13.5\,\text{cm}$ in halber Höhe auf $15\,\text{cm}$ am Rand. Der Eimer ist ein
+Kegelstumpf mit dem Volumen
+
+$$V = \frac{\pi H}{3}\bigl(r_\text{unten}^2 + r_\text{unten}\,r_\text{oben}
++ r_\text{oben}^2\bigr).$$
+
+1. Berechnen Sie das Volumen in Litern aus den drei Radien mit `simpson()` und
+   mit `np.trapezoid()`. Vergleichen Sie beide mit der Formel des
+   Kegelstumpfs.
+2. Beantworten Sie ohne Code: Beim Fass lieferte die Trapezregel zu wenig,
+   beim Eimer liefert sie zu viel. Warum? Denken Sie daran, wie die
+   Querschnittsfläche mit dem Radius wächst.
+3. Zurück zum Fass: Wie viele Doppelintervalle ergeben die fünf
+   Querschnittsflächen `flaeche[::2]`, und mit welchen Gewichten gehen sie in
+   die Simpson-Regel ein? Berechnen Sie das Volumen mit diesen Gewichten und
+   prüfen Sie Ihr Ergebnis mit `simpson()`.
 ```
 
 ```{code-cell} python
@@ -322,38 +286,242 @@ Weges zurückgelegt.
 ````{admonition} Lösung
 :class: tip
 :class: dropdown
-```python
-from scipy.integrate import quad
-import numpy as np
+1. Wir legen die Höhen und Radien in Metern an:
 
-# Teilaufgabe 1: uneigentliches Integral
-# Analytisch: Stammfunktion -e^{-t}, von 0 bis inf: 0 - (-1) = 1
-ergebnis, fehler = quad(lambda t: np.exp(-t), 0, np.inf)
-print(f"Integral e^(-t) von 0 bis inf: {ergebnis:.6f}")
-print(f"Fehlerabschätzung:             {fehler:.2e}")
-```
+   ```python
+   # Teilaufgabe 1: Eimer, Höhen und Radien in m
+   hoehe_eimer = np.array([0.0, 0.15, 0.30])
+   radius_eimer = np.array([0.12, 0.135, 0.15])
+   flaeche_eimer = np.pi * radius_eimer**2
 
-Das Integral ergibt exakt 1, wie analytisch erwartet.
+   # Teilaufgabe 1: Simpson-Regel, Trapezregel und Formel, Volumen in L
+   volumen_simpson = simpson(flaeche_eimer, x=hoehe_eimer) * 1000
+   volumen_trapez = np.trapezoid(flaeche_eimer, hoehe_eimer) * 1000
+   volumen_formel = np.pi * 0.30 / 3 * (0.12**2 + 0.12 * 0.15 + 0.15**2) * 1000
+   print(f'Simpson-Regel: {volumen_simpson:.3f} L')
+   print(f'Trapezregel:   {volumen_trapez:.3f} L')
+   print(f'Kegelstumpf:   {volumen_formel:.3f} L')
+   ```
 
-Zu Frage 2: Eine große Fehlerabschätzung signalisiert, dass `quad()`
-intern viele Auswertungen brauchte und trotzdem keine hohe Genauigkeit
-erreichte. Das passiert zum Beispiel bei Funktionen mit Sprungstellen,
-sehr starken Oszillationen oder Singularitäten im Integrationsbereich.
-In solchen Fällen sollte man das Integral aufteilen oder eine
-spezialisierte Methode verwenden.
+   Die Simpson-Regel liefert genau das Volumen des Kegelstumpfs,
+   $17.247\,\text{L}$. Die Trapezregel liefert $17.283\,\text{L}$, also
+   $0.035\,\text{L}$ zu viel.
+2. Der Radius wächst gleichmäßig mit der Höhe, die Querschnittsfläche
+   $\pi r^2$ aber mit dem Quadrat des Radius. Sie wächst nach oben immer
+   schneller, die Kurve hängt also durch. Die Strecken zwischen den
+   Messpunkten verlaufen über der Kurve, die Trapeze sind zu groß. Beim Fass war
+   die Kurve nach oben gewölbt. Weil die Querschnittsfläche des Eimers
+   quadratisch von der Höhe abhängt, ist die Fassregel hier sogar exakt.
+3. Fünf Radien ergeben vier Intervalle der Breite $0.225\,\text{m}$, also zwei
+   Doppelintervalle. Die Gewichte sind 1, 4, 2, 4, 1. Der mittlere Wert ist
+   die Grenze zwischen den beiden Doppelintervallen und zählt deshalb
+   doppelt:
+
+   ```python
+   # Teilaufgabe 3: fünf Radien, Schrittweite 0.225 m
+   flaeche_5 = flaeche[::2]
+   gewichtet = (flaeche_5[0] + 4 * flaeche_5[1] + 2 * flaeche_5[2]
+                + 4 * flaeche_5[3] + flaeche_5[4])
+   volumen_gewichte = 0.225 / 3 * gewichtet * 1000
+   volumen_scipy = simpson(flaeche_5, x=hoehe[::2]) * 1000
+   print(f'Mit Gewichten: {volumen_gewichte:.2f} L')
+   print(f'simpson():     {volumen_scipy:.2f} L')
+   ```
+
+   Beide liefern $228.68\,\text{L}$, nur $0.1\,\text{L}$ über dem
+   ausgeliterten Wert. Die Trapezregel lag mit denselben fünf Radien
+   $2.8\,\text{L}$ darunter.
 ````
 
-+++
+## Wie schnell sinkt der Fehler?
+
+Mit drei Radien fehlten der Trapezregel $11.6\,\text{L}$, mit neun nur noch
+$0.7\,\text{L}$. Um zu untersuchen, wie schnell der Fehler sinkt, brauchen wir
+das exakte Volumen und Radien an beliebig vielen Stellen. Beides liefert die
+Formel, nach der die Küferei die Kontur des Fasses gefertigt hat:
+
+$$r(z) = 0.30\,\text{m} - 0.048\,\text{m} \cdot
+\Bigl(\frac{2z - H}{H}\Bigr)^2.$$
+
+Die Kontur ist eine Parabel. Die Querschnittsfläche $\pi\,r(z)^2$ ist deshalb
+ein Polynom vierten Grades, für das auch die Simpson-Regel nicht exakt ist.
+
+```{code-cell} python
+# Kontur des Fasses als Formel, Höhe H = 0.9 m
+def innenradius(z):
+    """Innenradius des Fasses in m in der Höhe z in m."""
+    return 0.30 - 0.048 * ((2 * z - 0.9) / 0.9)**2
+
+def querschnitt(z):
+    """Querschnittsfläche des Fasses in m² in der Höhe z in m."""
+    return np.pi * innenradius(z)**2
+```
+
+Liegt der Integrand als Formel vor, brauchen wir keine Messwerte. Dafür bietet
+das Modul `scipy.integrate` die Funktion `quad()`. Sie erhält den Integranden
+und die beiden Grenzen. Den Integranden übergeben wir wie in Kapitel 7.2 ohne
+Klammern, also die Funktion selbst. Zurück kommen zwei Zahlen: der
+Näherungswert und eine Schätzung seines Fehlers. Wie bei
+`fig, ax = plt.subplots()` fangen wir sie in zwei Variablen auf.
+
+```{code-cell} python
+from scipy.integrate import quad
+
+# quad() erhält die Funktion selbst und die Grenzen in m, Ergebnis in m³
+volumen, fehlerschaetzung = quad(querschnitt, 0, 0.9)
+
+# Umrechnung von m³ in L
+volumen_quad = volumen * 1000
+fehlerschaetzung_quad = fehlerschaetzung * 1000
+print(f'quad():          {volumen_quad:.4f} L')
+print(f'Fehlerschätzung: {fehlerschaetzung_quad:.1e} L')
+```
+
+Auf eine Nachkommastelle gerundet liefert `quad()` den ausgeliterten Wert
+$228.6\,\text{L}$. Die Fehlerschätzung von $2.5 \cdot 10^{-12}\,\text{L}$ ist
+verschwindend klein. Wir verwenden den Wert von `quad()` deshalb als exakten
+Vergleichswert.
+
+Jetzt messen wir die Fehler beider Regeln. Wir werten die Formel mit 2, 4, 8,
+…, 128 Intervallen aus und halbieren so die Schrittweite immer wieder. In einer
+Schleife berechnen wir für jede Anzahl die Fehler beider Regeln und sammeln sie
+wie in Kapitel 7.2 in Arrays.
+
+```{code-cell} python
+# Anzahl der Intervalle, jedes Mal verdoppelt, und Schrittweite in m
+anzahl = np.array([2, 4, 8, 16, 32, 64, 128])
+schrittweite = 0.9 / anzahl
+
+# Fehler beider Regeln in L für jede Anzahl von Intervallen
+fehler_trapez = np.zeros(len(anzahl))
+fehler_simpson = np.zeros(len(anzahl))
+for k in range(len(anzahl)):
+    z = np.linspace(0, 0.9, anzahl[k] + 1)
+    volumen_trapez = np.trapezoid(querschnitt(z), z) * 1000
+    volumen_simpson = simpson(querschnitt(z), x=z) * 1000
+    fehler_trapez[k] = abs(volumen_trapez - volumen_quad)
+    fehler_simpson[k] = abs(volumen_simpson - volumen_quad)
+```
+
+Wie in Kapitel 7.2 zeichnen wir die Fehler doppelt logarithmisch über der
+Schrittweite.
+
+```{code-cell} python
+# Diagramm: Fehler über der Schrittweite, doppelt logarithmisch
+fig, ax = plt.subplots(figsize=(7, 5))
+ax.loglog(schrittweite, fehler_trapez, marker='o', label='Trapezregel')
+ax.loglog(schrittweite, fehler_simpson, marker='o', label='Simpson-Regel')
+ax.set_xlabel('Schrittweite in m')
+ax.set_ylabel('Fehler in L')
+ax.set_title('Fehler beim Volumen des Fasses')
+ax.legend()
+ax.grid(True, which='both')
+plt.show()
+```
+
+Die Schrittweite wird von $0.45$ auf $0.007\,\text{m}$ um den Faktor 64
+kleiner, das sind knapp zwei Zehnerpotenzen. Der Fehler der Trapezregel fällt
+dabei um knapp vier Zehnerpotenzen, die Steigung ist also 2. Der Fehler der
+Simpson-Regel fällt um gut sieben Zehnerpotenzen, die Steigung ist 4. Die
+Trapezregel hat die Fehlerordnung 2, die Simpson-Regel die Fehlerordnung 4.
+Halbieren wir die Schrittweite, sinkt der Fehler also auf ein Viertel
+beziehungsweise auf ein Sechzehntel. Dass die Parabeln gleich zwei Ordnungen
+gewinnen, folgt wie in Kapitel 7.2 aus der Taylor-Entwicklung. Wie dort setzen
+die Fehlerordnungen voraus, dass sich der Integrand oft genug ableiten lässt.
+Am Knick der Ladekurve aus Kapitel 9.1 gilt das nicht.
+
+```{admonition} Welches Werkzeug wann?
+:class: note
+| Werkzeug | Eingabe | Idee |
+| --- | --- | --- |
+| `np.trapezoid(werte, stellen)` | Messwerte | Strecken, Fehlerordnung 2 |
+| `simpson(werte, x=stellen)` | Messwerte | Parabeln, Fehlerordnung 4 |
+| `quad(funktion, a, b)` | Funktion | wählt die Stellen selbst |
+
+Liegen nur Messwerte vor und verläuft die Kurve dazwischen glatt, ist die
+Simpson-Regel mit denselben Messwerten meist genauer als die Trapezregel. Ist
+der Integrand als Formel bekannt, kommen wir mit `quad()` meist am einfachsten
+zu einem sehr genauen Wert.
+```
+
+```{admonition} Mini-Übung (✩)
+:class: tip
+1. Das Fass ist bis zur Höhe $60\,\text{cm}$ mit Wein gefüllt. Berechnen Sie
+   mit `quad()`, wie viele Liter Wein es enthält.
+2. Lesen Sie aus dem Diagramm ab: Welche Schrittweite braucht jede der beiden
+   Regeln, damit der Fehler unter $0.1\,\text{L}$ bleibt? Wie viele Intervalle
+   und wie viele Radien sind das? Prüfen Sie Ihre Ablesung mit den Arrays
+   `fehler_trapez` und `fehler_simpson`.
+3. Die Keplersche Fassregel, also die Simpson-Regel mit zwei Intervallen, liegt
+   $0.87\,\text{L}$ daneben. Schätzen Sie ohne Code mit der Fehlerordnung den
+   Fehler der Simpson-Regel mit 16 Intervallen. Prüfen Sie Ihre Schätzung dann
+   mit `fehler_simpson[3]`.
+```
+
+```{code-cell} python
+# Code-Zelle
+```
+
+````{admonition} Lösung
+:class: tip
+:class: dropdown
+1. Die obere Grenze ist jetzt $0.6\,\text{m}$:
+
+   ```python
+   # Teilaufgabe 1: Füllung bis 0.6 m, Volumen in L
+   volumen_wein, fehlerschaetzung_wein = quad(querschnitt, 0, 0.6)
+   volumen_wein_liter = volumen_wein * 1000
+   print(f'Wein im Fass: {volumen_wein_liter:.1f} L')
+   ```
+
+   Das Fass enthält $156.2\,\text{L}$ Wein. Das sind mehr als zwei Drittel von
+   $228.6\,\text{L}$, obwohl der Wein nur zwei Drittel der Höhe erreicht. Leer
+   bleibt das schmale obere Ende des Fasses, der breite Bauch ist gefüllt.
+2. Im Diagramm liegt die Trapezregel erst ab der Schrittweite
+   $0.028\,\text{m}$ unter $0.1\,\text{L}$, die Simpson-Regel schon ab
+   $0.225\,\text{m}$. Wir prüfen die Ablesung mit den Arrays:
+
+   ```python
+   # Teilaufgabe 2: Fehler in L für jede Anzahl von Intervallen
+   for k in range(len(anzahl)):
+       print(f'{anzahl[k]:3d} Intervalle: Trapez {fehler_trapez[k]:.3f} L, '
+             f'Simpson {fehler_simpson[k]:.3f} L')
+   ```
+
+   Die Trapezregel braucht 32 Intervalle (Fehler $0.045\,\text{L}$), die
+   Simpson-Regel nur vier (Fehler $0.054\,\text{L}$). Die Küferei müsste für
+   die Trapezregel 33 Radien messen, für die Simpson-Regel nur fünf.
+3. Von zwei auf 16 Intervalle halbiert sich die Schrittweite dreimal. Bei
+   Fehlerordnung 4 sinkt der Fehler bei jeder Halbierung auf ein Sechzehntel,
+   insgesamt also auf $1/16^3 = 1/4096$. Die Schätzung ist
+   $0.87\,\text{L} / 4096 \approx 2.1 \cdot 10^{-4}\,\text{L}$. Zur Prüfung
+   geben wir den Fehler mit 16 Intervallen aus, das ist der Eintrag mit dem
+   Index 3:
+
+   ```python
+   # Teilaufgabe 3: Fehler der Simpson-Regel mit 16 Intervallen
+   print(f'Fehler mit 16 Intervallen: {fehler_simpson[3]:.1e} L')
+   ```
+
+   Die Ausgabe `2.1e-04 L` bestätigt die Schätzung.
+````
 
 ## Zusammenfassung und Ausblick
 
-Die Simpson-Regel erreicht durch quadratische Interpolation die
-Fehlerordnung $O(\Delta t^4)$ und ist bei glatten Funktionen der
-Trapezregel deutlich überlegen. Bei verrauschten Messdaten dominiert
-das Rauschen und die Trapezregel genügt. `scipy.integrate.quad()`
-integriert eine analytisch gegebene Funktion adaptiv und ist das
-Werkzeug der Wahl, wenn das Modell bekannt ist.
+Das Volumen eines Behälters ist das Integral der Querschnittsfläche über der
+Höhe. Die Trapezregel verbindet die Messpunkte durch Strecken. Bei einem
+bauchigen Fass schneiden die Strecken die Wölbung ab, und das Volumen wird zu
+klein. Die Keplersche Fassregel legt durch drei Punkte eine Parabel und
+gewichtet den mittleren Wert vierfach. Wenden wir sie auf jedes
+Doppelintervall an, erhalten wir die Simpson-Regel. Sie braucht keine
+zusätzlichen Messungen, nur andere Gewichte, und steht in SciPy als
+`simpson()` bereit. Halbieren wir die Schrittweite, sinkt der Fehler der
+Trapezregel auf ein Viertel und der Fehler der Simpson-Regel auf ein
+Sechzehntel: Die Fehlerordnungen sind 2 und 4. Liegt der Integrand als Formel
+vor, integriert `quad()` aus SciPy ihn direkt und schätzt dabei auch den Fehler
+des Ergebnisses.
 
-In Abschnitt 9.4 wenden wir Trapezregel und `quad()` auf ein neues
-Problem an: die geleistete Arbeit entlang einer gemessenen nichtlinearen
-Federkennlinie.
+In Kapitel 9.4 setzen Sie alle drei Werkzeuge ein. Aus Druckmessungen im
+Zylinder eines Kolbenkompressors berechnen Sie, wie viel Arbeit der Kolben
+beim Verdichten der Luft verrichtet und welche Leistung der Antrieb allein
+dafür aufbringen muss.
