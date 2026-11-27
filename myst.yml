@@ -78,6 +78,7 @@ project:
       - file: chapter08/chapter08_sec05.md
     - title: 9. Numerische Integration
       children:
+      - file: chapter09/chapter09_sec00.md
       - file: chapter09/chapter09_sec01.md
       - file: chapter09/chapter09_sec02.md
       - file: chapter09/chapter09_sec03.md

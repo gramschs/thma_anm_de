@@ -300,19 +300,19 @@ eine Rolle, welche Regel wir verwenden.
    drückt dagegen die angesaugte Luft mit $1\,\text{bar}$ auf den Kolben und
    gibt $100\,\text{J}$ zurück. Ohne Verluste braucht der Antrieb deshalb pro
    Umdrehung etwa $207 + 162 - 100 = 269\,\text{J}$, das sind rund
-   $6.5\,\text{kW}$. Dazu
-   kommen die Reibung von Kolben und Lagern und die Verluste im Motor selbst.
-   Die Werkstatt sollte also den Motor mit $7.5\,\text{kW}$ wählen.
+   $6.5\,\text{kW}$. Der Motor mit $5.5\,\text{kW}$ reicht also nicht. Von
+   den beiden angebotenen Motoren kommt nur der mit $7.5\,\text{kW}$ infrage.
+   Ob seine Reserve für die Reibung von Kolben und Lagern genügt, muss die
+   Werkstatt mit dem Hersteller klären.
 2. Bei 1000 Werten gibt es 999 statt acht Intervalle. Die Schrittweite ist
    etwa 125-mal kleiner. Bei Fehlerordnung 2 wird die Abweichung der
    Trapezregel etwa $125^2 \approx 15600$-mal kleiner, also
    $4.16\,\text{J} / 15600 \approx 3 \cdot 10^{-4}\,\text{J}$. Bei einer
-   Arbeit von gut $200\,\text{J}$ spielt das keine Rolle mehr. Die
-   Simpson-Regel wäre zwar noch genauer, aber der Gewinn ist praktisch
-   bedeutungslos.
-   Beide Regeln sind dann gleich gut geeignet. Die Simpson-Regel lohnt sich
-   vor allem, wenn nur wenige Messwerte vorliegen, wie bei den neun Werten in
-   diesem Projekt.
+   Arbeit von gut $200\,\text{J}$ spielt das keine Rolle mehr. Bei echten
+   Messwerten begrenzt dann eher die Messgenauigkeit des Sensors das Ergebnis
+   als die Regel. Beide Regeln sind dann gleich gut geeignet. Die
+   Simpson-Regel lohnt sich vor allem, wenn nur wenige Messwerte vorliegen,
+   wie bei den neun Werten in diesem Projekt.
 ````
 
 ````{admonition} Zusatzaufgabe: Messpunkte klug verteilen (✩✩✩)

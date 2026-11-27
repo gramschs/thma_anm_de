@@ -72,11 +72,12 @@ radius = np.array([0.252, 0.273, 0.288, 0.297, 0.300,
 flaeche = np.pi * radius**2
 ```
 
-Kepler kannte nur drei Radien: an Boden, Bauch und Deckel. Das sind der erste,
-der mittlere und der letzte Eintrag. `hoehe[::4]` nimmt jeden vierten Eintrag,
-also genau diese drei. Mit `np.trapezoid()` berechnen wir das Volumen einmal
-aus drei und einmal aus allen neun Radien. Fläche in Quadratmetern mal Höhe in
-Metern ergibt Kubikmeter. Ein Kubikmeter entspricht 1000 Litern.
+Die Keplersche Fassregel kommt mit drei Radien aus: an Boden, Bauch und Deckel.
+Das sind der erste, der mittlere und der letzte Eintrag. `hoehe[::4]` nimmt
+jeden vierten Eintrag, also genau diese drei. Mit `np.trapezoid()` berechnen
+wir das Volumen einmal aus drei und einmal aus allen neun Radien. Fläche in
+Quadratmetern mal Höhe in Metern ergibt Kubikmeter. Ein Kubikmeter entspricht
+1000 Litern.
 
 ```{code-cell} python
 # Nur Boden, Bauch und Deckel: jeder vierte Eintrag
@@ -109,9 +110,11 @@ plt.show()
 ```
 
 Vom Boden zum Bauch wächst die Querschnittsfläche erst schnell, dann immer
-langsamer. Die neun Messpunkte liegen deshalb auf einer nach oben gewölbten
-Kurve, wie der Bauch des Fasses. Jede Strecke zwischen zwei Messpunkten
-verläuft unter dieser Kurve, jedes Trapez ist also zu klein. Mit drei Radien
+langsamer. Das Diagramm verbindet die Messpunkte nur durch Strecken. Die
+Fasswand wölbt sich aber auch zwischen den Messstellen weiter nach außen. Die
+Querschnittsfläche folgt deshalb einer nach oben gewölbten Kurve, wie der Bauch
+des Fasses. Jede Strecke zwischen zwei Messpunkten verläuft unter dieser Kurve,
+jedes Trapez ist also zu klein. Mit drei Radien
 schneiden die beiden Strecken den ganzen Bauch ab, mit neun Radien fehlen nur
 noch schmale Streifen.
 
@@ -165,10 +168,10 @@ noch schmale Streifen.
    genauer.
 ````
 
-## Wie rechnete Kepler mit drei Radien?
+## Wie kommt die Fassregel mit drei Radien aus?
 
 Die Trapezregel verbindet die drei Messpunkte durch zwei Strecken und schneidet
-dabei den Bauch ab. Kepler legte stattdessen eine **Parabel** durch die drei
+dabei den Bauch ab. Wir legen stattdessen eine **Parabel** durch die drei
 Punkte. Sie ist gewölbt und folgt der Form des Fasses viel besser. Die
 Abbildung zeigt beide Näherungen für die Querschnittsfläche. Gelb markiert ist
 die Fläche, die die Strecken abschneiden und die Parabel erfasst.
@@ -214,16 +217,18 @@ $0.9\,\text{L}$ über dem ausgeliterten Wert statt $11.6\,\text{L}$ darunter.
 Mit neun Radien geht es noch genauer. Wir fassen je zwei benachbarte Intervalle
 zu einem **Doppelintervall** der Breite $2\,\Delta z$ mit drei Punkten
 zusammen. Auf jedes Doppelintervall wenden wir die Fassregel an, mit
-$2\,\Delta z / 6 = \Delta z / 3$ statt $H/6$. Die Punkte an den Grenzen zwischen zwei Doppelintervallen gehören zu
-beiden und zählen deshalb doppelt. Mit $n$ Intervallen und den Flächen
-$A_0, A_1, \dots, A_n$ ergibt das die **Simpson-Regel**:
+$2\,\Delta z / 6 = \Delta z / 3$ statt $H/6$. Die Punkte an den Grenzen
+zwischen zwei Doppelintervallen gehören zu beiden und zählen deshalb doppelt.
+Mit $n$ Intervallen und den Flächen $A_0, A_1, \dots, A_n$ ergibt das die
+**Simpson-Regel**:
 
 $$V \approx \frac{\Delta z}{3}\bigl(A_0 + 4A_1 + 2A_2 + 4A_3 + \dots +
 2A_{n-2} + 4A_{n-1} + A_n\bigr).$$
 
-Die Formel braucht eine gerade Anzahl von Intervallen, also eine ungerade
-Anzahl von Werten. Die Abbildung zeigt das für die neun Radien: vier
-Doppelintervalle mit je einer Parabel und über jedem Punkt sein Gewicht.
+Die Formel setzt gleiche Abstände voraus und braucht eine gerade Anzahl von
+Intervallen, also eine ungerade Anzahl von Werten. Die Abbildung zeigt das für
+die neun Radien: vier Doppelintervalle mit je einer Parabel und über jedem
+Punkt sein Gewicht.
 
 ```{figure} pics/chap09_simpson.svg
 :alt: Querschnittsfläche des Fasses über der Höhe mit neun Punkten. Gestrichelte Linien teilen die Höhe in vier Doppelintervalle, abwechselnd hellblau und gelb gefüllt, in jedem verläuft eine Parabel durch drei Punkte. Über den Punkten stehen die Gewichte 1, 4, 2, 4, 2, 4, 2, 4, 1.
@@ -424,11 +429,11 @@ kleiner, das sind knapp zwei Zehnerpotenzen. Der Fehler der Trapezregel fällt
 dabei um knapp vier Zehnerpotenzen, die Steigung ist also 2. Der Fehler der
 Simpson-Regel fällt um gut sieben Zehnerpotenzen, die Steigung ist 4. Die
 Trapezregel hat die Fehlerordnung 2, die Simpson-Regel die Fehlerordnung 4.
-Halbieren wir die Schrittweite, sinkt der Fehler also auf ein Viertel
-beziehungsweise auf ein Sechzehntel. Dass die Parabeln gleich zwei Ordnungen
-gewinnen, folgt wie in Kapitel 7.2 aus der Taylor-Entwicklung. Wie dort setzen
-die Fehlerordnungen voraus, dass sich der Integrand oft genug ableiten lässt.
-Am Knick der Ladekurve aus Kapitel 9.1 gilt das nicht.
+Halbieren wir die Schrittweite, sinkt der Fehler also auf etwa ein Viertel
+beziehungsweise auf etwa ein Sechzehntel. Dass die Parabeln gleich zwei
+Ordnungen gewinnen, folgt wie in Kapitel 7.2 aus der Taylor-Entwicklung. Wie
+dort setzen die Fehlerordnungen voraus, dass sich der Integrand oft genug
+ableiten lässt. Am Knick der Ladekurve aus Kapitel 9.1 gilt das nicht.
 
 ```{admonition} Welches Werkzeug wann?
 :class: note
@@ -516,7 +521,7 @@ gewichtet den mittleren Wert vierfach. Wenden wir sie auf jedes
 Doppelintervall an, erhalten wir die Simpson-Regel. Sie braucht keine
 zusätzlichen Messungen, nur andere Gewichte, und steht in SciPy als
 `simpson()` bereit. Halbieren wir die Schrittweite, sinkt der Fehler der
-Trapezregel auf ein Viertel und der Fehler der Simpson-Regel auf ein
+Trapezregel auf etwa ein Viertel und der Fehler der Simpson-Regel auf etwa ein
 Sechzehntel: Die Fehlerordnungen sind 2 und 4. Liegt der Integrand als Formel
 vor, integriert `quad()` aus SciPy ihn direkt und schätzt dabei auch den Fehler
 des Ergebnisses.

@@ -90,7 +90,8 @@ Das bestimmte Integral $\int_a^b f(t)\,\mathrm{d}t$ ist die Fläche zwischen
 dem Graphen von $f$ und der $t$-Achse im Bereich von $a$ bis $b$. Liegt der
 Graph unter der Achse, zählt die Fläche dort negativ. Hat der Integrand eine
 Einheit, hat das Integral die Einheit des Integranden mal die Einheit von $t$,
-hier also Kilowatt mal Stunden.
+hier also Kilowatt mal Stunden. Die Grundlagen dazu können Sie in der
+[Vorbereitung](chapter09_sec00.md) wiederholen.
 ```
 
 Die einfachste Näherung zerlegt die Fläche in Rechtecke, eines pro
