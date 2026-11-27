@@ -119,8 +119,7 @@ Ein Quotient aus zwei Differenzen wie $(s_{k+1} - s_k) / \Delta t$ heißt
 Geht $\Delta t$ gegen null, wird aus der Sekante die **Tangente** und aus dem
 Differenzenquotienten die **Ableitung** $s'(t)$, also die momentane
 Geschwindigkeit $v(t)$. Messwerte liegen aber nur im Abstand $\Delta t$ vor.
-Deshalb bleibt der Differenzenquotient eine Näherung. Die Grundlagen dazu
-können Sie in der [Vorbereitung](chapter07_sec00.md) wiederholen.
+Deshalb bleibt der Differenzenquotient eine Näherung.
 ```
 
 ```{admonition} Mini-Übung (✩)
